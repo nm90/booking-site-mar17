@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% block title %}Request a Booking{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1>Request a Booking</h1>
+        <p class="subtitle">Choose your dates and we'll confirm availability</p>
+    </div>
+    <a href="{{ url_for('portal.bookings_index') }}" class="btn btn-outline">← Back</a>
+</div>
+
+<div class="form-page">
+    <div class="form-card">
+        <form action="{{ url_for('portal.bookings_create') }}" method="POST">
+
+            <div class="property-preview">
+                <div class="property-preview-info">
+                    <h3>🏖️ Sunset Villa — Malibu, California</h3>
+                    <p>Beachfront villa · 4 bedrooms · Private pool · Up to 8 guests</p>
+                    <p class="price-hint"><strong>$450 / night</strong></p>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="start_date">Check-in date</label>
+                    <input type="date" id="start_date" name="start_date"
+                           value="{{ start_date or '' }}" required>
+                </div>
+                <div class="form-group">
+                    <label for="end_date">Check-out date</label>
+                    <input type="date" id="end_date" name="end_date"
+                           value="{{ end_date or '' }}" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="guests">Number of guests</label>
+                <input type="number" id="guests" name="guests"
+                       value="{{ guests or '2' }}"
+                       min="1" max="8" required>
+                <p class="form-hint">Maximum 8 guests</p>
+            </div>
+
+            <div class="form-group">
+                <label for="special_requests">Special requests <span class="optional">(optional)</span></label>
+                <textarea id="special_requests" name="special_requests"
+                          rows="3"
+                          placeholder="Early check-in, dietary needs, accessibility requirements…">{{ special_requests or '' }}</textarea>
+            </div>
+
+            <div class="form-actions">
+                <a href="{{ url_for('portal.bookings_index') }}" class="btn btn-outline">Cancel</a>
+                <button type="submit" class="btn btn-primary">Submit Request</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="form-aside">
+        <div class="info-card">
+            <h3>How it works</h3>
+            <ol class="steps">
+                <li>Submit your dates and we'll check availability</li>
+                <li>We review your request (usually within 24 hours)</li>
+                <li>You'll receive an approval or alternative dates</li>
+                <li>Once approved, your stay is confirmed!</li>
+            </ol>
+        </div>
+        <div class="info-card">
+            <h3>Pricing</h3>
+            <p><strong>$450</strong> per night</p>
+            <p class="text-muted text-sm">Total is calculated automatically based on your selected dates.</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Auto-calculate price hint
+    const startInput = document.getElementById('start_date');
+    const endInput = document.getElementById('end_date');
+
+    function updatePriceHint() {
+        const start = new Date(startInput.value);
+        const end = new Date(endInput.value);
+        if (start && end && end > start) {
+            const nights = Math.round((end - start) / (1000 * 60 * 60 * 24));
+            const total = (nights * 450).toLocaleString('en-US', {style: 'currency', currency: 'USD'});
+            document.querySelector('.price-hint').textContent = `$450 / night · ${nights} night${nights > 1 ? 's' : ''} = ${total} estimated`;
+        }
+    }
+
+    startInput.addEventListener('change', updatePriceHint);
+    endInput.addEventListener('change', updatePriceHint);
+</script>
+{% endblock %}

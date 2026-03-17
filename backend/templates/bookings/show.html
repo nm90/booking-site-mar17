@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block title %}Booking #{{ booking.id }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1>Booking #{{ booking.id }}</h1>
+        <p class="subtitle">Submitted {{ booking.created_at[:10] }}</p>
+    </div>
+    <a href="{{ url_for('portal.bookings_index') }}" class="btn btn-outline">← My Bookings</a>
+</div>
+
+<div class="detail-layout">
+    <div class="detail-main">
+        <div class="detail-card">
+            <div class="detail-card-header">
+                <h2>Stay Details</h2>
+                <span class="badge badge-{{ booking.status }} badge-lg">{{ booking.status }}</span>
+            </div>
+
+            <div class="detail-grid">
+                <div class="detail-item">
+                    <span class="detail-label">Property</span>
+                    <span class="detail-value">🏖️ Sunset Villa, Malibu CA</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Check-in</span>
+                    <span class="detail-value">{{ booking.start_date }}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Check-out</span>
+                    <span class="detail-value">{{ booking.end_date }}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Guests</span>
+                    <span class="detail-value">{{ booking.guests }}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Total Price</span>
+                    <span class="detail-value price">${{ "%.2f" | format(booking.total_price) }}</span>
+                </div>
+            </div>
+
+            {% if booking.special_requests %}
+            <div class="detail-notes">
+                <span class="detail-label">Special Requests</span>
+                <p>{{ booking.special_requests }}</p>
+            </div>
+            {% endif %}
+
+            {% if booking.admin_notes %}
+            <div class="detail-notes admin-notes">
+                <span class="detail-label">Note from Host</span>
+                <p>{{ booking.admin_notes }}</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Actions -->
+        <div class="action-row">
+            {% if booking.status in ['pending', 'approved'] %}
+                <form action="{{ url_for('portal.bookings_cancel', booking_id=booking.id) }}" method="POST"
+                      onsubmit="return confirm('Are you sure you want to cancel this booking?')">
+                    <button type="submit" class="btn btn-danger">Cancel Booking</button>
+                </form>
+            {% endif %}
+
+            {% if booking.status == 'approved' and not already_reviewed %}
+                <a href="{{ url_for('portal.reviews_new', booking_id=booking.id) }}"
+                   class="btn btn-outline">✍️ Leave a Review</a>
+            {% endif %}
+
+            {% if booking.status == 'approved' %}
+                <a href="{{ url_for('portal.adventures_new') }}?booking_id={{ booking.id }}"
+                   class="btn btn-outline">🏄 Book an Adventure</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="detail-sidebar">
+        <div class="info-card">
+            <h3>Status Guide</h3>
+            <ul class="status-guide">
+                <li><span class="badge badge-pending">pending</span> Awaiting host review</li>
+                <li><span class="badge badge-approved">approved</span> Your stay is confirmed</li>
+                <li><span class="badge badge-rejected">rejected</span> Dates unavailable</li>
+                <li><span class="badge badge-cancelled">cancelled</span> Booking cancelled</li>
+            </ul>
+        </div>
+
+        {% if already_reviewed %}
+        <div class="info-card success-card">
+            <h3>✅ Review Submitted</h3>
+            <p>Thank you for sharing your experience!</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

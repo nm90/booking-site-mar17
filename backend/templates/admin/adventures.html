@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}Adventure Bookings{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1>Adventure Bookings</h1>
+        <p class="subtitle">Review and manage adventure requests</p>
+    </div>
+</div>
+
+<div class="filter-tabs">
+    <a href="{{ url_for('admin.adventures_index') }}"
+       class="filter-tab {% if not current_status %}active{% endif %}">All</a>
+    <a href="?status=pending"
+       class="filter-tab {% if current_status == 'pending' %}active{% endif %}">Pending</a>
+    <a href="?status=approved"
+       class="filter-tab {% if current_status == 'approved' %}active{% endif %}">Approved</a>
+    <a href="?status=rejected"
+       class="filter-tab {% if current_status == 'rejected' %}active{% endif %}">Rejected</a>
+</div>
+
+{% if bookings %}
+<div class="table-container">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Guest</th>
+                <th>Adventure</th>
+                <th>Date</th>
+                <th>Participants</th>
+                <th>Total</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for ab in bookings %}
+            <tr class="{% if ab.status == 'pending' %}row-highlight{% endif %}">
+                <td class="text-muted">#{{ ab.id }}</td>
+                <td>
+                    <strong>{{ ab.user.first_name }} {{ ab.user.last_name }}</strong>
+                    <div class="text-sm text-muted">{{ ab.user.email }}</div>
+                </td>
+                <td><strong>{{ ab.adventure.name }}</strong></td>
+                <td>{{ ab.scheduled_date }}</td>
+                <td>{{ ab.participants }}</td>
+                <td>${{ "%.2f" | format(ab.total_price) }}</td>
+                <td><span class="badge badge-{{ ab.status }}">{{ ab.status }}</span></td>
+                <td>
+                    {% if ab.status == 'pending' %}
+                    <form action="{{ url_for('admin.adventures_approve', ab_id=ab.id) }}" method="POST" style="display:inline">
+                        <button type="submit" class="btn btn-success btn-sm">✓</button>
+                    </form>
+                    <form action="{{ url_for('admin.adventures_reject', ab_id=ab.id) }}" method="POST"
+                          style="display:inline"
+                          onsubmit="return confirm('Reject this adventure booking?')">
+                        <button type="submit" class="btn btn-danger btn-sm">✗</button>
+                    </form>
+                    {% else %}
+                        <span class="text-muted text-sm">—</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="empty-state">
+    <div class="empty-icon">🏄</div>
+    <p>No adventure bookings {% if current_status %}with status "{{ current_status }}"{% endif %}.</p>
+</div>
+{% endif %}
+{% endblock %}

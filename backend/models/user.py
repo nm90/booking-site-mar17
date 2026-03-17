@@ -1,0 +1,173 @@
+"""
+User Model - Handles user data validation and database operations.
+
+MVC Role: MODEL
+- Validates user input
+- Manages database queries for users table
+- Contains business logic for user operations
+- Returns data structures (dicts) to controllers
+"""
+
+import re
+import hashlib
+from typing import Dict, List, Optional
+from backend.database.connection import execute_query
+
+
+class User:
+    """
+    User model for managing user data and operations.
+
+    Demonstrates the MODEL layer in MVC:
+    - Data validation
+    - Database operations (CRUD)
+    - Business logic (authentication, roles)
+    """
+
+    EMAIL_PATTERN = r'^[\w\.-]+@[\w\.-]+\.\w+$'
+    VALID_ROLES = ['customer', 'admin']
+    VALID_STATUSES = ['active', 'inactive', 'suspended']
+
+    @staticmethod
+    def hash_password(password: str) -> str:
+        """Hash a password using SHA-256."""
+        return hashlib.sha256(password.encode()).hexdigest()
+
+    @staticmethod
+    def validate(email: str, first_name: str, last_name: str,
+                 password: str = None, role: str = 'customer') -> None:
+        """
+        Validate user data before database operations.
+
+        Raises ValueError with descriptive message if validation fails.
+        """
+        if not first_name or not first_name.strip():
+            raise ValueError("First name is required")
+
+        if not last_name or not last_name.strip():
+            raise ValueError("Last name is required")
+
+        if not email or not email.strip():
+            raise ValueError("Email is required")
+
+        if not re.match(User.EMAIL_PATTERN, email):
+            raise ValueError(f"Invalid email format: {email}")
+
+        if password is not None and len(password) < 6:
+            raise ValueError("Password must be at least 6 characters")
+
+        if role not in User.VALID_ROLES:
+            raise ValueError(f"Role must be one of {User.VALID_ROLES}")
+
+    @staticmethod
+    def create(email: str, first_name: str, last_name: str,
+               password: str, phone_number: str = None, role: str = 'customer') -> Dict:
+        """
+        Create a new user in the database.
+
+        MVC Flow:
+        1. Controller calls User.create() with form data
+        2. Model validates and inserts into database
+        3. Returns complete user dict
+        """
+        User.validate(email, first_name, last_name, password, role)
+
+        password_hash = User.hash_password(password)
+        query = """
+            INSERT INTO users (email, password_hash, first_name, last_name, phone_number, role)
+            VALUES (?, ?, ?, ?, ?, ?)
+        """
+        user_id = execute_query(
+            query,
+            (email, password_hash, first_name, last_name, phone_number, role),
+            commit=True
+        )
+        return User.get_by_id(user_id)
+
+    @staticmethod
+    def get_by_id(user_id: int) -> Optional[Dict]:
+        """Fetch a user by their ID. Returns None if not found."""
+        return execute_query(
+            "SELECT id, email, first_name, last_name, phone_number, role, status, created_at FROM users WHERE id = ?",
+            (user_id,), fetch_one=True
+        )
+
+    @staticmethod
+    def get_by_email(email: str) -> Optional[Dict]:
+        """Fetch a user by email (includes password_hash for auth)."""
+        return execute_query(
+            "SELECT * FROM users WHERE email = ?",
+            (email,), fetch_one=True
+        )
+
+    @staticmethod
+    def get_all() -> List[Dict]:
+        """Fetch all users ordered by creation date."""
+        result = execute_query(
+            "SELECT id, email, first_name, last_name, phone_number, role, status, created_at FROM users ORDER BY created_at DESC",
+            fetch_all=True
+        )
+        return result if result else []
+
+    @staticmethod
+    def authenticate(email: str, password: str) -> Optional[Dict]:
+        """
+        Authenticate a user with email and password.
+
+        Returns user dict if credentials are valid, None otherwise.
+        """
+        user = User.get_by_email(email)
+        if not user:
+            return None
+
+        if user['password_hash'] != User.hash_password(password):
+            return None
+
+        if user['status'] != 'active':
+            return None
+
+        # Return safe user dict (without password_hash)
+        return User.get_by_id(user['id'])
+
+    @staticmethod
+    def update(user_id: int, first_name: str, last_name: str,
+               email: str, phone_number: str = None) -> Optional[Dict]:
+        """Update an existing user's profile information."""
+        User.validate(email, first_name, last_name)
+
+        existing = User.get_by_id(user_id)
+        if not existing:
+            return None
+
+        execute_query(
+            "UPDATE users SET first_name=?, last_name=?, email=?, phone_number=?, updated_at=CURRENT_TIMESTAMP WHERE id=?",
+            (first_name, last_name, email, phone_number, user_id),
+            commit=True
+        )
+        return User.get_by_id(user_id)
+
+    @staticmethod
+    def update_status(user_id: int, status: str) -> Optional[Dict]:
+        """Update a user's account status (admin action)."""
+        if status not in User.VALID_STATUSES:
+            raise ValueError(f"Status must be one of {User.VALID_STATUSES}")
+
+        existing = User.get_by_id(user_id)
+        if not existing:
+            return None
+
+        execute_query(
+            "UPDATE users SET status=?, updated_at=CURRENT_TIMESTAMP WHERE id=?",
+            (status, user_id), commit=True
+        )
+        return User.get_by_id(user_id)
+
+    @staticmethod
+    def delete(user_id: int) -> bool:
+        """Delete a user. Returns True if deleted, False if not found."""
+        existing = User.get_by_id(user_id)
+        if not existing:
+            return False
+
+        execute_query("DELETE FROM users WHERE id=?", (user_id,), commit=True)
+        return True

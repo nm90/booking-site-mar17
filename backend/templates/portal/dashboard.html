@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% block title %}My Dashboard{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1>Welcome back, {{ current_user_name }} 👋</h1>
+        <p class="subtitle">Manage your bookings and adventures</p>
+    </div>
+    <a href="{{ url_for('portal.bookings_new') }}" class="btn btn-primary">+ Request a Booking</a>
+</div>
+
+<!-- Stats Row -->
+<div class="stats-row">
+    {% set pending = bookings | selectattr('status', 'eq', 'pending') | list %}
+    {% set approved = bookings | selectattr('status', 'eq', 'approved') | list %}
+    {% set adv_pending = adventure_bookings | selectattr('status', 'eq', 'pending') | list %}
+
+    <div class="stat-card">
+        <div class="stat-number">{{ bookings | length }}</div>
+        <div class="stat-label">Total Bookings</div>
+    </div>
+    <div class="stat-card stat-card-warning">
+        <div class="stat-number">{{ pending | length }}</div>
+        <div class="stat-label">Pending Approval</div>
+    </div>
+    <div class="stat-card stat-card-success">
+        <div class="stat-number">{{ approved | length }}</div>
+        <div class="stat-label">Approved Stays</div>
+    </div>
+    <div class="stat-card stat-card-accent">
+        <div class="stat-number">{{ adventure_bookings | length }}</div>
+        <div class="stat-label">Adventures Booked</div>
+    </div>
+</div>
+
+<!-- Recent Bookings -->
+<section class="section">
+    <div class="section-header">
+        <h2>Recent Bookings</h2>
+        <a href="{{ url_for('portal.bookings_index') }}" class="link-more">View all →</a>
+    </div>
+
+    {% if bookings %}
+        <div class="table-container">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Check-in</th>
+                        <th>Check-out</th>
+                        <th>Guests</th>
+                        <th>Total</th>
+                        <th>Status</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for booking in bookings[:5] %}
+                    <tr>
+                        <td class="text-muted">#{{ booking.id }}</td>
+                        <td>{{ booking.start_date }}</td>
+                        <td>{{ booking.end_date }}</td>
+                        <td>{{ booking.guests }}</td>
+                        <td>${{ "%.2f" | format(booking.total_price) }}</td>
+                        <td><span class="badge badge-{{ booking.status }}">{{ booking.status }}</span></td>
+                        <td><a href="{{ url_for('portal.bookings_show', booking_id=booking.id) }}" class="link-action">View</a></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">🏠</div>
+            <p>No bookings yet.</p>
+            <a href="{{ url_for('portal.bookings_new') }}" class="btn btn-primary">Request Your First Booking</a>
+        </div>
+    {% endif %}
+</section>
+
+<!-- Adventure Bookings -->
+<section class="section">
+    <div class="section-header">
+        <h2>Adventure Requests</h2>
+        <a href="{{ url_for('portal.adventures_index') }}" class="link-more">Browse adventures →</a>
+    </div>
+
+    {% if adventure_bookings %}
+        <div class="table-container">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Adventure</th>
+                        <th>Category</th>
+                        <th>Date</th>
+                        <th>Participants</th>
+                        <th>Total</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for ab in adventure_bookings[:5] %}
+                    <tr>
+                        <td><strong>{{ ab.adventure.name }}</strong></td>
+                        <td class="text-muted">{{ ab.adventure.category }}</td>
+                        <td>{{ ab.scheduled_date }}</td>
+                        <td>{{ ab.participants }}</td>
+                        <td>${{ "%.2f" | format(ab.total_price) }}</td>
+                        <td><span class="badge badge-{{ ab.status }}">{{ ab.status }}</span></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">🏄</div>
+            <p>No adventure requests yet.</p>
+            <a href="{{ url_for('portal.adventures_index') }}" class="btn btn-outline">Explore Adventures</a>
+        </div>
+    {% endif %}
+</section>
+{% endblock %}

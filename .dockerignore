@@ -1,0 +1,70 @@
+# Python cache and bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv
+
+# IDEs and editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+backend/logs/*
+!backend/logs/.gitkeep
+
+# Database files (created fresh in container)
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+backend/database/booking_site.db
+
+# Node modules
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Docker files themselves
+docker-compose*.yml
+.dockerignore
+
+# Documentation
+*.md
+docs/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# Backup files
+*.bak
+*.backup
+*.old
+
+# OS files
+Thumbs.db
+.DS_Store

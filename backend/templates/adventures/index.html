@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block title %}Adventures{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1>Adventures</h1>
+        <p class="subtitle">Explore activities to enhance your Malibu stay</p>
+    </div>
+    <a href="{{ url_for('portal.adventures_new') }}" class="btn btn-primary">+ Book an Adventure</a>
+</div>
+
+<!-- Adventure Catalog -->
+<section class="section">
+    <h2>Available Activities</h2>
+    {% if adventures %}
+        <div class="card-grid">
+            {% for adventure in adventures %}
+            <div class="adventure-card">
+                <div class="adventure-card-header">
+                    <span class="adventure-category">{{ adventure.category }}</span>
+                    <span class="adventure-difficulty difficulty-{{ adventure.difficulty }}">{{ adventure.difficulty }}</span>
+                </div>
+                <h3>{{ adventure.name }}</h3>
+                <p class="adventure-desc">{{ adventure.description }}</p>
+                <div class="adventure-meta">
+                    <span>⏱ {{ adventure.duration_hours }}h</span>
+                    <span>👥 Max {{ adventure.max_participants }}</span>
+                    <span class="adventure-price">${{ "%.0f" | format(adventure.price) }}/person</span>
+                </div>
+                <a href="{{ url_for('portal.adventures_new') }}?adventure_id={{ adventure.id }}"
+                   class="btn btn-outline btn-full">Request This Adventure</a>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">🏄</div>
+            <p>No adventures available right now. Check back soon!</p>
+        </div>
+    {% endif %}
+</section>
+
+<!-- My Adventure Bookings -->
+<section class="section">
+    <h2>My Adventure Requests</h2>
+    {% if my_bookings %}
+        <div class="table-container">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Activity</th>
+                        <th>Category</th>
+                        <th>Difficulty</th>
+                        <th>Date</th>
+                        <th>Participants</th>
+                        <th>Total</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for ab in my_bookings %}
+                    <tr>
+                        <td><strong>{{ ab.adventure.name }}</strong></td>
+                        <td class="text-muted">{{ ab.adventure.category }}</td>
+                        <td><span class="difficulty-{{ ab.adventure.difficulty }} text-sm">{{ ab.adventure.difficulty }}</span></td>
+                        <td>{{ ab.scheduled_date }}</td>
+                        <td>{{ ab.participants }}</td>
+                        <td>${{ "%.2f" | format(ab.total_price) }}</td>
+                        <td><span class="badge badge-{{ ab.status }}">{{ ab.status }}</span></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p class="text-muted">No adventure requests yet.</p>
+    {% endif %}
+</section>
+{% endblock %}

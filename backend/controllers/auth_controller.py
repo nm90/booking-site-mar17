@@ -1,0 +1,145 @@
+"""
+Auth Controller - Handles user registration, login, and logout.
+
+MVC Role: CONTROLLER
+- Receives HTTP requests
+- Calls User Model methods
+- Manages session state
+- Returns responses to the client
+
+URL Prefix: /auth
+Routes:
+    GET  /auth/register  - Show registration form
+    POST /auth/register  - Create new user
+    GET  /auth/login     - Show login form
+    POST /auth/login     - Authenticate user
+    POST /auth/logout    - Log out current user
+"""
+
+from flask import Blueprint, request, redirect, url_for, flash, session, render_template
+from backend.models.user import User
+
+auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
+
+
+def login_required(f):
+    """Decorator: redirect to login if user is not authenticated."""
+    from functools import wraps
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if 'user_id' not in session:
+            flash('Please log in to access this page.', 'warning')
+            return redirect(url_for('auth.login'))
+        return f(*args, **kwargs)
+    return decorated
+
+
+def admin_required(f):
+    """Decorator: redirect to home if user is not an admin."""
+    from functools import wraps
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if 'user_id' not in session:
+            flash('Please log in to access this page.', 'warning')
+            return redirect(url_for('auth.login'))
+        if session.get('user_role') != 'admin':
+            flash('Access denied. Admin privileges required.', 'error')
+            return redirect(url_for('portal.dashboard'))
+        return f(*args, **kwargs)
+    return decorated
+
+
+# ============================================================================
+# REGISTRATION
+# ============================================================================
+@auth_bp.route('/register', methods=['GET'])
+def register():
+    """Show the registration form."""
+    if 'user_id' in session:
+        return redirect(url_for('portal.dashboard'))
+    return render_template('users/register.html')
+
+
+@auth_bp.route('/register', methods=['POST'])
+def do_register():
+    """Create a new customer account from form data."""
+    email = request.form.get('email', '').strip()
+    first_name = request.form.get('first_name', '').strip()
+    last_name = request.form.get('last_name', '').strip()
+    password = request.form.get('password', '')
+    phone_number = request.form.get('phone_number', '').strip() or None
+
+    try:
+        user = User.create(
+            email=email,
+            first_name=first_name,
+            last_name=last_name,
+            password=password,
+            phone_number=phone_number,
+            role='customer'
+        )
+        flash('Account created successfully! Please log in.', 'success')
+        return redirect(url_for('auth.login'))
+
+    except ValueError as e:
+        flash(str(e), 'error')
+        return render_template('users/register.html',
+                               email=email, first_name=first_name,
+                               last_name=last_name, phone_number=phone_number)
+
+    except Exception as e:
+        error_message = getattr(e, 'user_message', str(e))
+        flash(error_message, 'error')
+        return render_template('users/register.html',
+                               email=email, first_name=first_name,
+                               last_name=last_name, phone_number=phone_number)
+
+
+# ============================================================================
+# LOGIN / LOGOUT
+# ============================================================================
+@auth_bp.route('/login', methods=['GET'])
+def login():
+    """Show the login form."""
+    if 'user_id' in session:
+        if session.get('user_role') == 'admin':
+            return redirect(url_for('admin.dashboard'))
+        return redirect(url_for('portal.dashboard'))
+    return render_template('users/login.html')
+
+
+@auth_bp.route('/login', methods=['POST'])
+def do_login():
+    """Authenticate user and establish session."""
+    email = request.form.get('email', '').strip()
+    password = request.form.get('password', '')
+
+    if not email or not password:
+        flash('Email and password are required.', 'error')
+        return render_template('users/login.html', email=email)
+
+    user = User.authenticate(email, password)
+
+    if not user:
+        flash('Invalid email or password.', 'error')
+        return render_template('users/login.html', email=email)
+
+    # Establish session
+    session['user_id'] = user['id']
+    session['user_email'] = user['email']
+    session['user_first_name'] = user['first_name']
+    session['user_role'] = user['role']
+
+    flash(f"Welcome back, {user['first_name']}!", 'success')
+
+    if user['role'] == 'admin':
+        return redirect(url_for('admin.dashboard'))
+    return redirect(url_for('portal.dashboard'))
+
+
+@auth_bp.route('/logout', methods=['POST'])
+def logout():
+    """Clear session and redirect to login."""
+    session.clear()
+    flash('You have been logged out.', 'success')
+    return redirect(url_for('auth.login'))

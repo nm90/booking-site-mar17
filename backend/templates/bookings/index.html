@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}My Bookings{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1>My Bookings</h1>
+        <p class="subtitle">All your stay requests at Sunset Villa</p>
+    </div>
+    <a href="{{ url_for('portal.bookings_new') }}" class="btn btn-primary">+ New Booking</a>
+</div>
+
+{% if bookings %}
+    <div class="table-container">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Check-in</th>
+                    <th>Check-out</th>
+                    <th>Nights</th>
+                    <th>Guests</th>
+                    <th>Total</th>
+                    <th>Status</th>
+                    <th>Submitted</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for booking in bookings %}
+                <tr>
+                    <td class="text-muted">#{{ booking.id }}</td>
+                    <td>{{ booking.start_date }}</td>
+                    <td>{{ booking.end_date }}</td>
+                    <td class="text-muted">—</td>
+                    <td>{{ booking.guests }}</td>
+                    <td><strong>${{ "%.2f" | format(booking.total_price) }}</strong></td>
+                    <td><span class="badge badge-{{ booking.status }}">{{ booking.status }}</span></td>
+                    <td class="text-muted text-sm">{{ booking.created_at[:10] }}</td>
+                    <td>
+                        <a href="{{ url_for('portal.bookings_show', booking_id=booking.id) }}" class="link-action">View</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% else %}
+    <div class="empty-state">
+        <div class="empty-icon">🏠</div>
+        <h2>No bookings yet</h2>
+        <p>Ready to plan your stay? Request a booking and we'll get back to you shortly.</p>
+        <a href="{{ url_for('portal.bookings_new') }}" class="btn btn-primary">Request a Booking</a>
+    </div>
+{% endif %}
+{% endblock %}

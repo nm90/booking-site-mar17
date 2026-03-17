@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}Manage Bookings{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1>Bookings</h1>
+        <p class="subtitle">Review and manage all stay requests</p>
+    </div>
+</div>
+
+<!-- Status Filters -->
+<div class="filter-tabs">
+    <a href="{{ url_for('admin.bookings_index') }}"
+       class="filter-tab {% if not current_status %}active{% endif %}">All</a>
+    <a href="?status=pending"
+       class="filter-tab {% if current_status == 'pending' %}active{% endif %}">Pending</a>
+    <a href="?status=approved"
+       class="filter-tab {% if current_status == 'approved' %}active{% endif %}">Approved</a>
+    <a href="?status=rejected"
+       class="filter-tab {% if current_status == 'rejected' %}active{% endif %}">Rejected</a>
+    <a href="?status=cancelled"
+       class="filter-tab {% if current_status == 'cancelled' %}active{% endif %}">Cancelled</a>
+</div>
+
+{% if bookings %}
+<div class="table-container">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Guest</th>
+                <th>Check-in</th>
+                <th>Check-out</th>
+                <th>Guests</th>
+                <th>Total</th>
+                <th>Status</th>
+                <th>Submitted</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for booking in bookings %}
+            <tr class="{% if booking.status == 'pending' %}row-highlight{% endif %}">
+                <td class="text-muted">#{{ booking.id }}</td>
+                <td>
+                    <strong>{{ booking.user.first_name }} {{ booking.user.last_name }}</strong>
+                    <div class="text-sm text-muted">{{ booking.user.email }}</div>
+                </td>
+                <td>{{ booking.start_date }}</td>
+                <td>{{ booking.end_date }}</td>
+                <td>{{ booking.guests }}</td>
+                <td>${{ "%.2f" | format(booking.total_price) }}</td>
+                <td><span class="badge badge-{{ booking.status }}">{{ booking.status }}</span></td>
+                <td class="text-sm text-muted">{{ booking.created_at[:10] }}</td>
+                <td><a href="{{ url_for('admin.bookings_show', booking_id=booking.id) }}" class="link-action">Review</a></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="empty-state">
+    <div class="empty-icon">📋</div>
+    <p>No bookings {% if current_status %}with status "{{ current_status }}"{% endif %}.</p>
+</div>
+{% endif %}
+{% endblock %}

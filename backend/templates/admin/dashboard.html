@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1>Admin Dashboard</h1>
+        <p class="subtitle">Manage bookings, reviews, and guests</p>
+    </div>
+</div>
+
+<!-- Pending Action Cards -->
+<div class="stats-row">
+    <a href="{{ url_for('admin.bookings_index') }}?status=pending" class="stat-card stat-card-warning stat-card-link">
+        <div class="stat-number">{{ pending_bookings | length }}</div>
+        <div class="stat-label">Pending Bookings</div>
+        <div class="stat-cta">Review →</div>
+    </a>
+    <a href="{{ url_for('admin.reviews_index') }}?status=pending" class="stat-card stat-card-accent stat-card-link">
+        <div class="stat-number">{{ pending_reviews | length }}</div>
+        <div class="stat-label">Pending Reviews</div>
+        <div class="stat-cta">Moderate →</div>
+    </a>
+    <a href="{{ url_for('admin.adventures_index') }}?status=pending" class="stat-card stat-card-info stat-card-link">
+        <div class="stat-number">{{ pending_adventures | length }}</div>
+        <div class="stat-label">Pending Adventures</div>
+        <div class="stat-cta">Review →</div>
+    </a>
+    <div class="stat-card stat-card-success">
+        <div class="stat-number">{{ all_bookings | selectattr('status', 'eq', 'approved') | list | length }}</div>
+        <div class="stat-label">Approved Stays</div>
+    </div>
+</div>
+
+<!-- Recent Bookings -->
+<section class="section">
+    <div class="section-header">
+        <h2>All Bookings</h2>
+        <a href="{{ url_for('admin.bookings_index') }}" class="link-more">View all →</a>
+    </div>
+
+    {% if all_bookings %}
+    <div class="table-container">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Guest</th>
+                    <th>Check-in</th>
+                    <th>Check-out</th>
+                    <th>Guests</th>
+                    <th>Total</th>
+                    <th>Status</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for booking in all_bookings[:10] %}
+                <tr class="{% if booking.status == 'pending' %}row-highlight{% endif %}">
+                    <td class="text-muted">#{{ booking.id }}</td>
+                    <td>
+                        <strong>{{ booking.user.first_name }} {{ booking.user.last_name }}</strong>
+                        <div class="text-sm text-muted">{{ booking.user.email }}</div>
+                    </td>
+                    <td>{{ booking.start_date }}</td>
+                    <td>{{ booking.end_date }}</td>
+                    <td>{{ booking.guests }}</td>
+                    <td>${{ "%.2f" | format(booking.total_price) }}</td>
+                    <td><span class="badge badge-{{ booking.status }}">{{ booking.status }}</span></td>
+                    <td><a href="{{ url_for('admin.bookings_show', booking_id=booking.id) }}" class="link-action">Review</a></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+        <p class="text-muted">No bookings yet.</p>
+    {% endif %}
+</section>
+{% endblock %}

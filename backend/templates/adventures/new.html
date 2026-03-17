@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% block title %}Book an Adventure{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1>Book an Adventure</h1>
+        <p class="subtitle">Request an activity for your stay</p>
+    </div>
+    <a href="{{ url_for('portal.adventures_index') }}" class="btn btn-outline">← Adventures</a>
+</div>
+
+<div class="form-page">
+    <div class="form-card">
+        <form action="{{ url_for('portal.adventures_create') }}" method="POST">
+
+            <div class="form-group">
+                <label for="adventure_id">Select Activity</label>
+                <select id="adventure_id" name="adventure_id" required>
+                    <option value="">— Choose an adventure —</option>
+                    {% for adv in adventures %}
+                    <option value="{{ adv.id }}"
+                        data-price="{{ adv.price }}"
+                        data-max="{{ adv.max_participants }}"
+                        {% if (selected_adventure and selected_adventure.id == adv.id) or (adventure_id == adv.id) %}selected{% endif %}>
+                        {{ adv.name }} — ${{ "%.0f" | format(adv.price) }}/person ({{ adv.difficulty }}, {{ adv.duration_hours }}h)
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="scheduled_date">Date</label>
+                    <input type="date" id="scheduled_date" name="scheduled_date"
+                           value="{{ scheduled_date or '' }}" required>
+                </div>
+                <div class="form-group">
+                    <label for="participants">Participants</label>
+                    <input type="number" id="participants" name="participants"
+                           value="{{ participants or '1' }}"
+                           min="1" max="20" required>
+                    <p class="form-hint" id="participants-hint"></p>
+                </div>
+            </div>
+
+            {% if stay_bookings %}
+            <div class="form-group">
+                <label for="booking_id">Link to Stay Booking <span class="optional">(optional)</span></label>
+                <select id="booking_id" name="booking_id">
+                    <option value="">— Not linked to a stay —</option>
+                    {% for b in stay_bookings %}
+                    <option value="{{ b.id }}">Booking #{{ b.id }}: {{ b.start_date }} – {{ b.end_date }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% endif %}
+
+            <div class="form-group">
+                <label for="special_requests">Special requests <span class="optional">(optional)</span></label>
+                <textarea id="special_requests" name="special_requests"
+                          rows="2"
+                          placeholder="Dietary needs, physical limitations, group details…"></textarea>
+            </div>
+
+            <div class="price-estimate" id="price-estimate" style="display:none">
+                <span>Estimated total:</span>
+                <strong id="price-total"></strong>
+            </div>
+
+            <div class="form-actions">
+                <a href="{{ url_for('portal.adventures_index') }}" class="btn btn-outline">Cancel</a>
+                <button type="submit" class="btn btn-primary">Submit Request</button>
+            </div>
+        </form>
+    </div>
+
+    {% if selected_adventure %}
+    <div class="form-aside">
+        <div class="info-card">
+            <h3>{{ selected_adventure.name }}</h3>
+            <p>{{ selected_adventure.description }}</p>
+            <ul class="detail-list">
+                <li>📂 {{ selected_adventure.category }}</li>
+                <li>⚡ {{ selected_adventure.difficulty }}</li>
+                <li>⏱ {{ selected_adventure.duration_hours }} hours</li>
+                <li>👥 Max {{ selected_adventure.max_participants }} participants</li>
+                <li>💰 ${{ "%.0f" | format(selected_adventure.price) }} per person</li>
+            </ul>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+const adventureSelect = document.getElementById('adventure_id');
+const participantsInput = document.getElementById('participants');
+const priceEstimate = document.getElementById('price-estimate');
+const priceTotal = document.getElementById('price-total');
+const participantsHint = document.getElementById('participants-hint');
+
+function updateEstimate() {
+    const selected = adventureSelect.options[adventureSelect.selectedIndex];
+    const price = parseFloat(selected.dataset.price) || 0;
+    const max = parseInt(selected.dataset.max) || 20;
+    const participants = parseInt(participantsInput.value) || 1;
+
+    participantsHint.textContent = max ? `Max ${max} participants` : '';
+    participantsInput.max = max;
+
+    if (price && participants) {
+        const total = (price * participants).toLocaleString('en-US', {style: 'currency', currency: 'USD'});
+        priceTotal.textContent = total;
+        priceEstimate.style.display = 'flex';
+    } else {
+        priceEstimate.style.display = 'none';
+    }
+}
+
+adventureSelect.addEventListener('change', updateEstimate);
+participantsInput.addEventListener('input', updateEstimate);
+updateEstimate();
+</script>
+{% endblock %}

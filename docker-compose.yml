@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    ports:
+      - "5000:5000"
+    environment:
+      - SECRET_KEY=change-this-in-production
+      - DATABASE_PATH=/app/data/booking_site.db
+      - FLASK_ENV=development
+    volumes:
+      - db_data:/app/data
+      - ./backend/logs:/app/backend/logs
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5000/health')"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+
+volumes:
+  db_data:

@@ -1,0 +1,18 @@
+services:
+  - name: booking-site
+    builder: dockerfile
+    git:
+      branch: main
+    env:
+      - key: FLASK_ENV
+        value: production
+      - key: PYTHONUNBUFFERED
+        value: "1"
+      - key: DATABASE_PATH
+        value: /tmp/booking_site.db
+    ports:
+      - name: http
+        port: 5000
+    health_checks:
+      - type: http
+        path: /health

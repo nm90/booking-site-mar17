@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Sunset Villa{% endblock %} — Vacation Rental</title>
+    <link rel="stylesheet" href="/static/css/main.css">
+</head>
+<body>
+
+<header>
+    <div class="header-inner">
+        <a href="/" class="logo">🌅 Sunset Villa</a>
+        <nav>
+            {% if is_logged_in %}
+                {% if is_admin %}
+                    <a href="{{ url_for('admin.dashboard') }}" {% if request.endpoint and request.endpoint.startswith('admin') %}class="active"{% endif %}>Dashboard</a>
+                    <a href="{{ url_for('admin.bookings_index') }}" {% if request.endpoint == 'admin.bookings_index' %}class="active"{% endif %}>Bookings</a>
+                    <a href="{{ url_for('admin.reviews_index') }}" {% if request.endpoint == 'admin.reviews_index' %}class="active"{% endif %}>Reviews</a>
+                    <a href="{{ url_for('admin.adventures_index') }}" {% if request.endpoint == 'admin.adventures_index' %}class="active"{% endif %}>Adventures</a>
+                    <a href="{{ url_for('admin.users_index') }}" {% if request.endpoint == 'admin.users_index' %}class="active"{% endif %}>Users</a>
+                {% else %}
+                    <a href="{{ url_for('portal.dashboard') }}" {% if request.endpoint == 'portal.dashboard' %}class="active"{% endif %}>Dashboard</a>
+                    <a href="{{ url_for('portal.bookings_index') }}" {% if request.endpoint and 'booking' in request.endpoint %}class="active"{% endif %}>My Bookings</a>
+                    <a href="{{ url_for('portal.adventures_index') }}" {% if request.endpoint and 'adventure' in request.endpoint %}class="active"{% endif %}>Adventures</a>
+                {% endif %}
+                <div class="nav-user">
+                    <span class="user-greeting">Hi, {{ current_user_name }}
+                        {% if is_admin %}<span class="role-badge admin">Admin</span>{% endif %}
+                    </span>
+                    <form action="{{ url_for('auth.logout') }}" method="POST" style="display:inline">
+                        <button type="submit" class="btn btn-ghost btn-sm">Log out</button>
+                    </form>
+                </div>
+            {% else %}
+                <a href="{{ url_for('auth.login') }}">Log in</a>
+                <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-sm">Sign up</a>
+            {% endif %}
+        </nav>
+    </div>
+</header>
+
+<main>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-container">
+                {% for category, message in messages %}
+                    <div class="flash flash-{{ category }}">
+                        <span>{{ message }}</span>
+                        <button class="flash-close" onclick="this.parentElement.remove()">×</button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    {% block content %}{% endblock %}
+</main>
+
+<footer>
+    <div class="footer-inner">
+        <p><strong>🌅 Sunset Villa</strong> — Malibu, California</p>
+        <p>Questions? <a href="mailto:hello@sunsetvilla.com">hello@sunsetvilla.com</a></p>
+    </div>
+</footer>
+
+<script src="/static/js/main.js"></script>
+</body>
+</html>

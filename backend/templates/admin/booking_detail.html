@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% block title %}Booking #{{ booking.id }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1>Booking #{{ booking.id }}</h1>
+        <p class="subtitle">{{ booking.user.first_name }} {{ booking.user.last_name }} — {{ booking.start_date }} to {{ booking.end_date }}</p>
+    </div>
+    <a href="{{ url_for('admin.bookings_index') }}" class="btn btn-outline">← All Bookings</a>
+</div>
+
+<div class="detail-layout">
+    <div class="detail-main">
+        <!-- Booking Details -->
+        <div class="detail-card">
+            <div class="detail-card-header">
+                <h2>Stay Details</h2>
+                <span class="badge badge-{{ booking.status }} badge-lg">{{ booking.status }}</span>
+            </div>
+
+            <div class="detail-grid">
+                <div class="detail-item">
+                    <span class="detail-label">Guest</span>
+                    <span class="detail-value">{{ booking.user.first_name }} {{ booking.user.last_name }}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Email</span>
+                    <span class="detail-value">{{ booking.user.email }}</span>
+                </div>
+                {% if booking.user.phone_number %}
+                <div class="detail-item">
+                    <span class="detail-label">Phone</span>
+                    <span class="detail-value">{{ booking.user.phone_number }}</span>
+                </div>
+                {% endif %}
+                <div class="detail-item">
+                    <span class="detail-label">Check-in</span>
+                    <span class="detail-value">{{ booking.start_date }}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Check-out</span>
+                    <span class="detail-value">{{ booking.end_date }}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Guests</span>
+                    <span class="detail-value">{{ booking.guests }}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Total Price</span>
+                    <span class="detail-value price">${{ "%.2f" | format(booking.total_price) }}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Submitted</span>
+                    <span class="detail-value">{{ booking.created_at[:10] }}</span>
+                </div>
+            </div>
+
+            {% if booking.special_requests %}
+            <div class="detail-notes">
+                <span class="detail-label">Special Requests</span>
+                <p>{{ booking.special_requests }}</p>
+            </div>
+            {% endif %}
+
+            {% if booking.admin_notes %}
+            <div class="detail-notes admin-notes">
+                <span class="detail-label">Host Notes</span>
+                <p>{{ booking.admin_notes }}</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Approve / Reject Actions (only for pending) -->
+        {% if booking.status == 'pending' %}
+        <div class="admin-actions">
+            <h3>Take Action</h3>
+            <div class="action-forms">
+                <form action="{{ url_for('admin.bookings_approve', booking_id=booking.id) }}" method="POST" class="action-form">
+                    <div class="form-group">
+                        <label for="approve_notes">Note to guest (optional)</label>
+                        <input type="text" id="approve_notes" name="admin_notes"
+                               placeholder="e.g. Looking forward to hosting you!">
+                    </div>
+                    <button type="submit" class="btn btn-success">✓ Approve Booking</button>
+                </form>
+
+                <form action="{{ url_for('admin.bookings_reject', booking_id=booking.id) }}" method="POST" class="action-form">
+                    <div class="form-group">
+                        <label for="reject_notes">Reason for rejection <span class="required">*</span></label>
+                        <input type="text" id="reject_notes" name="admin_notes"
+                               placeholder="e.g. Dates are already reserved" required>
+                    </div>
+                    <button type="submit" class="btn btn-danger">✗ Reject Booking</button>
+                </form>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="detail-sidebar">
+        <div class="info-card">
+            <h3>Quick Actions</h3>
+            <ul class="quick-links">
+                <li><a href="{{ url_for('admin.bookings_index') }}?status=pending">View all pending</a></li>
+                <li><a href="{{ url_for('admin.users_index') }}">Manage users</a></li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

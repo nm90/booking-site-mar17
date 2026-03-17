@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}Moderate Reviews{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1>Reviews</h1>
+        <p class="subtitle">Moderate guest feedback</p>
+    </div>
+</div>
+
+<div class="filter-tabs">
+    <a href="{{ url_for('admin.reviews_index') }}"
+       class="filter-tab {% if not current_status %}active{% endif %}">All</a>
+    <a href="?status=pending"
+       class="filter-tab {% if current_status == 'pending' %}active{% endif %}">Pending</a>
+    <a href="?status=approved"
+       class="filter-tab {% if current_status == 'approved' %}active{% endif %}">Approved</a>
+    <a href="?status=rejected"
+       class="filter-tab {% if current_status == 'rejected' %}active{% endif %}">Rejected</a>
+</div>
+
+{% if reviews %}
+    <div class="review-list">
+        {% for review in reviews %}
+        <div class="review-card {% if review.status == 'pending' %}review-pending{% endif %}">
+            <div class="review-card-header">
+                <div class="review-meta">
+                    <strong>{{ review.user.first_name }} {{ review.user.last_name }}</strong>
+                    <span class="text-muted">· Booking #{{ review.booking_id }}</span>
+                    <span class="text-muted">· {{ review.created_at[:10] }}</span>
+                </div>
+                <div class="review-right">
+                    <div class="stars">{{ '★' * review.rating }}{{ '☆' * (5 - review.rating) }}</div>
+                    <span class="badge badge-{{ review.status }}">{{ review.status }}</span>
+                </div>
+            </div>
+
+            {% if review.title %}
+            <h4 class="review-title">{{ review.title }}</h4>
+            {% endif %}
+            <p class="review-content">{{ review.content }}</p>
+
+            {% if review.status == 'pending' %}
+            <div class="review-actions">
+                <form action="{{ url_for('admin.reviews_approve', review_id=review.id) }}" method="POST" style="display:inline">
+                    <button type="submit" class="btn btn-success btn-sm">✓ Approve</button>
+                </form>
+                <form action="{{ url_for('admin.reviews_reject', review_id=review.id) }}" method="POST"
+                      style="display:inline"
+                      onsubmit="return confirm('Reject this review?')">
+                    <button type="submit" class="btn btn-danger btn-sm">✗ Reject</button>
+                </form>
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="empty-state">
+        <div class="empty-icon">✍️</div>
+        <p>No reviews {% if current_status %}with status "{{ current_status }}"{% endif %}.</p>
+    </div>
+{% endif %}
+{% endblock %}
