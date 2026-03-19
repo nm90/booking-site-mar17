@@ -5,7 +5,7 @@ Inserts sample users, properties, bookings, reviews, and adventures.
 
 import sqlite3
 import os
-import hashlib
+import bcrypt
 
 
 DB_PATH = os.environ.get(
@@ -15,8 +15,8 @@ DB_PATH = os.environ.get(
 
 
 def hash_password(password: str) -> str:
-    """Simple password hash for seed data."""
-    return hashlib.sha256(password.encode()).hexdigest()
+    """Hash a password using bcrypt with cost factor 12."""
+    return bcrypt.hashpw(password.encode(), bcrypt.gensalt(rounds=12)).decode()
 
 
 def insert_seed_data():
