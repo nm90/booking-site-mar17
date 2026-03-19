@@ -10,6 +10,7 @@ MVC Role: MODEL
 
 import re
 import hashlib
+import bcrypt
 from typing import Dict, List, Optional
 from backend.database.connection import execute_query
 
@@ -30,8 +31,20 @@ class User:
 
     @staticmethod
     def hash_password(password: str) -> str:
-        """Hash a password using SHA-256."""
-        return hashlib.sha256(password.encode()).hexdigest()
+        """Hash a password using bcrypt with cost factor 12."""
+        return bcrypt.hashpw(password.encode(), bcrypt.gensalt(rounds=12)).decode()
+
+    @staticmethod
+    def _is_sha256_hash(password_hash: str) -> bool:
+        """Return True if the stored hash looks like a raw SHA-256 hex digest."""
+        return len(password_hash) == 64 and all(c in '0123456789abcdef' for c in password_hash)
+
+    @staticmethod
+    def _verify_password(password: str, password_hash: str) -> bool:
+        """Verify a plaintext password against a stored hash (bcrypt or legacy SHA-256)."""
+        if User._is_sha256_hash(password_hash):
+            return hashlib.sha256(password.encode()).hexdigest() == password_hash
+        return bcrypt.checkpw(password.encode(), password_hash.encode())
 
     @staticmethod
     def validate(email: str, first_name: str, last_name: str,
@@ -114,17 +127,29 @@ class User:
         """
         Authenticate a user with email and password.
 
+        Legacy SHA-256 hashes are transparently migrated to bcrypt on first
+        successful login so that all active accounts eventually use bcrypt.
+
         Returns user dict if credentials are valid, None otherwise.
         """
         user = User.get_by_email(email)
         if not user:
             return None
 
-        if user['password_hash'] != User.hash_password(password):
+        if not User._verify_password(password, user['password_hash']):
             return None
 
         if user['status'] != 'active':
             return None
+
+        # Migrate legacy SHA-256 hash to bcrypt on successful login
+        if User._is_sha256_hash(user['password_hash']):
+            new_hash = User.hash_password(password)
+            execute_query(
+                "UPDATE users SET password_hash=?, updated_at=CURRENT_TIMESTAMP WHERE id=?",
+                (new_hash, user['id']),
+                commit=True
+            )
 
         # Return safe user dict (without password_hash)
         return User.get_by_id(user['id'])
