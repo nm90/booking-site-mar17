@@ -14,6 +14,7 @@ import sys
 import sqlite3
 import logging
 from flask import Flask, jsonify, request, session, render_template, redirect, url_for
+from flask_wtf.csrf import CSRFProtect
 
 # Add project root to sys.path
 if __name__ == '__main__' or __package__ is None:
@@ -59,6 +60,7 @@ def setup_logging():
 # APPLICATION INITIALIZATION
 # ============================================================================
 app = Flask(__name__)
+csrf = CSRFProtect(app)
 logger = setup_logging()
 
 # ============================================================================
@@ -197,6 +199,13 @@ def internal_error(error):
 
 @app.errorhandler(403)
 def forbidden(error):
+    return render_template('errors/403.html'), 403
+
+
+from flask_wtf.csrf import CSRFError
+
+@app.errorhandler(CSRFError)
+def handle_csrf_error(error):
     return render_template('errors/403.html'), 403
 
 

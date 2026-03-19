@@ -13,6 +13,7 @@
 <div class="form-page">
     <div class="form-card">
         <form action="{{ url_for('portal.bookings_create') }}" method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
             <div class="property-preview">
                 <div class="property-preview-info">

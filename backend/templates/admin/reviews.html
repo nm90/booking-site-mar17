@@ -44,11 +44,13 @@
             {% if review.status == 'pending' %}
             <div class="review-actions">
                 <form action="{{ url_for('admin.reviews_approve', review_id=review.id) }}" method="POST" style="display:inline">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <button type="submit" class="btn btn-success btn-sm">✓ Approve</button>
                 </form>
                 <form action="{{ url_for('admin.reviews_reject', review_id=review.id) }}" method="POST"
                       style="display:inline"
                       onsubmit="return confirm('Reject this review?')">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <button type="submit" class="btn btn-danger btn-sm">✗ Reject</button>
                 </form>
             </div>

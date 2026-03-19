@@ -51,11 +51,13 @@
                 <td>
                     {% if ab.status == 'pending' %}
                     <form action="{{ url_for('admin.adventures_approve', ab_id=ab.id) }}" method="POST" style="display:inline">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <button type="submit" class="btn btn-success btn-sm">✓</button>
                     </form>
                     <form action="{{ url_for('admin.adventures_reject', ab_id=ab.id) }}" method="POST"
                           style="display:inline"
                           onsubmit="return confirm('Reject this adventure booking?')">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <button type="submit" class="btn btn-danger btn-sm">✗</button>
                     </form>
                     {% else %}
