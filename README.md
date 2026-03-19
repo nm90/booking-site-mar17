@@ -42,11 +42,17 @@ backend/
 # Install dependencies
 pip install -r requirements.txt
 
+# Generate a secure SECRET_KEY (required — the app refuses to start without one)
+export SECRET_KEY=$(python3 -c "import secrets; print(secrets.token_hex(32))")
+
 # Run the server
 python backend/app.py
 ```
 
 Visit http://localhost:5000
+
+> **Security requirement:** `SECRET_KEY` must be set to a cryptographically random value.
+> The application will exit immediately if it detects a missing or well-known insecure default key.
 
 ### Demo Accounts
 
@@ -60,6 +66,13 @@ Visit http://localhost:5000
 
 ```bash
 docker-compose up --build
+```
+
+The Docker entrypoint automatically generates a random `SECRET_KEY` if one is not provided.
+To use a persistent key across restarts, pass it explicitly:
+
+```bash
+SECRET_KEY=$(python3 -c "import secrets; print(secrets.token_hex(32))") docker-compose up --build
 ```
 
 ## Features
