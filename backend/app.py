@@ -64,7 +64,22 @@ logger = setup_logging()
 # ============================================================================
 # CONFIGURATION
 # ============================================================================
-app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key-change-in-production')
+_INSECURE_DEFAULTS = {
+    'dev-secret-key-change-in-production',
+    'change-this-in-production',
+    'secret',
+    'supersecret',
+    '',
+}
+
+_secret_key = os.environ.get('SECRET_KEY', '')
+if _secret_key in _INSECURE_DEFAULTS:
+    print("FATAL: SECRET_KEY is not set or uses a known insecure default value.")
+    print("Set a cryptographically random SECRET_KEY environment variable before starting.")
+    print("Generate one with:  python3 -c \"import secrets; print(secrets.token_hex(32))\"")
+    sys.exit(1)
+
+app.config['SECRET_KEY'] = _secret_key
 
 DATABASE_DIR = os.path.join(os.path.dirname(__file__), 'database')
 app.config['DATABASE_PATH'] = os.environ.get(
