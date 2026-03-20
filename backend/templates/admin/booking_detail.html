@@ -77,6 +77,7 @@
             <h3>Take Action</h3>
             <div class="action-forms">
                 <form action="{{ url_for('admin.bookings_approve', booking_id=booking.id) }}" method="POST" class="action-form">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <div class="form-group">
                         <label for="approve_notes">Note to guest (optional)</label>
                         <input type="text" id="approve_notes" name="admin_notes"
@@ -86,6 +87,7 @@
                 </form>
 
                 <form action="{{ url_for('admin.bookings_reject', booking_id=booking.id) }}" method="POST" class="action-form">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <div class="form-group">
                         <label for="reject_notes">Reason for rejection <span class="required">*</span></label>
                         <input type="text" id="reject_notes" name="admin_notes"
