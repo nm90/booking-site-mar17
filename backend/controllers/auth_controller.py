@@ -23,26 +23,44 @@ auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
 
 
 def login_required(f):
-    """Decorator: redirect to login if user is not authenticated."""
+    """Decorator: redirect to login if user is not authenticated.
+
+    Re-verifies user existence and active status from the database on every
+    request so that suspended or deleted accounts are denied immediately.
+    """
     from functools import wraps
     @wraps(f)
     def decorated(*args, **kwargs):
         if 'user_id' not in session:
             flash('Please log in to access this page.', 'warning')
+            return redirect(url_for('auth.login'))
+        user = User.get_by_id(session['user_id'])
+        if not user or user['status'] != 'active':
+            session.clear()
+            flash('Your account is no longer active. Please log in again.', 'warning')
             return redirect(url_for('auth.login'))
         return f(*args, **kwargs)
     return decorated
 
 
 def admin_required(f):
-    """Decorator: redirect to home if user is not an admin."""
+    """Decorator: redirect to home if user is not an admin.
+
+    Re-verifies user existence, active status, and admin role from the database
+    on every request so that revoked privileges take effect immediately.
+    """
     from functools import wraps
     @wraps(f)
     def decorated(*args, **kwargs):
         if 'user_id' not in session:
             flash('Please log in to access this page.', 'warning')
             return redirect(url_for('auth.login'))
-        if session.get('user_role') != 'admin':
+        user = User.get_by_id(session['user_id'])
+        if not user or user['status'] != 'active':
+            session.clear()
+            flash('Your account is no longer active. Please log in again.', 'warning')
+            return redirect(url_for('auth.login'))
+        if user['role'] != 'admin':
             flash('Access denied. Admin privileges required.', 'error')
             return redirect(url_for('portal.dashboard'))
         return f(*args, **kwargs)
