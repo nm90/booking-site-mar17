@@ -85,11 +85,14 @@ def bookings_approve(booking_id):
     """Approve a pending booking."""
     admin_notes = request.form.get('admin_notes', '').strip() or None
 
-    booking = Booking.update_status(booking_id, 'approved', admin_notes)
-    if not booking:
-        flash('Booking not found.', 'error')
-    else:
-        flash(f'Booking #{booking_id} has been approved.', 'success')
+    try:
+        booking = Booking.update_status(booking_id, 'approved', admin_notes)
+        if not booking:
+            flash('Booking not found.', 'error')
+        else:
+            flash(f'Booking #{booking_id} has been approved.', 'success')
+    except ValueError as e:
+        flash(str(e), 'error')
 
     return redirect(url_for('admin.bookings_show', booking_id=booking_id))
 
@@ -104,11 +107,14 @@ def bookings_reject(booking_id):
         flash('A reason is required when rejecting a booking.', 'error')
         return redirect(url_for('admin.bookings_show', booking_id=booking_id))
 
-    booking = Booking.update_status(booking_id, 'rejected', admin_notes)
-    if not booking:
-        flash('Booking not found.', 'error')
-    else:
-        flash(f'Booking #{booking_id} has been rejected.', 'success')
+    try:
+        booking = Booking.update_status(booking_id, 'rejected', admin_notes)
+        if not booking:
+            flash('Booking not found.', 'error')
+        else:
+            flash(f'Booking #{booking_id} has been rejected.', 'success')
+    except ValueError as e:
+        flash(str(e), 'error')
 
     return redirect(url_for('admin.bookings_show', booking_id=booking_id))
 

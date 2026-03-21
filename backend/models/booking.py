@@ -23,6 +23,13 @@ class Booking:
 
     VALID_STATUSES = ['pending', 'approved', 'rejected', 'cancelled']
 
+    ALLOWED_TRANSITIONS = {
+        'pending': ['approved', 'rejected'],
+        'approved': ['cancelled'],
+        'rejected': [],
+        'cancelled': [],
+    }
+
     @staticmethod
     def validate(start_date: str, end_date: str, guests: int) -> None:
         """
@@ -221,6 +228,13 @@ class Booking:
         existing = Booking.get_by_id(booking_id)
         if not existing:
             return None
+
+        current_status = existing['status']
+        allowed = Booking.ALLOWED_TRANSITIONS.get(current_status, [])
+        if status not in allowed:
+            raise ValueError(
+                f"Cannot transition from '{current_status}' to '{status}'"
+            )
 
         execute_query(
             "UPDATE bookings SET status=?, admin_notes=?, updated_at=CURRENT_TIMESTAMP WHERE id=?",
