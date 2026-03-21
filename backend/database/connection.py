@@ -4,11 +4,13 @@ Database connection utilities. Handles SQLite connection and query execution.
 MVC Role: Infrastructure Layer
 - Provides low-level database access
 - Models use these functions to persist data
+- Reuses one connection per Flask request via g (teardown registered in app.py)
 """
 
 import sqlite3
 import os
 from typing import Any, List, Optional
+from flask import g
 
 
 DB_PATH = os.environ.get(
@@ -18,11 +20,19 @@ DB_PATH = os.environ.get(
 
 
 def get_connection() -> sqlite3.Connection:
-    """Create and return a connection to the SQLite database."""
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-    conn.execute("PRAGMA foreign_keys = ON;")
-    return conn
+    """Return the per-request connection, creating it if needed."""
+    if 'db' not in g:
+        g.db = sqlite3.connect(DB_PATH)
+        g.db.row_factory = sqlite3.Row
+        g.db.execute("PRAGMA foreign_keys = ON;")
+    return g.db
+
+
+def close_connection(exception=None) -> None:
+    """Close the per-request connection. Registered with app.teardown_appcontext."""
+    db = g.pop('db', None)
+    if db is not None:
+        db.close()
 
 
 def execute_query(query: str, params: tuple = (), fetch_one: bool = False,
@@ -43,9 +53,8 @@ def execute_query(query: str, params: tuple = (), fetch_one: bool = False,
         - commit: lastrowid
         - Otherwise: None
     """
-    conn = None
+    conn = get_connection()
     try:
-        conn = get_connection()
         cursor = conn.cursor()
         cursor.execute(query, params)
 
@@ -68,10 +77,6 @@ def execute_query(query: str, params: tuple = (), fetch_one: bool = False,
 
     except sqlite3.Error as e:
         raise
-
-    finally:
-        if conn:
-            conn.close()
 
 
 def _parse_integrity_error(error_message: str) -> str:

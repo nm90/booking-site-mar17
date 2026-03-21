@@ -63,6 +63,9 @@ app = Flask(__name__)
 csrf = CSRFProtect(app)
 logger = setup_logging()
 
+from backend.database.connection import close_connection
+app.teardown_appcontext(close_connection)
+
 # ============================================================================
 # CONFIGURATION
 # ============================================================================
