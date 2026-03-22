@@ -10,7 +10,7 @@ MVC Role: MODEL
 
 from typing import Dict, List, Optional
 from datetime import date, datetime
-from backend.database.connection import execute_query
+from backend.database.connection import execute_query, begin_immediate
 
 
 class Booking:
@@ -109,21 +109,22 @@ class Booking:
         4. Returns complete booking dict
         """
         Booking.validate(start_date, end_date, guests)
-
-        if not Booking.check_availability(start_date, end_date):
-            raise ValueError("The property is not available for the selected dates")
-
         total_price = Booking.calculate_price(start_date, end_date)
 
-        query = """
-            INSERT INTO bookings (user_id, property_id, start_date, end_date, status, total_price, guests, special_requests)
-            VALUES (?, 1, ?, ?, 'pending', ?, ?, ?)
-        """
-        booking_id = execute_query(
-            query,
-            (user_id, start_date, end_date, total_price, int(guests), special_requests),
-            commit=True
-        )
+        with begin_immediate():
+            if not Booking.check_availability(start_date, end_date):
+                raise ValueError("The property is not available for the selected dates")
+
+            query = """
+                INSERT INTO bookings (user_id, property_id, start_date, end_date, status, total_price, guests, special_requests)
+                VALUES (?, 1, ?, ?, 'pending', ?, ?, ?)
+            """
+            booking_id = execute_query(
+                query,
+                (user_id, start_date, end_date, total_price, int(guests), special_requests),
+                commit=True
+            )
+
         return Booking.get_by_id(booking_id, include_relations=True)
 
     @staticmethod

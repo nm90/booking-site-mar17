@@ -9,6 +9,7 @@ MVC Role: Infrastructure Layer
 
 import sqlite3
 import os
+from contextlib import contextmanager
 from typing import Any, List, Optional
 from flask import g
 
@@ -22,7 +23,7 @@ DB_PATH = os.environ.get(
 def get_connection() -> sqlite3.Connection:
     """Return the per-request connection, creating it if needed."""
     if 'db' not in g:
-        g.db = sqlite3.connect(DB_PATH)
+        g.db = sqlite3.connect(DB_PATH, timeout=10)
         g.db.row_factory = sqlite3.Row
         g.db.execute("PRAGMA foreign_keys = ON;")
     return g.db
@@ -33,6 +34,23 @@ def close_connection(exception=None) -> None:
     db = g.pop('db', None)
     if db is not None:
         db.close()
+
+
+@contextmanager
+def begin_immediate():
+    """Wrap multiple execute_query() calls in a BEGIN IMMEDIATE transaction."""
+    conn = get_connection()
+    conn.execute("BEGIN IMMEDIATE")
+    g.in_transaction = True
+    try:
+        yield conn
+    except Exception:
+        conn.rollback()
+        raise
+    else:
+        conn.commit()
+    finally:
+        g.in_transaction = False
 
 
 def execute_query(query: str, params: tuple = (), fetch_one: bool = False,
@@ -59,7 +77,8 @@ def execute_query(query: str, params: tuple = (), fetch_one: bool = False,
         cursor.execute(query, params)
 
         if commit:
-            conn.commit()
+            if not getattr(g, 'in_transaction', False):
+                conn.commit()
             return cursor.lastrowid
         elif fetch_one:
             result = cursor.fetchone()
