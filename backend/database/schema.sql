@@ -53,7 +53,7 @@ CREATE TABLE IF NOT EXISTS bookings (
     start_date DATE NOT NULL,
     end_date DATE NOT NULL,
     status TEXT NOT NULL DEFAULT 'pending'
-        CHECK (status IN ('pending', 'approved', 'rejected', 'cancelled')),
+        CHECK (status IN ('pending', 'approved', 'rejected', 'cancelled', 'completed')),
     total_price REAL NOT NULL DEFAULT 0,
     guests INTEGER NOT NULL DEFAULT 1,
     special_requests TEXT,

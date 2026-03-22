@@ -60,8 +60,8 @@ class Review:
         if not booking:
             raise ValueError("Booking not found or does not belong to you")
 
-        if booking['status'] not in ['approved']:
-            raise ValueError("You can only review approved bookings")
+        if booking['status'] not in ['completed']:
+            raise ValueError("You can only review completed stays")
 
         # Check not already reviewed
         existing = execute_query(

@@ -19,16 +19,18 @@ class Booking:
     Booking model for managing stay reservations.
 
     Lifecycle: pending → approved / rejected
-                        → cancelled (by customer or admin)
+                        → completed (auto, after checkout)
+                        → cancelled (by customer or admin, before completion)
     """
 
-    VALID_STATUSES = ['pending', 'approved', 'rejected', 'cancelled']
+    VALID_STATUSES = ['pending', 'approved', 'rejected', 'cancelled', 'completed']
 
     ALLOWED_TRANSITIONS = {
         'pending': ['approved', 'rejected'],
-        'approved': ['cancelled'],
+        'approved': ['cancelled', 'completed'],
         'rejected': [],
         'cancelled': [],
+        'completed': [],
     }
 
     @staticmethod
@@ -85,7 +87,7 @@ class Booking:
         """
         query = """
             SELECT id FROM bookings
-            WHERE status IN ('pending', 'approved')
+            WHERE status IN ('pending', 'approved', 'completed')
             AND property_id = ?
             AND start_date < ?
             AND end_date > ?
@@ -271,6 +273,15 @@ class Booking:
             (status, admin_notes, booking_id), commit=True
         )
         return Booking.get_by_id(booking_id, include_relations=True)
+
+    @staticmethod
+    def transition_completed():
+        """Auto-transition approved bookings past checkout to 'completed'."""
+        execute_query(
+            """UPDATE bookings SET status='completed', updated_at=CURRENT_TIMESTAMP
+               WHERE status='approved' AND end_date <= date('now')""",
+            commit=True
+        )
 
     @staticmethod
     def cancel(booking_id: int, user_id: int) -> Optional[Dict]:

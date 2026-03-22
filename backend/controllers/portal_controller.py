@@ -169,8 +169,8 @@ def reviews_new(booking_id):
         flash('Booking not found.', 'error')
         return redirect(url_for('portal.bookings_index'))
 
-    if booking['status'] != 'approved':
-        flash('You can only review approved bookings.', 'error')
+    if booking['status'] != 'completed':
+        flash('You can only review completed stays.', 'error')
         return redirect(url_for('portal.bookings_show', booking_id=booking_id))
 
     return render_template('feedback/new.html', booking=booking)
