@@ -9,6 +9,8 @@ MVC Role: CONTROLLER
 URL Prefix: /portal
 Routes:
     GET  /portal/                    - Customer dashboard
+    GET  /portal/profile             - Show and edit user profile
+    POST /portal/profile             - Update user profile
     GET  /portal/bookings            - View all bookings
     GET  /portal/bookings/new        - Show booking form
     POST /portal/bookings            - Submit booking request
@@ -26,6 +28,7 @@ from backend.models.booking import Booking
 from backend.models.review import Review
 from backend.models.adventure import Adventure, AdventureBooking
 from backend.models.property import Property
+from backend.models.user import User
 from backend.controllers.auth_controller import login_required
 
 portal_bp = Blueprint('portal', __name__, url_prefix='/portal')
@@ -49,6 +52,67 @@ def dashboard():
     return render_template('portal/dashboard.html',
                            bookings=bookings,
                            adventure_bookings=adventure_bookings)
+
+
+@portal_bp.route('/profile', methods=['GET'])
+@login_required
+def profile():
+    """Show the current user's profile details and edit form."""
+    user = User.get_by_id(session['user_id'])
+    if not user:
+        session.clear()
+        flash('Your account could not be found. Please log in again.', 'warning')
+        return redirect(url_for('auth.login'))
+
+    return render_template('portal/profile.html', form_data=user)
+
+
+@portal_bp.route('/profile', methods=['POST'])
+@login_required
+def profile_update():
+    """Update the current user's profile details."""
+    user_id = session['user_id']
+    user = User.get_by_id(user_id)
+    if not user:
+        session.clear()
+        flash('Your account could not be found. Please log in again.', 'warning')
+        return redirect(url_for('auth.login'))
+
+    first_name = request.form.get('first_name', '').strip()
+    last_name = request.form.get('last_name', '').strip()
+    email = request.form.get('email', '').strip()
+    form_data = {
+        'first_name': first_name,
+        'last_name': last_name,
+        'email': email
+    }
+
+    try:
+        updated_user = User.update(
+            user_id=user_id,
+            first_name=first_name,
+            last_name=last_name,
+            email=email
+        )
+        if not updated_user:
+            session.clear()
+            flash('Your account could not be found. Please log in again.', 'warning')
+            return redirect(url_for('auth.login'))
+
+        session['user_first_name'] = updated_user['first_name']
+        session['user_email'] = updated_user['email']
+
+        flash('Profile updated successfully.', 'success')
+        return redirect(url_for('portal.profile'))
+
+    except ValueError as e:
+        flash(str(e), 'error')
+        return render_template('portal/profile.html', form_data=form_data)
+
+    except Exception as e:
+        error_message = getattr(e, 'user_message', str(e))
+        flash(error_message, 'error')
+        return render_template('portal/profile.html', form_data=form_data)
 
 
 # ============================================================================

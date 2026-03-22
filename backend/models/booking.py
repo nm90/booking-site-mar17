@@ -143,6 +143,12 @@ class Booking:
         """Build a booking dict with nested user and property from a joined row."""
         booking = {k: v for k, v in row.items()
                    if k == 'user_id' or (not k.startswith('user_') and not k.startswith('property_'))}
+        try:
+            start = date.fromisoformat(booking['start_date'])
+            end = date.fromisoformat(booking['end_date'])
+            booking['nights'] = (end - start).days
+        except (KeyError, TypeError, ValueError):
+            booking['nights'] = None
         if 'user_first_name' in row:
             booking['user'] = {
                 'first_name': row['user_first_name'],
