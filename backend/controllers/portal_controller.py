@@ -25,6 +25,7 @@ from flask import Blueprint, request, redirect, url_for, flash, session, render_
 from backend.models.booking import Booking
 from backend.models.review import Review
 from backend.models.adventure import Adventure, AdventureBooking
+from backend.models.property import Property
 from backend.controllers.auth_controller import login_required
 
 portal_bp = Blueprint('portal', __name__, url_prefix='/portal')
@@ -66,7 +67,9 @@ def bookings_index():
 @login_required
 def bookings_new():
     """Show the booking request form."""
-    return render_template('bookings/new.html')
+    properties = Property.get_all(active_only=True)
+    selected_id = request.args.get('property_id', type=int)
+    return render_template('bookings/new.html', properties=properties, property_id=selected_id)
 
 
 @portal_bp.route('/bookings', methods=['POST'])
@@ -77,7 +80,10 @@ def bookings_create():
     start_date = request.form.get('start_date', '').strip()
     end_date = request.form.get('end_date', '').strip()
     guests = request.form.get('guests', '1')
+    property_id = request.form.get('property_id', type=int)
     special_requests = request.form.get('special_requests', '').strip() or None
+
+    properties = Property.get_all(active_only=True)
 
     try:
         booking = Booking.create(
@@ -85,6 +91,7 @@ def bookings_create():
             start_date=start_date,
             end_date=end_date,
             guests=guests,
+            property_id=property_id,
             special_requests=special_requests
         )
         flash('Booking request submitted! We will review it shortly.', 'success')
@@ -94,14 +101,16 @@ def bookings_create():
         flash(str(e), 'error')
         return render_template('bookings/new.html',
                                start_date=start_date, end_date=end_date,
-                               guests=guests, special_requests=special_requests)
+                               guests=guests, special_requests=special_requests,
+                               properties=properties, property_id=property_id)
 
     except Exception as e:
         error_message = getattr(e, 'user_message', str(e))
         flash(error_message, 'error')
         return render_template('bookings/new.html',
                                start_date=start_date, end_date=end_date,
-                               guests=guests)
+                               guests=guests, properties=properties,
+                               property_id=property_id)
 
 
 @portal_bp.route('/bookings/<int:booking_id>')

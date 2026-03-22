@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}Manage Properties{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1>Properties</h1>
+        <p class="subtitle">Manage vacation rental listings</p>
+    </div>
+    <a href="{{ url_for('admin.properties_new') }}" class="btn btn-primary">+ Add Property</a>
+</div>
+
+{% if properties %}
+<div class="table-container">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Name</th>
+                <th>Location</th>
+                <th>Capacity</th>
+                <th>Price/Night</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for prop in properties %}
+            <tr>
+                <td class="text-muted">{{ prop.id }}</td>
+                <td><strong>{{ prop.name }}</strong></td>
+                <td>{{ prop.location }}</td>
+                <td>{{ prop.capacity }} guests</td>
+                <td>${{ "%.2f" | format(prop.price_per_night) }}</td>
+                <td><span class="badge badge-status-{{ prop.status }}">{{ prop.status }}</span></td>
+                <td>
+                    <a href="{{ url_for('admin.properties_edit', property_id=prop.id) }}" class="link-action">Edit</a>
+                    <form action="{{ url_for('admin.properties_delete', property_id=prop.id) }}" method="POST" style="display:inline">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-danger btn-sm"
+                                onclick="return confirm('Delete this property?')">Delete</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="empty-state">
+    <div class="empty-icon">🏠</div>
+    <h2>No properties yet</h2>
+    <p>Add your first vacation rental property.</p>
+    <a href="{{ url_for('admin.properties_new') }}" class="btn btn-primary">Add Property</a>
+</div>
+{% endif %}
+{% endblock %}
