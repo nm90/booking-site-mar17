@@ -5,7 +5,7 @@
 <div class="page-header">
     <div>
         <h1>Request a Booking</h1>
-        <p class="subtitle">Choose your dates and we'll confirm availability</p>
+        <p class="subtitle">Choose your property and dates, and we'll confirm availability</p>
     </div>
     <a href="{{ url_for('portal.bookings_index') }}" class="btn btn-outline">← Back</a>
 </div>
@@ -15,11 +15,27 @@
         <form action="{{ url_for('portal.bookings_create') }}" method="POST">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-            <div class="property-preview">
+            <div class="form-group">
+                <label for="property_id">Select Property</label>
+                <select id="property_id" name="property_id" required>
+                    <option value="">— Choose a property —</option>
+                    {% for prop in properties %}
+                    <option value="{{ prop.id }}"
+                            data-price="{{ prop.price_per_night }}"
+                            data-capacity="{{ prop.capacity }}"
+                            data-location="{{ prop.location }}"
+                            {{ "selected" if property_id == prop.id }}>
+                        {{ prop.name }} — {{ prop.location }} (${{ "%.2f" | format(prop.price_per_night) }}/night, up to {{ prop.capacity }} guests)
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div id="property-preview" class="property-preview" style="display:none">
                 <div class="property-preview-info">
-                    <h3>🏖️ Sunset Villa — San Pedro Town, Belize</h3>
-                    <p>Beachfront villa · 4 bedrooms · Private pool · Up to 8 guests</p>
-                    <p class="price-hint"><strong>$450 / night</strong></p>
+                    <h3 id="preview-name"></h3>
+                    <p id="preview-details"></p>
+                    <p class="price-hint"><strong id="preview-price"></strong></p>
                 </div>
             </div>
 
@@ -40,8 +56,8 @@
                 <label for="guests">Number of guests</label>
                 <input type="number" id="guests" name="guests"
                        value="{{ guests or '2' }}"
-                       min="1" max="8" required>
-                <p class="form-hint">Maximum 8 guests</p>
+                       min="1" max="20" required>
+                <p class="form-hint" id="guests-hint">Select a property to see max guests</p>
             </div>
 
             <div class="form-group">
@@ -62,36 +78,82 @@
         <div class="info-card">
             <h3>How it works</h3>
             <ol class="steps">
-                <li>Submit your dates and we'll check availability</li>
+                <li>Select a property and submit your dates</li>
                 <li>We review your request (usually within 24 hours)</li>
                 <li>You'll receive an approval or alternative dates</li>
                 <li>Once approved, your stay is confirmed!</li>
             </ol>
         </div>
-        <div class="info-card">
+        <div class="info-card" id="pricing-card">
             <h3>Pricing</h3>
-            <p><strong>$450</strong> per night</p>
+            <p id="aside-price">Select a property to see pricing</p>
             <p class="text-muted text-sm">Total is calculated automatically based on your selected dates.</p>
         </div>
     </div>
 </div>
 
 <script>
-    // Auto-calculate price hint
+    const propertySelect = document.getElementById('property_id');
     const startInput = document.getElementById('start_date');
     const endInput = document.getElementById('end_date');
+    const guestsInput = document.getElementById('guests');
+    const guestsHint = document.getElementById('guests-hint');
+    const preview = document.getElementById('property-preview');
+    const previewName = document.getElementById('preview-name');
+    const previewDetails = document.getElementById('preview-details');
+    const previewPrice = document.getElementById('preview-price');
+    const asidePrice = document.getElementById('aside-price');
+
+    function getSelectedProperty() {
+        const opt = propertySelect.selectedOptions[0];
+        if (!opt || !opt.value) return null;
+        return {
+            price: parseFloat(opt.dataset.price),
+            capacity: parseInt(opt.dataset.capacity),
+            location: opt.dataset.location,
+            name: opt.text.split(' — ')[0]
+        };
+    }
+
+    function updatePropertyPreview() {
+        const prop = getSelectedProperty();
+        if (!prop) {
+            preview.style.display = 'none';
+            guestsHint.textContent = 'Select a property to see max guests';
+            guestsInput.max = 20;
+            asidePrice.innerHTML = 'Select a property to see pricing';
+            return;
+        }
+        previewName.textContent = prop.name + ' — ' + prop.location;
+        previewDetails.textContent = 'Up to ' + prop.capacity + ' guests';
+        previewPrice.textContent = '$' + prop.price.toFixed(2) + ' / night';
+        preview.style.display = '';
+        guestsInput.max = prop.capacity;
+        guestsHint.textContent = 'Maximum ' + prop.capacity + ' guests';
+        asidePrice.innerHTML = '<strong>$' + prop.price.toFixed(2) + '</strong> per night';
+        if (parseInt(guestsInput.value) > prop.capacity) {
+            guestsInput.value = prop.capacity;
+        }
+        updatePriceHint();
+    }
 
     function updatePriceHint() {
+        const prop = getSelectedProperty();
+        if (!prop) return;
         const start = new Date(startInput.value);
         const end = new Date(endInput.value);
         if (start && end && end > start) {
             const nights = Math.round((end - start) / (1000 * 60 * 60 * 24));
-            const total = (nights * 450).toLocaleString('en-US', {style: 'currency', currency: 'USD'});
-            document.querySelector('.price-hint').textContent = `$450 / night · ${nights} night${nights > 1 ? 's' : ''} = ${total} estimated`;
+            const total = (nights * prop.price).toLocaleString('en-US', {style: 'currency', currency: 'USD'});
+            previewPrice.textContent = '$' + prop.price.toFixed(2) + ' / night \u00b7 ' + nights + ' night' + (nights > 1 ? 's' : '') + ' = ' + total + ' estimated';
         }
     }
 
+    propertySelect.addEventListener('change', updatePropertyPreview);
     startInput.addEventListener('change', updatePriceHint);
     endInput.addEventListener('change', updatePriceHint);
+
+    // Initialize on page load
+    updatePropertyPreview();
 </script>
 {% endblock %}

@@ -44,7 +44,7 @@ def insert_seed_data():
             VALUES (?, ?, ?, ?, ?, ?)
         """, ('bob@example.com', hash_password('pass123'), 'Bob', 'Smith', '555-0102', 'customer'))
 
-        # Property
+        # Properties
         conn.execute("""
             INSERT INTO properties (name, description, location, capacity, price_per_night)
             VALUES (?, ?, ?, ?, ?)
@@ -53,6 +53,26 @@ def insert_seed_data():
             'A beautiful beachfront villa with stunning ocean views, 4 bedrooms and private pool.',
             'San Pedro Town, Belize',
             8, 450.00
+        ))
+
+        conn.execute("""
+            INSERT INTO properties (name, description, location, capacity, price_per_night)
+            VALUES (?, ?, ?, ?, ?)
+        """, (
+            'Ocean Breeze Cottage',
+            'A cozy seaside cottage perfect for couples or small families, steps from the beach.',
+            'Placencia, Belize',
+            4, 250.00
+        ))
+
+        conn.execute("""
+            INSERT INTO properties (name, description, location, capacity, price_per_night)
+            VALUES (?, ?, ?, ?, ?)
+        """, (
+            'Mountain Retreat Lodge',
+            'Spacious lodge nestled in the hills with panoramic views and hiking trails.',
+            'San Ignacio, Belize',
+            12, 600.00
         ))
 
         # Bookings

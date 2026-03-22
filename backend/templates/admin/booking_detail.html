@@ -35,6 +35,10 @@
                 </div>
                 {% endif %}
                 <div class="detail-item">
+                    <span class="detail-label">Property</span>
+                    <span class="detail-value">{{ booking.property.name }}, {{ booking.property.location }}</span>
+                </div>
+                <div class="detail-item">
                     <span class="detail-label">Check-in</span>
                     <span class="detail-value">{{ booking.start_date }}</span>
                 </div>

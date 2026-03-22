@@ -30,6 +30,7 @@
             <tr>
                 <th>#</th>
                 <th>Guest</th>
+                <th>Property</th>
                 <th>Check-in</th>
                 <th>Check-out</th>
                 <th>Guests</th>
@@ -47,6 +48,7 @@
                     <strong>{{ booking.user.first_name }} {{ booking.user.last_name }}</strong>
                     <div class="text-sm text-muted">{{ booking.user.email }}</div>
                 </td>
+                <td>{{ booking.property.name if booking.property else '—' }}</td>
                 <td>{{ booking.start_date }}</td>
                 <td>{{ booking.end_date }}</td>
                 <td>{{ booking.guests }}</td>

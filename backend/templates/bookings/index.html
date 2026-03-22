@@ -5,7 +5,7 @@
 <div class="page-header">
     <div>
         <h1>My Bookings</h1>
-        <p class="subtitle">All your stay requests at Sunset Villa</p>
+        <p class="subtitle">Your stay requests</p>
     </div>
     <a href="{{ url_for('portal.bookings_new') }}" class="btn btn-primary">+ New Booking</a>
 </div>
@@ -16,9 +16,9 @@
             <thead>
                 <tr>
                     <th>#</th>
+                    <th>Property</th>
                     <th>Check-in</th>
                     <th>Check-out</th>
-                    <th>Nights</th>
                     <th>Guests</th>
                     <th>Total</th>
                     <th>Status</th>
@@ -30,9 +30,9 @@
                 {% for booking in bookings %}
                 <tr>
                     <td class="text-muted">#{{ booking.id }}</td>
+                    <td>{{ booking.property.name if booking.property else '—' }}</td>
                     <td>{{ booking.start_date }}</td>
                     <td>{{ booking.end_date }}</td>
-                    <td class="text-muted">—</td>
                     <td>{{ booking.guests }}</td>
                     <td><strong>${{ "%.2f" | format(booking.total_price) }}</strong></td>
                     <td><span class="badge badge-{{ booking.status }}">{{ booking.status }}</span></td>

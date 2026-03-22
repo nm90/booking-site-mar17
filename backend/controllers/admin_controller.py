@@ -28,6 +28,7 @@ from backend.models.booking import Booking
 from backend.models.review import Review
 from backend.models.adventure import Adventure, AdventureBooking
 from backend.models.user import User
+from backend.models.property import Property
 from backend.controllers.auth_controller import admin_required
 
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
@@ -218,3 +219,92 @@ def users_update_status(user_id):
         flash(str(e), 'error')
 
     return redirect(url_for('admin.users_index'))
+
+
+# ============================================================================
+# PROPERTY MANAGEMENT
+# ============================================================================
+@admin_bp.route('/properties')
+@admin_required
+def properties_index():
+    """View all properties."""
+    properties = Property.get_all()
+    return render_template('admin/properties.html', properties=properties)
+
+
+@admin_bp.route('/properties/new')
+@admin_required
+def properties_new():
+    """Show the create property form."""
+    return render_template('admin/property_form.html')
+
+
+@admin_bp.route('/properties', methods=['POST'])
+@admin_required
+def properties_create():
+    """Handle property creation."""
+    name = request.form.get('name', '').strip()
+    description = request.form.get('description', '').strip()
+    location = request.form.get('location', '').strip()
+    capacity = request.form.get('capacity', '')
+    price_per_night = request.form.get('price_per_night', '')
+
+    try:
+        prop = Property.create(name, description, location, capacity, price_per_night)
+        flash(f'Property "{prop["name"]}" created successfully.', 'success')
+        return redirect(url_for('admin.properties_index'))
+    except ValueError as e:
+        flash(str(e), 'error')
+        return render_template('admin/property_form.html',
+                               name=name, description=description, location=location,
+                               capacity=capacity, price_per_night=price_per_night)
+
+
+@admin_bp.route('/properties/<int:property_id>/edit')
+@admin_required
+def properties_edit(property_id):
+    """Show the edit property form."""
+    prop = Property.get_by_id(property_id)
+    if not prop:
+        flash('Property not found.', 'error')
+        return redirect(url_for('admin.properties_index'))
+    return render_template('admin/property_form.html', property=prop)
+
+
+@admin_bp.route('/properties/<int:property_id>', methods=['POST'])
+@admin_required
+def properties_update(property_id):
+    """Handle property update."""
+    name = request.form.get('name', '').strip()
+    description = request.form.get('description', '').strip()
+    location = request.form.get('location', '').strip()
+    capacity = request.form.get('capacity', '')
+    price_per_night = request.form.get('price_per_night', '')
+    status = request.form.get('status', 'active')
+
+    try:
+        prop = Property.update(property_id, name, description, location,
+                               capacity, price_per_night, status)
+        if not prop:
+            flash('Property not found.', 'error')
+        else:
+            flash(f'Property "{prop["name"]}" updated successfully.', 'success')
+        return redirect(url_for('admin.properties_index'))
+    except ValueError as e:
+        flash(str(e), 'error')
+        return render_template('admin/property_form.html',
+                               property={'id': property_id, 'name': name, 'description': description,
+                                         'location': location, 'capacity': capacity,
+                                         'price_per_night': price_per_night, 'status': status})
+
+
+@admin_bp.route('/properties/<int:property_id>/delete', methods=['POST'])
+@admin_required
+def properties_delete(property_id):
+    """Handle property deletion."""
+    try:
+        Property.delete(property_id)
+        flash('Property deleted successfully.', 'success')
+    except ValueError as e:
+        flash(str(e), 'error')
+    return redirect(url_for('admin.properties_index'))

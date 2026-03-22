@@ -11,6 +11,7 @@ MVC Role: MODEL
 from typing import Dict, List, Optional
 from datetime import date, datetime
 from backend.database.connection import execute_query, begin_immediate
+from backend.models.property import Property
 
 
 class Booking:
@@ -31,7 +32,7 @@ class Booking:
     }
 
     @staticmethod
-    def validate(start_date: str, end_date: str, guests: int) -> None:
+    def validate(start_date: str, end_date: str, guests: int, max_capacity: int = None) -> None:
         """
         Validate booking data.
 
@@ -63,11 +64,11 @@ class Booking:
         if guests_int < 1:
             raise ValueError("At least 1 guest is required")
 
-        if guests_int > 20:
-            raise ValueError("Maximum 20 guests allowed per booking")
+        if max_capacity and guests_int > max_capacity:
+            raise ValueError(f"Maximum {max_capacity} guests allowed for this property")
 
     @staticmethod
-    def calculate_price(start_date: str, end_date: str, price_per_night: float = 450.00) -> float:
+    def calculate_price(start_date: str, end_date: str, price_per_night: float) -> float:
         """Calculate total price for a stay."""
         start = date.fromisoformat(start_date)
         end = date.fromisoformat(end_date)
@@ -75,19 +76,21 @@ class Booking:
         return round(nights * price_per_night, 2)
 
     @staticmethod
-    def check_availability(start_date: str, end_date: str, exclude_booking_id: int = None) -> bool:
+    def check_availability(start_date: str, end_date: str, property_id: int,
+                           exclude_booking_id: int = None) -> bool:
         """
-        Check if the property is available for the requested dates.
+        Check if a property is available for the requested dates.
 
         Returns True if available, False if dates overlap with an existing booking.
         """
         query = """
             SELECT id FROM bookings
             WHERE status IN ('pending', 'approved')
+            AND property_id = ?
             AND start_date < ?
             AND end_date > ?
         """
-        params = [end_date, start_date]
+        params = [property_id, end_date, start_date]
 
         if exclude_booking_id:
             query += " AND id != ?"
@@ -98,7 +101,7 @@ class Booking:
 
     @staticmethod
     def create(user_id: int, start_date: str, end_date: str,
-               guests: int, special_requests: str = None) -> Dict:
+               guests: int, property_id: int, special_requests: str = None) -> Dict:
         """
         Create a new booking request.
 
@@ -108,33 +111,65 @@ class Booking:
         3. Inserts booking with 'pending' status
         4. Returns complete booking dict
         """
-        Booking.validate(start_date, end_date, guests)
-        total_price = Booking.calculate_price(start_date, end_date)
+        prop = Property.get_by_id(property_id)
+        if not prop:
+            raise ValueError("Property not found")
+        if prop['status'] != 'active':
+            raise ValueError("This property is not currently available for booking")
+
+        Booking.validate(start_date, end_date, guests, max_capacity=prop['capacity'])
+        total_price = Booking.calculate_price(start_date, end_date, prop['price_per_night'])
 
         with begin_immediate():
-            if not Booking.check_availability(start_date, end_date):
+            if not Booking.check_availability(start_date, end_date, property_id):
                 raise ValueError("The property is not available for the selected dates")
 
             query = """
                 INSERT INTO bookings (user_id, property_id, start_date, end_date, status, total_price, guests, special_requests)
-                VALUES (?, 1, ?, ?, 'pending', ?, ?, ?)
+                VALUES (?, ?, ?, ?, 'pending', ?, ?, ?)
             """
             booking_id = execute_query(
                 query,
-                (user_id, start_date, end_date, total_price, int(guests), special_requests),
+                (user_id, property_id, start_date, end_date, total_price, int(guests), special_requests),
                 commit=True
             )
 
         return Booking.get_by_id(booking_id, include_relations=True)
 
     @staticmethod
+    def _build_booking_dict(row: Dict) -> Dict:
+        """Build a booking dict with nested user and property from a joined row."""
+        booking = {k: v for k, v in row.items()
+                   if not k.startswith('user_') and not k.startswith('property_')}
+        if 'user_first_name' in row:
+            booking['user'] = {
+                'first_name': row['user_first_name'],
+                'last_name': row['user_last_name'],
+                'email': row['user_email'],
+                'phone_number': row['user_phone'],
+            }
+        if 'property_name' in row:
+            booking['property'] = {
+                'name': row['property_name'],
+                'location': row['property_location'],
+            }
+        return booking
+
+    @staticmethod
     def get_by_id(booking_id: int, include_relations: bool = False) -> Optional[Dict]:
-        """Fetch a booking by its ID, optionally with user details."""
+        """Fetch a booking by its ID, optionally with user and property details."""
         if not include_relations:
-            return execute_query(
-                "SELECT * FROM bookings WHERE id=?",
+            result = execute_query(
+                """SELECT bookings.*, properties.name as property_name,
+                          properties.location as property_location
+                   FROM bookings
+                   LEFT JOIN properties ON bookings.property_id = properties.id
+                   WHERE bookings.id = ?""",
                 (booking_id,), fetch_one=True
             )
+            if not result:
+                return None
+            return Booking._build_booking_dict(result)
 
         query = """
             SELECT
@@ -142,24 +177,19 @@ class Booking:
                 users.first_name as user_first_name,
                 users.last_name as user_last_name,
                 users.email as user_email,
-                users.phone_number as user_phone
+                users.phone_number as user_phone,
+                properties.name as property_name,
+                properties.location as property_location
             FROM bookings
             INNER JOIN users ON bookings.user_id = users.id
+            LEFT JOIN properties ON bookings.property_id = properties.id
             WHERE bookings.id = ?
         """
         result = execute_query(query, (booking_id,), fetch_one=True)
         if not result:
             return None
 
-        return {
-            **{k: v for k, v in result.items() if not k.startswith('user_')},
-            'user': {
-                'first_name': result['user_first_name'],
-                'last_name': result['user_last_name'],
-                'email': result['user_email'],
-                'phone_number': result['user_phone'],
-            }
-        }
+        return Booking._build_booking_dict(result)
 
     @staticmethod
     def get_all(status: str = None, include_relations: bool = True) -> List[Dict]:
@@ -171,50 +201,49 @@ class Booking:
                     users.first_name as user_first_name,
                     users.last_name as user_last_name,
                     users.email as user_email,
-                    users.phone_number as user_phone
+                    users.phone_number as user_phone,
+                    properties.name as property_name,
+                    properties.location as property_location
                 FROM bookings
                 INNER JOIN users ON bookings.user_id = users.id
+                LEFT JOIN properties ON bookings.property_id = properties.id
             """
         else:
-            query = "SELECT * FROM bookings"
+            query = """
+                SELECT bookings.*, properties.name as property_name,
+                       properties.location as property_location
+                FROM bookings
+                LEFT JOIN properties ON bookings.property_id = properties.id
+            """
 
         params = []
         if status:
-            query += " WHERE bookings.status = ?" if include_relations else " WHERE status = ?"
+            query += " WHERE bookings.status = ?"
             params.append(status)
 
-        query += " ORDER BY bookings.created_at DESC" if include_relations else " ORDER BY created_at DESC"
+        query += " ORDER BY bookings.created_at DESC"
 
         results = execute_query(query, tuple(params), fetch_all=True)
         if not results:
             return []
 
-        if not include_relations:
-            return results
-
-        bookings = []
-        for r in results:
-            bookings.append({
-                **{k: v for k, v in r.items() if not k.startswith('user_')},
-                'user': {
-                    'first_name': r['user_first_name'],
-                    'last_name': r['user_last_name'],
-                    'email': r['user_email'],
-                    'phone_number': r['user_phone'],
-                }
-            })
-        return bookings
+        return [Booking._build_booking_dict(r) for r in results]
 
     @staticmethod
     def get_by_user(user_id: int) -> List[Dict]:
         """Fetch all bookings for a specific user."""
         query = """
-            SELECT bookings.* FROM bookings
-            WHERE user_id = ?
-            ORDER BY created_at DESC
+            SELECT bookings.*, properties.name as property_name,
+                   properties.location as property_location
+            FROM bookings
+            LEFT JOIN properties ON bookings.property_id = properties.id
+            WHERE bookings.user_id = ?
+            ORDER BY bookings.created_at DESC
         """
-        result = execute_query(query, (user_id,), fetch_all=True)
-        return result if result else []
+        results = execute_query(query, (user_id,), fetch_all=True)
+        if not results:
+            return []
+        return [Booking._build_booking_dict(r) for r in results]
 
     @staticmethod
     def update_status(booking_id: int, status: str, admin_notes: str = None) -> Optional[Dict]:
