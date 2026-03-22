@@ -3,7 +3,7 @@ Flask application entry point for Vacation Rental Booking System.
 
 MVC Role: Application Bootstrap
 - Initializes the Flask web server
-- Sets up configuration and CORS
+- Sets up configuration
 - Handles database initialization on first run
 - Registers all controllers (Blueprints)
 - Defines basic routes and error handlers
