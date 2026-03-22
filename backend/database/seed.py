@@ -5,13 +5,17 @@ Inserts sample users, properties, bookings, reviews, and adventures.
 
 import sqlite3
 import os
+import sys
 import bcrypt
 
+# Allow standalone execution
+if __name__ == '__main__' or __package__ is None:
+    _db_dir = os.path.dirname(os.path.abspath(__file__))
+    _project_root = os.path.dirname(os.path.dirname(_db_dir))
+    if _project_root not in sys.path:
+        sys.path.insert(0, _project_root)
 
-DB_PATH = os.environ.get(
-    'DATABASE_PATH',
-    os.path.join(os.path.dirname(__file__), 'booking_site.db')
-)
+from backend.database.connection import DB_PATH
 
 
 def hash_password(password: str) -> str:

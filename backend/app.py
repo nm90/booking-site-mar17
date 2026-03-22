@@ -63,7 +63,7 @@ app = Flask(__name__)
 csrf = CSRFProtect(app)
 logger = setup_logging()
 
-from backend.database.connection import close_connection
+from backend.database.connection import close_connection, DB_PATH
 app.teardown_appcontext(close_connection)
 
 # ============================================================================
@@ -87,10 +87,7 @@ if _secret_key in _INSECURE_DEFAULTS:
 app.config['SECRET_KEY'] = _secret_key
 
 DATABASE_DIR = os.path.join(os.path.dirname(__file__), 'database')
-app.config['DATABASE_PATH'] = os.environ.get(
-    'DATABASE_PATH',
-    os.path.join(DATABASE_DIR, 'booking_site.db')
-)
+app.config['DATABASE_PATH'] = DB_PATH
 
 
 # ============================================================================
