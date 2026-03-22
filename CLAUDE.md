@@ -6,13 +6,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ```bash
 # Run the app
-python backend/app.py          # http://localhost:5000
+python3 backend/app.py          # http://localhost:5000
 
 # Docker
 docker compose up --build
 
 # Initialize/reset database manually
-python -c "from backend.database.seed import seed_database; seed_database()"
+python3 -c "from backend.database.seed import seed_database; seed_database()"
 ```
 
 No test suite or linter is configured.
