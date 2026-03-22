@@ -16,9 +16,15 @@ Routes:
     GET  /admin/reviews                   - All reviews
     POST /admin/reviews/<id>/approve      - Approve review
     POST /admin/reviews/<id>/reject       - Reject review
-    GET  /admin/adventures                - Adventure bookings
-    POST /admin/adventures/<id>/approve   - Approve adventure booking
-    POST /admin/adventures/<id>/reject    - Reject adventure booking
+    GET  /admin/adventures                - Adventure catalog
+    GET  /admin/adventures/new            - Show new adventure form
+    POST /admin/adventures                - Create adventure
+    GET  /admin/adventures/<id>/edit      - Show edit adventure form
+    POST /admin/adventures/<id>           - Update adventure
+    POST /admin/adventures/<id>/deactivate - Deactivate adventure
+    GET  /admin/adventure-bookings        - Adventure bookings
+    POST /admin/adventure-bookings/<id>/approve - Approve adventure booking
+    POST /admin/adventure-bookings/<id>/reject  - Reject adventure booking
     GET  /admin/users                     - Manage users
     POST /admin/users/<id>/status         - Update user status
 """
@@ -175,39 +181,174 @@ def reviews_reject(review_id):
 
 
 # ============================================================================
-# ADVENTURE BOOKING MANAGEMENT
+# ADVENTURE CATALOG MANAGEMENT
 # ============================================================================
 @admin_bp.route('/adventures')
 @admin_required
 def adventures_index():
+    """View all adventures (including inactive)."""
+    adventures = Adventure.get_all(active_only=False)
+    return render_template('admin/adventures.html', adventures=adventures)
+
+
+@admin_bp.route('/adventures/new')
+@admin_required
+def adventures_new():
+    """Show the create adventure form."""
+    return render_template('admin/adventure_form.html', valid_difficulties=Adventure.VALID_DIFFICULTIES)
+
+
+@admin_bp.route('/adventures', methods=['POST'])
+@admin_required
+def adventures_create():
+    """Handle adventure creation."""
+    name = request.form.get('name', '').strip()
+    description = request.form.get('description', '').strip()
+    category = request.form.get('category', '').strip()
+    difficulty = request.form.get('difficulty', '').strip()
+    duration_hours = request.form.get('duration_hours', '')
+    price = request.form.get('price', '')
+    max_participants = request.form.get('max_participants', '')
+
+    try:
+        adventure = Adventure.create(
+            name=name,
+            description=description,
+            category=category,
+            difficulty=difficulty,
+            duration_hours=duration_hours,
+            price=price,
+            max_participants=max_participants
+        )
+        flash(f'Adventure "{adventure["name"]}" created successfully.', 'success')
+        return redirect(url_for('admin.adventures_index'))
+    except ValueError as e:
+        flash(str(e), 'error')
+        return render_template(
+            'admin/adventure_form.html',
+            valid_difficulties=Adventure.VALID_DIFFICULTIES,
+            adventure={
+                'name': name,
+                'description': description,
+                'category': category,
+                'difficulty': difficulty,
+                'duration_hours': duration_hours,
+                'price': price,
+                'max_participants': max_participants,
+            }
+        )
+
+
+@admin_bp.route('/adventures/<int:adventure_id>/edit')
+@admin_required
+def adventures_edit(adventure_id):
+    """Show the edit adventure form."""
+    adventure = Adventure.get_by_id(adventure_id)
+    if not adventure:
+        flash('Adventure not found.', 'error')
+        return redirect(url_for('admin.adventures_index'))
+    return render_template('admin/adventure_form.html',
+                           adventure=adventure,
+                           valid_difficulties=Adventure.VALID_DIFFICULTIES,
+                           valid_statuses=Adventure.VALID_STATUSES)
+
+
+@admin_bp.route('/adventures/<int:adventure_id>', methods=['POST'])
+@admin_required
+def adventures_update(adventure_id):
+    """Handle adventure update."""
+    name = request.form.get('name', '').strip()
+    description = request.form.get('description', '').strip()
+    category = request.form.get('category', '').strip()
+    difficulty = request.form.get('difficulty', '').strip()
+    duration_hours = request.form.get('duration_hours', '')
+    price = request.form.get('price', '')
+    max_participants = request.form.get('max_participants', '')
+    status = request.form.get('status', 'active').strip()
+
+    try:
+        adventure = Adventure.update(
+            adventure_id=adventure_id,
+            name=name,
+            description=description,
+            category=category,
+            difficulty=difficulty,
+            duration_hours=duration_hours,
+            price=price,
+            max_participants=max_participants,
+            status=status
+        )
+        if not adventure:
+            flash('Adventure not found.', 'error')
+        else:
+            flash(f'Adventure "{adventure["name"]}" updated successfully.', 'success')
+        return redirect(url_for('admin.adventures_index'))
+    except ValueError as e:
+        flash(str(e), 'error')
+        return render_template(
+            'admin/adventure_form.html',
+            valid_difficulties=Adventure.VALID_DIFFICULTIES,
+            valid_statuses=Adventure.VALID_STATUSES,
+            adventure={
+                'id': adventure_id,
+                'name': name,
+                'description': description,
+                'category': category,
+                'difficulty': difficulty,
+                'duration_hours': duration_hours,
+                'price': price,
+                'max_participants': max_participants,
+                'status': status
+            }
+        )
+
+
+@admin_bp.route('/adventures/<int:adventure_id>/deactivate', methods=['POST'])
+@admin_required
+def adventures_deactivate(adventure_id):
+    """Deactivate an adventure."""
+    adventure = Adventure.deactivate(adventure_id)
+    if not adventure:
+        flash('Adventure not found.', 'error')
+    else:
+        flash(f'Adventure "{adventure["name"]}" deactivated.', 'success')
+    return redirect(url_for('admin.adventures_index'))
+
+
+# ============================================================================
+# ADVENTURE BOOKING MANAGEMENT
+# ============================================================================
+@admin_bp.route('/adventure-bookings')
+@admin_required
+def adventure_bookings_index():
     """View all adventure booking requests."""
     status = request.args.get('status')
     bookings = AdventureBooking.get_all(status=status)
-    return render_template('admin/adventures.html', bookings=bookings, current_status=status)
+    return render_template('admin/adventure_bookings.html', bookings=bookings, current_status=status)
 
 
-@admin_bp.route('/adventures/<int:ab_id>/approve', methods=['POST'])
+@admin_bp.route('/adventure-bookings/<int:ab_id>/approve', methods=['POST'])
 @admin_required
-def adventures_approve(ab_id):
+def adventure_bookings_approve(ab_id):
     """Approve an adventure booking."""
     ab = AdventureBooking.update_status(ab_id, 'approved')
     if not ab:
         flash('Adventure booking not found.', 'error')
     else:
         flash('Adventure booking approved.', 'success')
-    return redirect(url_for('admin.adventures_index'))
+    return redirect(url_for('admin.adventure_bookings_index'))
 
 
-@admin_bp.route('/adventures/<int:ab_id>/reject', methods=['POST'])
+@admin_bp.route('/adventure-bookings/<int:ab_id>/reject', methods=['POST'])
 @admin_required
-def adventures_reject(ab_id):
+def adventure_bookings_reject(ab_id):
     """Reject an adventure booking."""
     ab = AdventureBooking.update_status(ab_id, 'rejected')
     if not ab:
         flash('Adventure booking not found.', 'error')
     else:
         flash('Adventure booking rejected.', 'success')
-    return redirect(url_for('admin.adventures_index'))
+    return redirect(url_for('admin.adventure_bookings_index'))
 
 
 # ============================================================================
