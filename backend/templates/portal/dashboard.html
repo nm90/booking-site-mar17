@@ -50,6 +50,7 @@
                         <th>#</th>
                         <th>Check-in</th>
                         <th>Check-out</th>
+                        <th>Nights</th>
                         <th>Guests</th>
                         <th>Total</th>
                         <th>Status</th>
@@ -62,6 +63,7 @@
                         <td class="text-muted">#{{ booking.id }}</td>
                         <td>{{ booking.start_date }}</td>
                         <td>{{ booking.end_date }}</td>
+                        <td>{{ booking.nights if booking.nights is not none else '—' }}</td>
                         <td>{{ booking.guests }}</td>
                         <td>${{ "%.2f" | format(booking.total_price) }}</td>
                         <td><span class="badge badge-{{ booking.status }}">{{ booking.status }}</span></td>
