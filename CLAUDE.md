@@ -50,17 +50,43 @@ Flask MVC app with strict layer separation:
 - Admin: `admin@vacationrental.com` / `admin123`
 - Customers: `alice@example.com` / `pass123`, `bob@example.com` / `pass123`
 
-Add as a new top-level ## Deployment section in CLAUDE.md\n\n## Deployment (Koyeb)
-- Always use `koyeb.yaml` for deployment config. Verify CLI commands exist before suggesting them (`koyeb --help`).
-- Link secrets as environment variables in `koyeb.yaml`, not just in the Koyeb dashboard.
-- Avoid persistent volumes on Koyeb unless explicitly needed; use managed databases instead.
+## Deployment (Koyeb)
+
+The production app is `booking-site-mar17`, service `booking-site`. It uses archive + Docker builder (not the image in `koyeb.yaml`).
+
+```bash
+# Deploy current directory to production
+koyeb deploy . booking-site-mar17/booking-site --archive-builder docker --wait
+
+# Check service health
+koyeb services get booking-site-mar17/booking-site
+
+# View build logs
+koyeb service logs 53d7d5ba -t build
+
+# View runtime logs
+koyeb service logs 53d7d5ba
+```
+
+- Always verify the koyeb CLI exists before suggesting commands (`koyeb --help`).
+- Avoid persistent volumes on Koyeb; use managed databases instead.
 - Always ensure `.env` files are sourced in `startup.sh`.
-Add as a new ## Docker section in CLAUDE.md, or append to an existing infrastructure section\n\n## Docker
-- Check Docker Compose version before running commands: use `docker-compose` (v1) if `docker compose` (v2) is unavailable.
-- Run `docker compose version || docker-compose version` to detect which is installed.
-Add as a new ## Testing section in CLAUDE.md\n\n## Testing
+
+## Docker
+
+```bash
+# Detect Docker Compose version
+docker compose version || docker-compose version
+```
+
+- Use `docker-compose` (v1) if `docker compose` (v2) is unavailable.
+
+## Testing
+
 - Do not add Flask routes after app initialization in tests. Use app factory pattern or register routes before first request.
 - Always run `pytest` after modifying application code before committing.
-Add under a ## General or ## Conventions section in CLAUDE.md\n\n## General
+
+## General
+
 - When using external CLI tools (koyeb, docker, gh), verify the command exists with `--help` before running it.
-- For GitHub API calls, always include all required fields (e.g., 'description' on singleSelectOptions).
+- For GitHub API calls, always include all required fields (e.g., `description` on singleSelectOptions).
