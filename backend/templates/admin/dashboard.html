@@ -21,7 +21,7 @@
         <div class="stat-label">Pending Reviews</div>
         <div class="stat-cta">Moderate →</div>
     </a>
-    <a href="{{ url_for('admin.adventures_index') }}?status=pending" class="stat-card stat-card-info stat-card-link">
+    <a href="{{ url_for('admin.adventure_bookings_index') }}?status=pending" class="stat-card stat-card-info stat-card-link">
         <div class="stat-number">{{ pending_adventures | length }}</div>
         <div class="stat-label">Pending Adventures</div>
         <div class="stat-cta">Review →</div>

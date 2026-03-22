@@ -18,6 +18,7 @@ class Adventure:
     """
 
     VALID_DIFFICULTIES = ['easy', 'moderate', 'hard', 'extreme']
+    VALID_STATUSES = ['active', 'inactive']
 
     @staticmethod
     def get_all(active_only: bool = True) -> List[Dict]:
@@ -43,14 +44,25 @@ class Adventure:
         )
 
     @staticmethod
-    def create(name: str, description: str, category: str, difficulty: str,
-               duration_hours: int, price: float, max_participants: int = 10) -> Dict:
-        """Create a new adventure activity (admin action)."""
+    def validate(name: str, category: str, difficulty: str, duration_hours,
+                 price, max_participants, status: str = None) -> None:
+        """Validate adventure data. Raises ValueError if invalid."""
         if not name or not name.strip():
             raise ValueError("Adventure name is required")
 
+        if not category or not category.strip():
+            raise ValueError("Category is required")
+
         if difficulty not in Adventure.VALID_DIFFICULTIES:
             raise ValueError(f"Difficulty must be one of {Adventure.VALID_DIFFICULTIES}")
+
+        try:
+            duration_int = int(duration_hours)
+        except (TypeError, ValueError):
+            raise ValueError("Duration must be a whole number")
+
+        if duration_int < 1:
+            raise ValueError("Duration must be at least 1 hour")
 
         try:
             price_float = float(price)
@@ -60,16 +72,82 @@ class Adventure:
         if price_float <= 0:
             raise ValueError("Price must be greater than 0")
 
+        try:
+            participants_int = int(max_participants)
+        except (TypeError, ValueError):
+            raise ValueError("Max participants must be a whole number")
+
+        if participants_int < 1:
+            raise ValueError("Max participants must be at least 1")
+
+        if status is not None and status not in Adventure.VALID_STATUSES:
+            raise ValueError(f"Status must be one of {Adventure.VALID_STATUSES}")
+
+    @staticmethod
+    def create(name: str, description: str, category: str, difficulty: str,
+               duration_hours: int, price: float, max_participants: int = 10) -> Dict:
+        """Create a new adventure activity (admin action)."""
+        Adventure.validate(name, category, difficulty, duration_hours, price, max_participants)
+
         query = """
             INSERT INTO adventures (name, description, category, difficulty, duration_hours, price, max_participants)
             VALUES (?, ?, ?, ?, ?, ?, ?)
         """
         adventure_id = execute_query(
             query,
-            (name.strip(), description, category, difficulty, int(duration_hours), price_float, int(max_participants)),
+            (name.strip(), (description or '').strip() or None, category.strip(), difficulty,
+             int(duration_hours), float(price), int(max_participants)),
             commit=True
         )
         return Adventure.get_by_id(adventure_id)
+
+    @staticmethod
+    def update(adventure_id: int, name: str, description: str, category: str,
+               difficulty: str, duration_hours: int, price: float,
+               max_participants: int, status: str = 'active') -> Optional[Dict]:
+        """Update an adventure and return the updated row."""
+        Adventure.validate(name, category, difficulty, duration_hours, price, max_participants, status)
+
+        existing = Adventure.get_by_id(adventure_id)
+        if not existing:
+            return None
+
+        query = """
+            UPDATE adventures
+            SET name = ?, description = ?, category = ?, difficulty = ?,
+                duration_hours = ?, price = ?, max_participants = ?, status = ?,
+                updated_at = CURRENT_TIMESTAMP
+            WHERE id = ?
+        """
+        execute_query(
+            query,
+            (name.strip(), (description or '').strip() or None, category.strip(), difficulty,
+             int(duration_hours), float(price), int(max_participants), status, adventure_id),
+            commit=True
+        )
+        return Adventure.get_by_id(adventure_id)
+
+    @staticmethod
+    def update_status(adventure_id: int, status: str) -> Optional[Dict]:
+        """Update an adventure status."""
+        if status not in Adventure.VALID_STATUSES:
+            raise ValueError(f"Status must be one of {Adventure.VALID_STATUSES}")
+
+        existing = Adventure.get_by_id(adventure_id)
+        if not existing:
+            return None
+
+        execute_query(
+            "UPDATE adventures SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+            (status, adventure_id),
+            commit=True
+        )
+        return Adventure.get_by_id(adventure_id)
+
+    @staticmethod
+    def deactivate(adventure_id: int) -> Optional[Dict]:
+        """Soft-deactivate an adventure by setting status to inactive."""
+        return Adventure.update_status(adventure_id, 'inactive')
 
 
 class AdventureBooking:

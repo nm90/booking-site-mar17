@@ -18,7 +18,7 @@
                     <a href="{{ url_for('admin.bookings_index') }}" {% if request.endpoint == 'admin.bookings_index' %}class="active"{% endif %}>Bookings</a>
                     <a href="{{ url_for('admin.reviews_index') }}" {% if request.endpoint == 'admin.reviews_index' %}class="active"{% endif %}>Reviews</a>
                     <a href="{{ url_for('admin.properties_index') }}" {% if request.endpoint and 'properties' in request.endpoint %}class="active"{% endif %}>Properties</a>
-                    <a href="{{ url_for('admin.adventures_index') }}" {% if request.endpoint == 'admin.adventures_index' %}class="active"{% endif %}>Adventures</a>
+                    <a href="{{ url_for('admin.adventures_index') }}" {% if request.endpoint and (request.endpoint.startswith('admin.adventures_') or request.endpoint.startswith('admin.adventure_bookings_')) %}class="active"{% endif %}>Adventures</a>
                     <a href="{{ url_for('admin.users_index') }}" {% if request.endpoint == 'admin.users_index' %}class="active"{% endif %}>Users</a>
                 {% else %}
                     <a href="{{ url_for('portal.dashboard') }}" {% if request.endpoint == 'portal.dashboard' %}class="active"{% endif %}>Dashboard</a>
