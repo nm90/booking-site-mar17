@@ -57,11 +57,21 @@ echo ""
 
 PASSED=0
 FAILED=0
+PREV_BRANCH=""
 
 for issue_num in "${ISSUES[@]}"; do
   # Fetch issue details
   ISSUE_TITLE=$(gh issue view "$issue_num" --json title --jq '.title')
   ISSUE_BODY=$(gh issue view "$issue_num" --json body --jq '.body')
+
+  # Create a new branch from the previous issue's branch (or main for the first)
+  BRANCH="issue-${issue_num}"
+  if [[ -n "$PREV_BRANCH" ]]; then
+    BASE="$PREV_BRANCH"
+  else
+    BASE="main"
+  fi
+  git checkout -b "$BRANCH" "$BASE"
 
   PLAN_LOG="$LOG_DIR/issue-${issue_num}-plan.log"
   IMPL_LOG="$LOG_DIR/issue-${issue_num}-impl.log"
@@ -106,6 +116,12 @@ Instructions:
   PLAN_CONTENT=$(cat "$PLAN_FILE")
 
   # Step 2: Implement (fresh context with plan as input)
+  if [[ "$BASE" != "main" ]]; then
+    PR_BASE_FLAG="--base $BASE"
+  else
+    PR_BASE_FLAG=""
+  fi
+
   IMPL_PROMPT="Implement GitHub issue #${issue_num}.
 
 Title: ${ISSUE_TITLE}
@@ -121,7 +137,8 @@ Instructions:
 1. Follow the plan above to implement the fix or feature.
 2. Run pytest to verify nothing is broken.
 3. Commit your changes with a message referencing #${issue_num}.
-4. Create a pull request for this issue."
+4. Push the current branch '${BRANCH}' and create a pull request for this issue${PR_BASE_FLAG:+ with: gh pr create $PR_BASE_FLAG}.
+5. Do NOT create or switch branches — you are already on the correct branch '${BRANCH}'."
 
   echo "  Implementing..."
   if claude -p "$IMPL_PROMPT" \
@@ -129,6 +146,7 @@ Instructions:
     > "$IMPL_LOG" 2>&1; then
     echo "  PASS - plan: $PLAN_LOG, impl: $IMPL_LOG"
     PASSED=$((PASSED + 1))
+    PREV_BRANCH="$BRANCH"
   else
     echo "  FAIL (implementation) - logged to $IMPL_LOG"
     FAILED=$((FAILED + 1))
