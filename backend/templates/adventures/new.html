@@ -51,7 +51,9 @@
                 <select id="booking_id" name="booking_id">
                     <option value="">— Not linked to a stay —</option>
                     {% for b in stay_bookings %}
-                    <option value="{{ b.id }}">Booking #{{ b.id }}: {{ b.start_date }} – {{ b.end_date }}</option>
+                    <option value="{{ b.id }}" {% if booking_id == b.id %}selected{% endif %}>
+                        Booking #{{ b.id }}: {{ b.start_date }} – {{ b.end_date }}
+                    </option>
                     {% endfor %}
                 </select>
             </div>
@@ -61,7 +63,7 @@
                 <label for="special_requests">Special requests <span class="optional">(optional)</span></label>
                 <textarea id="special_requests" name="special_requests"
                           rows="2"
-                          placeholder="Dietary needs, physical limitations, group details…"></textarea>
+                          placeholder="Dietary needs, physical limitations, group details…">{{ special_requests or '' }}</textarea>
             </div>
 
             <div class="price-estimate" id="price-estimate" style="display:none">
