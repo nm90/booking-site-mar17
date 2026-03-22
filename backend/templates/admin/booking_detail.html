@@ -101,6 +101,21 @@
                 </form>
             </div>
         </div>
+        {% elif booking.status == 'approved' %}
+        <div class="admin-actions">
+            <h3>Take Action</h3>
+            <div class="action-forms">
+                <form action="{{ url_for('admin.bookings_complete', booking_id=booking.id) }}" method="POST" class="action-form">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="form-group">
+                        <label for="complete_notes">Note (optional)</label>
+                        <input type="text" id="complete_notes" name="admin_notes"
+                               placeholder="e.g. Stay completed successfully">
+                    </div>
+                    <button type="submit" class="btn btn-success">✓ Mark as Completed</button>
+                </form>
+            </div>
+        </div>
         {% endif %}
     </div>
 

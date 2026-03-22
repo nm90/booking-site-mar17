@@ -120,6 +120,24 @@ def bookings_reject(booking_id):
     return redirect(url_for('admin.bookings_show', booking_id=booking_id))
 
 
+@admin_bp.route('/bookings/<int:booking_id>/complete', methods=['POST'])
+@admin_required
+def bookings_complete(booking_id):
+    """Mark an approved booking as completed."""
+    admin_notes = request.form.get('admin_notes', '').strip() or None
+
+    try:
+        booking = Booking.update_status(booking_id, 'completed', admin_notes)
+        if not booking:
+            flash('Booking not found.', 'error')
+        else:
+            flash(f'Booking #{booking_id} has been marked as completed.', 'success')
+    except ValueError as e:
+        flash(str(e), 'error')
+
+    return redirect(url_for('admin.bookings_show', booking_id=booking_id))
+
+
 # ============================================================================
 # REVIEW MODERATION
 # ============================================================================
