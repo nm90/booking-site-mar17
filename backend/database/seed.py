@@ -88,7 +88,7 @@ def insert_seed_data():
 
         conn.execute("""
             INSERT INTO bookings (user_id, property_id, start_date, end_date, status, total_price, guests)
-            VALUES (2, 1, '2026-03-01', '2026-03-05', 'approved', 1800.00, 2)
+            VALUES (2, 1, '2026-03-01', '2026-03-05', 'completed', 1800.00, 2)
         """)
 
         # Review

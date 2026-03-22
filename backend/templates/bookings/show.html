@@ -66,12 +66,12 @@
                 </form>
             {% endif %}
 
-            {% if booking.status == 'approved' and not already_reviewed %}
+            {% if booking.status == 'completed' and not already_reviewed %}
                 <a href="{{ url_for('portal.reviews_new', booking_id=booking.id) }}"
                    class="btn btn-outline">✍️ Leave a Review</a>
             {% endif %}
 
-            {% if booking.status == 'approved' %}
+            {% if booking.status in ['approved', 'completed'] %}
                 <a href="{{ url_for('portal.adventures_new') }}?booking_id={{ booking.id }}"
                    class="btn btn-outline">🏄 Book an Adventure</a>
             {% endif %}
@@ -85,6 +85,7 @@
                 <li><span class="badge badge-pending">pending</span> Awaiting host review</li>
                 <li><span class="badge badge-approved">approved</span> Your stay is confirmed</li>
                 <li><span class="badge badge-rejected">rejected</span> Dates unavailable</li>
+                <li><span class="badge badge-completed">completed</span> Stay finished — leave a review!</li>
                 <li><span class="badge badge-cancelled">cancelled</span> Booking cancelled</li>
             </ul>
         </div>

@@ -332,6 +332,7 @@ footer a { color: rgba(255,255,255,.75); }
 .badge-approved  { background: var(--success-light); color: #14532d; }
 .badge-rejected  { background: var(--danger-light);  color: #7f1d1d; }
 .badge-cancelled { background: #f3f4f6; color: #6b7280; }
+.badge-completed { background: #dbeafe; color: #1e40af; }
 
 .badge-status-active    { background: var(--success-light); color: #14532d; }
 .badge-status-suspended { background: var(--danger-light);  color: #7f1d1d; }
