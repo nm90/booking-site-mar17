@@ -158,11 +158,20 @@ class User:
     def update(user_id: int, first_name: str, last_name: str,
                email: str, phone_number: str = None) -> Optional[Dict]:
         """Update an existing user's profile information."""
-        User.validate(email, first_name, last_name)
-
         existing = User.get_by_id(user_id)
         if not existing:
             return None
+
+        first_name = (first_name or '').strip()
+        last_name = (last_name or '').strip()
+        email = (email or '').strip()
+
+        if phone_number is None:
+            phone_number = existing.get('phone_number')
+        else:
+            phone_number = phone_number.strip() or None
+
+        User.validate(email, first_name, last_name)
 
         execute_query(
             "UPDATE users SET first_name=?, last_name=?, email=?, phone_number=?, updated_at=CURRENT_TIMESTAMP WHERE id=?",
