@@ -140,7 +140,7 @@ class Booking:
     def _build_booking_dict(row: Dict) -> Dict:
         """Build a booking dict with nested user and property from a joined row."""
         booking = {k: v for k, v in row.items()
-                   if not k.startswith('user_') and not k.startswith('property_')}
+                   if k == 'user_id' or (not k.startswith('user_') and not k.startswith('property_'))}
         if 'user_first_name' in row:
             booking['user'] = {
                 'first_name': row['user_first_name'],
