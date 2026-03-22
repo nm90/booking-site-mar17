@@ -1,8 +1,6 @@
 services:
   - name: booking-site
-    builder: dockerfile
-    git:
-      branch: main
+    image: fauxtoe/booking-site
     env:
       - key: FLASK_ENV
         value: production
@@ -10,6 +8,8 @@ services:
         value: "1"
       - key: DATABASE_PATH
         value: /tmp/booking_site.db
+      - key: SECRET_KEY
+        secret: secret-key
     ports:
       - name: http
         port: 5000

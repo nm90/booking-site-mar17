@@ -137,14 +137,14 @@ mutation {
     dataType: SINGLE_SELECT
     name: "Epic"
     singleSelectOptions: [
-      {name: "E-1: Security Hardening", color: RED}
-      {name: "E-2: Database & Data Integrity", color: ORANGE}
-      {name: "E-3: Business Logic & Data Model", color: YELLOW}
-      {name: "E-4: User Account Management", color: GREEN}
-      {name: "E-5: Admin Tooling", color: BLUE}
-      {name: "E-6: Customer Experience", color: PURPLE}
-      {name: "E-7: Notifications & Payments", color: PINK}
-      {name: "E-8: DevOps & Production Readiness", color: GRAY}
+      {name: "E-1: Security Hardening", color: RED, description: ""}
+      {name: "E-2: Database & Data Integrity", color: ORANGE, description: ""}
+      {name: "E-3: Business Logic & Data Model", color: YELLOW, description: ""}
+      {name: "E-4: User Account Management", color: GREEN, description: ""}
+      {name: "E-5: Admin Tooling", color: BLUE, description: ""}
+      {name: "E-6: Customer Experience", color: PURPLE, description: ""}
+      {name: "E-7: Notifications & Payments", color: PINK, description: ""}
+      {name: "E-8: DevOps & Production Readiness", color: GRAY, description: ""}
     ]
   }) { projectV2Field { ... on ProjectV2SingleSelectField { id options { id name } } } }
 }' --jq '.data.createProjectV2Field.projectV2Field')
@@ -170,10 +170,10 @@ mutation {
     dataType: SINGLE_SELECT
     name: "Phase"
     singleSelectOptions: [
-      {name: "Phase 1: Security & Stability", color: RED}
-      {name: "Phase 2: Data & Core Logic", color: ORANGE}
-      {name: "Phase 3: User & Admin Features", color: GREEN}
-      {name: "Phase 4: Revenue & Comms", color: BLUE}
+      {name: "Phase 1: Security & Stability", color: RED, description: ""}
+      {name: "Phase 2: Data & Core Logic", color: ORANGE, description: ""}
+      {name: "Phase 3: User & Admin Features", color: GREEN, description: ""}
+      {name: "Phase 4: Revenue & Comms", color: BLUE, description: ""}
     ]
   }) { projectV2Field { ... on ProjectV2SingleSelectField { id options { id name } } } }
 }' --jq '.data.createProjectV2Field.projectV2Field')

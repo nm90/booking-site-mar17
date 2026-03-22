@@ -33,6 +33,9 @@ ENV/
 *.log
 backend/logs/
 
+# Claude Code local config
+.claude/
+
 # IDE
 .vscode/
 .idea/
