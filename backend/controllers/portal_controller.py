@@ -270,4 +270,6 @@ def adventures_create():
                                stay_bookings=stay_bookings,
                                adventure_id=adventure_id,
                                scheduled_date=scheduled_date,
-                               participants=participants)
+                               participants=participants,
+                               booking_id=booking_id,
+                               special_requests=special_requests)

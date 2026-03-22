@@ -156,6 +156,7 @@ class AdventureBooking:
     """
 
     VALID_STATUSES = ['pending', 'approved', 'rejected', 'cancelled']
+    LINKABLE_STAY_STATUSES = ['approved']
 
     @staticmethod
     def validate(adventure_id: int, scheduled_date: str, participants: int) -> None:
@@ -200,6 +201,14 @@ class AdventureBooking:
         4. Returns complete booking dict
         """
         AdventureBooking.validate(adventure_id, scheduled_date, participants)
+        scheduled = date.fromisoformat(scheduled_date)
+
+        if booking_id is not None:
+            AdventureBooking._validate_linked_stay_booking(
+                booking_id=booking_id,
+                user_id=user_id,
+                scheduled_date=scheduled
+            )
 
         adventure = Adventure.get_by_id(adventure_id)
         total_price = round(adventure['price'] * int(participants), 2)
@@ -215,6 +224,33 @@ class AdventureBooking:
             commit=True
         )
         return AdventureBooking.get_by_id(ab_id, include_relations=True)
+
+    @staticmethod
+    def _validate_linked_stay_booking(booking_id: int, user_id: int, scheduled_date: date) -> None:
+        """Validate linked stay booking ownership, status, and date window."""
+        stay_booking = execute_query(
+            """
+                SELECT id, user_id, status, start_date, end_date
+                FROM bookings
+                WHERE id = ?
+            """,
+            (booking_id,),
+            fetch_one=True
+        )
+
+        if not stay_booking:
+            raise ValueError("Linked stay booking not found")
+
+        if stay_booking['user_id'] != user_id:
+            raise ValueError("You can only link your own stay bookings")
+
+        if stay_booking['status'] not in AdventureBooking.LINKABLE_STAY_STATUSES:
+            raise ValueError("Only approved stays can be linked to an adventure booking")
+
+        start_date = date.fromisoformat(stay_booking['start_date'])
+        end_date = date.fromisoformat(stay_booking['end_date'])
+        if not (start_date <= scheduled_date < end_date):
+            raise ValueError("Adventure date must be within your linked stay dates")
 
     @staticmethod
     def get_by_id(ab_id: int, include_relations: bool = False) -> Optional[Dict]:
