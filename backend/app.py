@@ -13,6 +13,7 @@ import os
 import sys
 import sqlite3
 import logging
+from logging.handlers import RotatingFileHandler
 from flask import Flask, jsonify, request, session, render_template, redirect, url_for
 from flask_wtf.csrf import CSRFProtect
 
@@ -37,18 +38,34 @@ def setup_logging():
     os.makedirs(log_dir, exist_ok=True)
     log_file = os.path.join(log_dir, 'errors.log')
 
-    logger = logging.getLogger()
-    logger.setLevel(logging.DEBUG)
+    is_production = os.environ.get('FLASK_ENV', 'development').lower() == 'production'
+    file_log_level = logging.WARNING if is_production else logging.DEBUG
+    root_log_level = logging.WARNING if is_production else logging.DEBUG
+    console_log_level = logging.WARNING if is_production else logging.DEBUG
+    max_bytes = 1_048_576  # 1MB
+    backup_count = 5
 
-    file_handler = logging.FileHandler(log_file)
-    file_handler.setLevel(logging.DEBUG)
+    logger = logging.getLogger()
+    logger.setLevel(root_log_level)
+
+    # Keep setup idempotent across reloads/tests.
+    for handler in list(logger.handlers):
+        logger.removeHandler(handler)
+        handler.close()
+
+    file_handler = RotatingFileHandler(
+        log_file,
+        maxBytes=max_bytes,
+        backupCount=backup_count
+    )
+    file_handler.setLevel(file_log_level)
     file_handler.setFormatter(logging.Formatter(
         '%(asctime)s - %(name)s - %(levelname)s - %(message)s',
         datefmt='%Y-%m-%d %H:%M:%S'
     ))
 
     console_handler = logging.StreamHandler()
-    console_handler.setLevel(logging.WARNING)
+    console_handler.setLevel(console_log_level)
     console_handler.setFormatter(logging.Formatter('%(levelname)s: %(message)s'))
 
     logger.addHandler(file_handler)
