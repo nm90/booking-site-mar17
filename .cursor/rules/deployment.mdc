@@ -1,0 +1,37 @@
+---
+description: Koyeb deployment instructions and checklist
+alwaysApply: true
+---
+
+# Deployment (Koyeb)
+
+The production app is `booking-site-mar17`, service `booking-site`. It uses archive + Docker builder (not the image in `koyeb.yaml`).
+
+## Deploy Checklist
+
+1. Ensure `koyeb.yaml` exists with all env vars linked from secrets
+2. Ensure `startup.sh` sources `.env`
+3. Run `koyeb deploy` from project root
+4. Verify service is healthy with `koyeb services get <app-name>`
+5. If volumes are configured, confirm they are necessary — avoid persistent volumes on Koyeb; use managed databases instead
+
+## Commands
+
+```bash
+# Deploy current directory to production
+koyeb deploy . booking-site-mar17/booking-site --archive-builder docker --wait
+
+# Check service health
+koyeb services get booking-site-mar17/booking-site
+
+# View build logs
+koyeb service logs 53d7d5ba -t build
+
+# View runtime logs
+koyeb service logs 53d7d5ba
+```
+
+## Rules
+
+- Always verify the koyeb CLI exists before suggesting commands (`koyeb --help`).
+- Always ensure `.env` files are sourced in `startup.sh`.

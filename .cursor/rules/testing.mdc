@@ -1,0 +1,9 @@
+---
+description: Testing conventions for the Flask app
+alwaysApply: true
+---
+
+# Testing
+
+- Do not add Flask routes after app initialization in tests. Use app factory pattern or register routes before first request.
+- Always run `pytest` after modifying application code before committing.

@@ -1,0 +1,13 @@
+---
+description: Docker Compose version detection and usage
+alwaysApply: true
+---
+
+# Docker
+
+```bash
+# Detect Docker Compose version
+docker compose version || docker-compose version
+```
+
+- Use `docker-compose` (v1) if `docker compose` (v2) is unavailable.

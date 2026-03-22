@@ -1,0 +1,10 @@
+---
+description: Python and CLI conventions — python3 enforcement, tool verification
+alwaysApply: true
+---
+
+# Python & CLI Conventions
+
+- Always use `python3`, never bare `python`.
+- When using external CLI tools (koyeb, docker, gh), verify the command exists with `--help` before running it.
+- For GitHub API calls, always include all required fields (e.g., `description` on `singleSelectOptions`).
