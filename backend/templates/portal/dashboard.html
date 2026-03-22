@@ -14,6 +14,7 @@
 <div class="stats-row">
     {% set pending = bookings | selectattr('status', 'eq', 'pending') | list %}
     {% set approved = bookings | selectattr('status', 'eq', 'approved') | list %}
+    {% set completed = bookings | selectattr('status', 'eq', 'completed') | list %}
     {% set adv_pending = adventure_bookings | selectattr('status', 'eq', 'pending') | list %}
 
     <div class="stat-card">
@@ -25,8 +26,8 @@
         <div class="stat-label">Pending Approval</div>
     </div>
     <div class="stat-card stat-card-success">
-        <div class="stat-number">{{ approved | length }}</div>
-        <div class="stat-label">Approved Stays</div>
+        <div class="stat-number">{{ approved | length + completed | length }}</div>
+        <div class="stat-label">Confirmed Stays</div>
     </div>
     <div class="stat-card stat-card-accent">
         <div class="stat-number">{{ adventure_bookings | length }}</div>
