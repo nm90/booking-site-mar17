@@ -47,7 +47,7 @@ def insert_seed_data():
         """, (
             'Sunset Villa',
             'A beautiful beachfront villa with stunning ocean views, 4 bedrooms and private pool.',
-            'Malibu, California',
+            'San Pedro Town, Belize',
             8, 450.00
         ))
 
