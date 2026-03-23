@@ -136,11 +136,52 @@
             padding: 2rem;
             max-width: 800px;
         }
+        .hero-overlay::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 140%;
+            aspect-ratio: 1;
+            transform: translate(-50%, -50%);
+            background: conic-gradient(
+                from 0deg,
+                rgba(224,124,90,0.25) 0deg, transparent 10deg,
+                transparent 20deg, rgba(224,124,90,0.25) 20deg, transparent 30deg,
+                transparent 40deg, rgba(255,255,255,0.15) 40deg, transparent 50deg,
+                transparent 60deg, rgba(224,124,90,0.25) 60deg, transparent 70deg,
+                transparent 80deg, rgba(255,255,255,0.15) 80deg, transparent 90deg,
+                transparent 100deg, rgba(224,124,90,0.25) 100deg, transparent 110deg,
+                transparent 120deg, rgba(255,255,255,0.15) 120deg, transparent 130deg,
+                transparent 140deg, rgba(224,124,90,0.25) 140deg, transparent 150deg,
+                transparent 160deg, rgba(255,255,255,0.15) 160deg, transparent 170deg,
+                transparent 180deg, rgba(224,124,90,0.25) 180deg, transparent 190deg,
+                transparent 200deg, rgba(255,255,255,0.15) 200deg, transparent 210deg,
+                transparent 220deg, rgba(224,124,90,0.25) 220deg, transparent 230deg,
+                transparent 240deg, rgba(255,255,255,0.15) 240deg, transparent 250deg,
+                transparent 260deg, rgba(224,124,90,0.25) 260deg, transparent 270deg,
+                transparent 280deg, rgba(255,255,255,0.15) 280deg, transparent 290deg,
+                transparent 300deg, rgba(224,124,90,0.25) 300deg, transparent 310deg,
+                transparent 320deg, rgba(255,255,255,0.15) 320deg, transparent 330deg,
+                transparent 340deg, rgba(224,124,90,0.25) 340deg, transparent 350deg,
+                transparent 360deg
+            );
+            border-radius: 50%;
+            mask-image: radial-gradient(circle, white 20%, transparent 70%);
+            -webkit-mask-image: radial-gradient(circle, white 20%, transparent 70%);
+            animation: sunburst-spin 60s linear infinite;
+            pointer-events: none;
+            z-index: -1;
+        }
+        @keyframes sunburst-spin {
+            to { transform: translate(-50%, -50%) rotate(360deg); }
+        }
         .hero-overlay h1 {
             font-size: clamp(2rem, 5vw, 3.5rem);
             font-weight: 800;
             margin-bottom: 0.75rem;
             text-shadow: 0 2px 12px rgba(0,0,0,0.5);
+            position: relative;
         }
         .hero-overlay p {
             font-size: clamp(1rem, 2.5vw, 1.35rem);
