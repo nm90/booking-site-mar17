@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Caye Garden Casita | Vacation Rental in San Pedro Town, Belize</title>
+    <meta name="description" content="Book your stay at Caye Garden Casita, a charming tropical vacation rental in San Pedro Town, Ambergris Caye, Belize. Steps from the Caribbean Sea with lush garden surroundings.">
+    <meta name="keywords" content="Caye Garden Casita, San Pedro Town, Belize vacation rental, Ambergris Caye, Caribbean rental, Belize accommodation, San Pedro Belize, tropical casita, beach house Belize">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://bze2.wiscomfort.com">
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="Caye Garden Casita | San Pedro Town, Belize">
+    <meta property="og:description" content="Charming tropical casita nestled in lush gardens in San Pedro Town, Ambergris Caye, Belize. Book your Caribbean getaway today.">
+    <meta property="og:image" content="images/casita-exterior.jpg">
+    <meta property="og:url" content="https://bze2.wiscomfort.com">
+    <meta property="og:type" content="website">
+    <meta property="og:locale" content="en_US">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Caye Garden Casita | San Pedro Town, Belize">
+    <meta name="twitter:description" content="Charming tropical casita in San Pedro Town, Ambergris Caye, Belize. Book your Caribbean getaway.">
+    <meta name="twitter:image" content="images/casita-exterior.jpg">
+
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "LodgingBusiness",
+        "name": "Caye Garden Casita",
+        "description": "A charming tropical casita nestled in lush gardens in San Pedro Town, Ambergris Caye, Belize. Perfect for a relaxing Caribbean getaway.",
+        "url": "https://bze2.wiscomfort.com",
+        "image": "images/casita-exterior.jpg",
+        "address": {
+            "@type": "PostalAddress",
+            "addressLocality": "San Pedro Town",
+            "addressRegion": "Ambergris Caye",
+            "addressCountry": "BZ"
+        },
+        "geo": {
+            "@type": "GeoCoordinates",
+            "latitude": 17.9214,
+            "longitude": -87.9611
+        },
+        "priceRange": "$$",
+        "amenityFeature": [
+            {"@type": "LocationFeatureSpecification", "name": "Tropical Garden"},
+            {"@type": "LocationFeatureSpecification", "name": "Near Beach"},
+            {"@type": "LocationFeatureSpecification", "name": "Private Casita"}
+        ],
+        "checkinTime": "15:00",
+        "checkoutTime": "11:00"
+    }
+    </script>
+
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --teal: #0e7c6b;
+            --teal-dark: #095e52;
+            --sand: #f5f0e8;
+            --sand-dark: #e8dfd2;
+            --coral: #e07c5a;
+            --coral-dark: #c96842;
+            --charcoal: #2c3e3a;
+            --white: #ffffff;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            color: var(--charcoal);
+            line-height: 1.6;
+            background: var(--white);
+        }
+
+        /* Header */
+        header {
+            background: var(--white);
+            border-bottom: 1px solid var(--sand-dark);
+            padding: 1rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .header-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .logo {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--teal);
+            text-decoration: none;
+        }
+        .logo span { color: var(--coral); }
+        .nav-book {
+            background: var(--coral);
+            color: var(--white);
+            padding: 0.6rem 1.5rem;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+        .nav-book:hover { background: var(--coral-dark); }
+
+        /* Hero */
+        .hero {
+            position: relative;
+            min-height: 80vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            background: var(--charcoal);
+        }
+        .hero-img {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0.85;
+        }
+        .hero-overlay {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+            color: var(--white);
+            padding: 2rem;
+            max-width: 800px;
+        }
+        .hero-overlay h1 {
+            font-size: clamp(2rem, 5vw, 3.5rem);
+            font-weight: 800;
+            margin-bottom: 0.75rem;
+            text-shadow: 0 2px 12px rgba(0,0,0,0.5);
+        }
+        .hero-overlay p {
+            font-size: clamp(1rem, 2.5vw, 1.35rem);
+            margin-bottom: 2rem;
+            text-shadow: 0 1px 6px rgba(0,0,0,0.5);
+        }
+        .hero-cta {
+            display: inline-block;
+            background: var(--coral);
+            color: var(--white);
+            padding: 1rem 2.5rem;
+            font-size: 1.15rem;
+            font-weight: 700;
+            border-radius: 8px;
+            text-decoration: none;
+            transition: background 0.2s, transform 0.2s;
+        }
+        .hero-cta:hover {
+            background: var(--coral-dark);
+            transform: translateY(-2px);
+        }
+
+        /* Sections */
+        section { padding: 5rem 2rem; }
+        .section-inner {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+        h2 {
+            font-size: 2rem;
+            color: var(--teal);
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+        .section-subtitle {
+            text-align: center;
+            max-width: 650px;
+            margin: 0 auto 3rem;
+            color: #5a6b68;
+            font-size: 1.1rem;
+        }
+
+        /* About */
+        .about { background: var(--sand); }
+        .about-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+            align-items: center;
+        }
+        .about-img {
+            width: 100%;
+            border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+        }
+        .about-text p {
+            margin-bottom: 1rem;
+            font-size: 1.05rem;
+        }
+
+        /* Features */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+        }
+        .feature-card {
+            background: var(--sand);
+            padding: 2rem;
+            border-radius: 12px;
+            text-align: center;
+        }
+        .feature-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+        .feature-card h3 {
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+            color: var(--teal-dark);
+        }
+
+        /* Location */
+        .location { background: var(--sand); }
+        .location-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+            align-items: start;
+        }
+        .location-details h3 {
+            color: var(--teal-dark);
+            margin-bottom: 0.5rem;
+            font-size: 1.15rem;
+        }
+        .location-details p {
+            margin-bottom: 1.5rem;
+        }
+        .location-map {
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        .location-map iframe {
+            width: 100%;
+            height: 350px;
+            border: 0;
+        }
+
+        /* CTA */
+        .cta-section {
+            background: var(--teal);
+            color: var(--white);
+            text-align: center;
+        }
+        .cta-section h2 { color: var(--white); }
+        .cta-section p {
+            font-size: 1.15rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+        }
+        .cta-btn {
+            display: inline-block;
+            background: var(--coral);
+            color: var(--white);
+            padding: 1rem 3rem;
+            font-size: 1.15rem;
+            font-weight: 700;
+            border-radius: 8px;
+            text-decoration: none;
+            transition: background 0.2s, transform 0.2s;
+        }
+        .cta-btn:hover {
+            background: var(--coral-dark);
+            transform: translateY(-2px);
+        }
+
+        /* Footer */
+        footer {
+            background: var(--charcoal);
+            color: rgba(255,255,255,0.7);
+            text-align: center;
+            padding: 2.5rem 2rem;
+            font-size: 0.95rem;
+        }
+        footer a {
+            color: var(--coral);
+            text-decoration: none;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .about-grid,
+            .location-grid {
+                grid-template-columns: 1fr;
+            }
+            header { padding: 0.75rem 1rem; }
+            section { padding: 3rem 1.25rem; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="header-inner">
+        <a href="/" class="logo">Caye Garden <span>Casita</span></a>
+        <a href="https://bze2.wiscomfort.com" class="nav-book">Book Now</a>
+    </div>
+</header>
+
+<section class="hero" aria-label="Hero">
+    <img src="images/casita-exterior.jpg" alt="Caye Garden Casita — a charming white cottage surrounded by tropical plants in San Pedro Town, Belize" class="hero-img" width="1200" height="800" loading="eager">
+    <div class="hero-overlay">
+        <h1>Caye Garden Casita</h1>
+        <p>Your private tropical retreat in San Pedro Town, Ambergris Caye, Belize</p>
+        <a href="https://bze2.wiscomfort.com" class="hero-cta">Check Availability</a>
+    </div>
+</section>
+
+<section class="about" id="about">
+    <div class="section-inner">
+        <h2>A Caribbean Hideaway</h2>
+        <div class="about-grid">
+            <img src="images/casita-exterior.jpg" alt="Caye Garden Casita exterior with lush tropical garden" class="about-img" width="600" height="400" loading="lazy">
+            <div class="about-text">
+                <p>Nestled among vibrant crotons, sea grape trees, and tropical palms, Caye Garden Casita is a cozy cottage-style vacation rental in the heart of San Pedro Town on Ambergris Caye, Belize.</p>
+                <p>The casita features classic Caribbean charm — white clapboard siding, lattice detailing, and a private patio surrounded by lush gardens. Wake up to birdsong, stroll to the beach, and experience authentic island life.</p>
+                <p>Whether you're snorkeling the Belize Barrier Reef, exploring local restaurants, or simply relaxing in the garden with a Belikin beer, Caye Garden Casita is your perfect home base.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="features" id="amenities">
+    <div class="section-inner">
+        <h2>What Makes Us Special</h2>
+        <p class="section-subtitle">Everything you need for a comfortable Caribbean vacation, with the charm of a true island home.</p>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon" aria-hidden="true">&#127965;</div>
+                <h3>Steps from the Beach</h3>
+                <p>A short walk to the turquoise Caribbean Sea and the world-famous Belize Barrier Reef.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon" aria-hidden="true">&#127796;</div>
+                <h3>Tropical Garden</h3>
+                <p>Surrounded by lush tropical plants, crotons, and sea grapes for a true island atmosphere.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon" aria-hidden="true">&#127968;</div>
+                <h3>Private Casita</h3>
+                <p>Your own standalone cottage with all the comforts of home — no shared walls or lobbies.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon" aria-hidden="true">&#129517;</div>
+                <h3>Island Adventures</h3>
+                <p>Snorkeling, diving, fishing, and island hopping — all easily arranged from San Pedro.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="location" id="location">
+    <div class="section-inner">
+        <h2>San Pedro Town, Belize</h2>
+        <p class="section-subtitle">Located on Ambergris Caye, the largest island in Belize and a top Caribbean destination.</p>
+        <div class="location-grid">
+            <div class="location-details">
+                <h3>Getting Here</h3>
+                <p>Fly into Philip S. W. Goldson International Airport (BZE) in Belize City, then take a quick 20-minute puddle-jumper flight or a scenic water taxi to San Pedro Town.</p>
+                <h3>The Neighborhood</h3>
+                <p>Caye Garden Casita sits in a quiet residential area of San Pedro Town, within walking distance of restaurants, shops, dive operators, and the beach.</p>
+                <h3>The Barrier Reef</h3>
+                <p>The Belize Barrier Reef — a UNESCO World Heritage Site and the second-largest reef system in the world — is just a short boat ride away.</p>
+            </div>
+            <div class="location-map">
+                <iframe src="https://www.openstreetmap.org/export/embed.html?bbox=-87.975,-87.95,17.91,17.94&layer=mapnik&marker=17.9214,-87.9611" title="Map showing San Pedro Town, Ambergris Caye, Belize" loading="lazy" referrerpolicy="no-referrer"></iframe>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="cta-section">
+    <div class="section-inner">
+        <h2>Ready for Your Belize Getaway?</h2>
+        <p>Check available dates and book your stay at Caye Garden Casita today.</p>
+        <a href="https://bze2.wiscomfort.com" class="cta-btn">Book Your Stay</a>
+    </div>
+</section>
+
+<footer>
+    <p>Caye Garden Casita &middot; San Pedro Town, Ambergris Caye, Belize</p>
+    <p style="margin-top: 0.5rem;">&copy; 2026 Caye Garden Casita. All rights reserved. &middot; <a href="https://bze2.wiscomfort.com">Manage Booking</a></p>
+</footer>
+
+</body>
+</html>
