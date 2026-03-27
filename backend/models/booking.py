@@ -160,6 +160,7 @@ class Booking:
             booking['property'] = {
                 'name': row['property_name'],
                 'location': row['property_location'],
+                'check_in_instructions': row.get('property_check_in_instructions'),
             }
         return booking
 
@@ -169,7 +170,8 @@ class Booking:
         if not include_relations:
             result = execute_query(
                 """SELECT bookings.*, properties.name as property_name,
-                          properties.location as property_location
+                          properties.location as property_location,
+                          properties.check_in_instructions as property_check_in_instructions
                    FROM bookings
                    LEFT JOIN properties ON bookings.property_id = properties.id
                    WHERE bookings.id = ?""",
@@ -187,7 +189,8 @@ class Booking:
                 users.email as user_email,
                 users.phone_number as user_phone,
                 properties.name as property_name,
-                properties.location as property_location
+                properties.location as property_location,
+                properties.check_in_instructions as property_check_in_instructions
             FROM bookings
             INNER JOIN users ON bookings.user_id = users.id
             LEFT JOIN properties ON bookings.property_id = properties.id
@@ -211,7 +214,8 @@ class Booking:
                     users.email as user_email,
                     users.phone_number as user_phone,
                     properties.name as property_name,
-                    properties.location as property_location
+                    properties.location as property_location,
+                    properties.check_in_instructions as property_check_in_instructions
                 FROM bookings
                 INNER JOIN users ON bookings.user_id = users.id
                 LEFT JOIN properties ON bookings.property_id = properties.id
@@ -219,7 +223,8 @@ class Booking:
         else:
             query = """
                 SELECT bookings.*, properties.name as property_name,
-                       properties.location as property_location
+                       properties.location as property_location,
+                       properties.check_in_instructions as property_check_in_instructions
                 FROM bookings
                 LEFT JOIN properties ON bookings.property_id = properties.id
             """
@@ -242,7 +247,8 @@ class Booking:
         """Fetch all bookings for a specific user."""
         query = """
             SELECT bookings.*, properties.name as property_name,
-                   properties.location as property_location
+                   properties.location as property_location,
+                   properties.check_in_instructions as property_check_in_instructions
             FROM bookings
             LEFT JOIN properties ON bookings.property_id = properties.id
             WHERE bookings.user_id = ?

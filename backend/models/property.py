@@ -46,18 +46,20 @@ class Property:
 
     @staticmethod
     def create(name: str, description: str, location: str,
-               capacity: int, price_per_night: float) -> Dict:
+               capacity: int, price_per_night: float,
+               check_in_instructions: str = None) -> Dict:
         """Create a new property and return it."""
         Property.validate(name, location, capacity, price_per_night)
 
         query = """
-            INSERT INTO properties (name, description, location, capacity, price_per_night)
-            VALUES (?, ?, ?, ?, ?)
+            INSERT INTO properties (name, description, location, capacity, price_per_night, check_in_instructions)
+            VALUES (?, ?, ?, ?, ?, ?)
         """
         property_id = execute_query(
             query,
             (name.strip(), (description or '').strip() or None, location.strip(),
-             int(capacity), float(price_per_night)),
+             int(capacity), float(price_per_night),
+             (check_in_instructions or '').strip() or None),
             commit=True
         )
         return Property.get_by_id(property_id)
@@ -82,20 +84,23 @@ class Property:
 
     @staticmethod
     def update(property_id: int, name: str, description: str, location: str,
-               capacity: int, price_per_night: float, status: str) -> Optional[Dict]:
+               capacity: int, price_per_night: float, status: str,
+               check_in_instructions: str = None) -> Optional[Dict]:
         """Update a property and return the updated row."""
         Property.validate(name, location, capacity, price_per_night, status)
 
         query = """
             UPDATE properties
             SET name = ?, description = ?, location = ?, capacity = ?,
-                price_per_night = ?, status = ?, updated_at = CURRENT_TIMESTAMP
+                price_per_night = ?, status = ?, check_in_instructions = ?,
+                updated_at = CURRENT_TIMESTAMP
             WHERE id = ?
         """
         execute_query(
             query,
             (name.strip(), (description or '').strip() or None, location.strip(),
-             int(capacity), float(price_per_night), status, property_id),
+             int(capacity), float(price_per_night), status,
+             (check_in_instructions or '').strip() or None, property_id),
             commit=True
         )
         return Property.get_by_id(property_id)

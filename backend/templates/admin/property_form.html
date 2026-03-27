@@ -27,6 +27,13 @@
             </div>
 
             <div class="form-group">
+                <label for="check_in_instructions">Check-in Instructions <span class="optional">(optional)</span></label>
+                <textarea id="check_in_instructions" name="check_in_instructions" rows="5"
+                          placeholder="Door code, key location, WiFi password, parking info, house rules...">{{ property.check_in_instructions if property and property.check_in_instructions else check_in_instructions or '' }}</textarea>
+                <p class="form-hint">Shown to guests after their booking is approved</p>
+            </div>
+
+            <div class="form-group">
                 <label for="location">Location</label>
                 <input type="text" id="location" name="location"
                        value="{{ property.location if property else location or '' }}" required>

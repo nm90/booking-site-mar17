@@ -148,6 +148,12 @@ def init_database():
 
     if os.path.exists(db_path):
         print(f"Database found: {db_path}")
+        # Run safe migrations for new columns
+        from backend.database.connection import execute_query
+        try:
+            execute_query("ALTER TABLE properties ADD COLUMN check_in_instructions TEXT")
+        except Exception:
+            pass  # Column already exists
         return
 
     print(f"Creating new database: {db_path}")

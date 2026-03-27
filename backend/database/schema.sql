@@ -34,6 +34,7 @@ CREATE TABLE IF NOT EXISTS properties (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
     description TEXT,
+    check_in_instructions TEXT,
     location TEXT NOT NULL,
     capacity INTEGER NOT NULL,
     price_per_night REAL NOT NULL,

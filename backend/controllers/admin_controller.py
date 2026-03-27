@@ -407,16 +407,19 @@ def properties_create():
     location = request.form.get('location', '').strip()
     capacity = request.form.get('capacity', '')
     price_per_night = request.form.get('price_per_night', '')
+    check_in_instructions = request.form.get('check_in_instructions', '').strip()
 
     try:
-        prop = Property.create(name, description, location, capacity, price_per_night)
+        prop = Property.create(name, description, location, capacity, price_per_night,
+                               check_in_instructions=check_in_instructions)
         flash(f'Property "{prop["name"]}" created successfully.', 'success')
         return redirect(url_for('admin.properties_index'))
     except ValueError as e:
         flash(str(e), 'error')
         return render_template('admin/property_form.html',
                                name=name, description=description, location=location,
-                               capacity=capacity, price_per_night=price_per_night)
+                               capacity=capacity, price_per_night=price_per_night,
+                               check_in_instructions=check_in_instructions)
 
 
 @admin_bp.route('/properties/<int:property_id>/edit')
@@ -440,10 +443,12 @@ def properties_update(property_id):
     capacity = request.form.get('capacity', '')
     price_per_night = request.form.get('price_per_night', '')
     status = request.form.get('status', 'active')
+    check_in_instructions = request.form.get('check_in_instructions', '').strip()
 
     try:
         prop = Property.update(property_id, name, description, location,
-                               capacity, price_per_night, status)
+                               capacity, price_per_night, status,
+                               check_in_instructions=check_in_instructions)
         if not prop:
             flash('Property not found.', 'error')
         else:
@@ -454,7 +459,8 @@ def properties_update(property_id):
         return render_template('admin/property_form.html',
                                property={'id': property_id, 'name': name, 'description': description,
                                          'location': location, 'capacity': capacity,
-                                         'price_per_night': price_per_night, 'status': status})
+                                         'price_per_night': price_per_night, 'status': status,
+                                         'check_in_instructions': check_in_instructions})
 
 
 @admin_bp.route('/properties/<int:property_id>/delete', methods=['POST'])
