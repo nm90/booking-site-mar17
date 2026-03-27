@@ -161,10 +161,15 @@ def init_database():
         print(f"Database found: {db_path}")
         # Run safe migrations for new columns
         from backend.database.connection import execute_query
-        try:
-            execute_query("ALTER TABLE properties ADD COLUMN check_in_instructions TEXT")
-        except Exception:
-            pass  # Column already exists
+        for migration in [
+            "ALTER TABLE properties ADD COLUMN check_in_instructions TEXT",
+            "ALTER TABLE users ADD COLUMN password_reset_token TEXT",
+            "ALTER TABLE users ADD COLUMN password_reset_expires DATETIME",
+        ]:
+            try:
+                execute_query(migration)
+            except Exception:
+                pass  # Column already exists
         return
 
     print(f"Creating new database: {db_path}")

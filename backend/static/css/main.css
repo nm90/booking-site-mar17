@@ -739,6 +739,16 @@ footer a { color: rgba(255,255,255,.75); }
 .text-sm    { font-size: 0.85rem; }
 .text-xs    { font-size: 0.75rem; }
 
+/* ── Form Link ──────────────────────────────────────────── */
+.form-link {
+    color: var(--primary);
+    font-size: 0.875rem;
+    text-decoration: none;
+}
+.form-link:hover {
+    text-decoration: underline;
+}
+
 /* ── Responsive ──────────────────────────────────────────── */
 @media (max-width: 768px) {
   .form-page       { grid-template-columns: 1fr; }

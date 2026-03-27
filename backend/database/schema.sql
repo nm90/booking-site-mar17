@@ -12,6 +12,8 @@ CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     email TEXT NOT NULL UNIQUE,
     password_hash TEXT NOT NULL,
+    password_reset_token TEXT,
+    password_reset_expires DATETIME,
     first_name TEXT NOT NULL,
     last_name TEXT NOT NULL,
     phone_number TEXT,
