@@ -9,7 +9,7 @@ MVC Role: MODEL
 """
 
 from typing import Dict, List, Optional
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from backend.database.connection import execute_query, begin_immediate
 from backend.models.property import Property
 
@@ -100,6 +100,28 @@ class Booking:
 
         result = execute_query(query, tuple(params), fetch_all=True)
         return len(result) == 0
+
+    @staticmethod
+    def get_booked_dates(property_id: int) -> List[Dict]:
+        """Return all booked date ranges for a property (next 12 months).
+
+        Returns list of dicts with start_date and end_date strings.
+        Only includes bookings that block availability (pending, approved).
+        """
+        today = str(date.today())
+        future = str(date.today() + timedelta(days=365))
+
+        results = execute_query(
+            """SELECT start_date, end_date FROM bookings
+               WHERE property_id = ?
+                 AND status IN ('pending', 'approved')
+                 AND end_date > ?
+                 AND start_date < ?
+               ORDER BY start_date""",
+            (property_id, today, future),
+            fetch_all=True
+        )
+        return [{'start_date': r['start_date'], 'end_date': r['end_date']} for r in results] if results else []
 
     @staticmethod
     def create(user_id: int, start_date: str, end_date: str,

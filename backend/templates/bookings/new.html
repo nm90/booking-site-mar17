@@ -39,6 +39,15 @@
                 </div>
             </div>
 
+            <div id="availability-calendar" class="availability-calendar" style="display:none">
+                <label>Availability</label>
+                <div class="calendar-legend">
+                    <span class="legend-item"><span class="legend-dot available"></span> Available</span>
+                    <span class="legend-item"><span class="legend-dot booked"></span> Booked</span>
+                </div>
+                <div id="calendar-months" class="calendar-months"></div>
+            </div>
+
             <div class="form-row">
                 <div class="form-group">
                     <label for="start_date">Check-in date</label>
@@ -149,11 +158,100 @@
         }
     }
 
-    propertySelect.addEventListener('change', updatePropertyPreview);
+    // Availability calendar
+    let bookedRanges = [];
+
+    function fetchAvailability() {
+        const prop = getSelectedProperty();
+        const calendarEl = document.getElementById('availability-calendar');
+        if (!prop) {
+            calendarEl.style.display = 'none';
+            return;
+        }
+        const propertyId = propertySelect.value;
+        fetch(`/portal/bookings/availability/${propertyId}`)
+            .then(r => r.json())
+            .then(data => {
+                bookedRanges = data;
+                renderCalendar();
+                calendarEl.style.display = '';
+            })
+            .catch(() => { calendarEl.style.display = 'none'; });
+    }
+
+    function renderCalendar() {
+        const container = document.getElementById('calendar-months');
+        container.innerHTML = '';
+        const today = new Date();
+        for (let m = 0; m < 12; m++) {
+            const monthDate = new Date(today.getFullYear(), today.getMonth() + m, 1);
+            container.appendChild(buildMonth(monthDate));
+        }
+    }
+
+    function buildMonth(monthDate) {
+        const div = document.createElement('div');
+        div.className = 'calendar-month';
+        const title = document.createElement('div');
+        title.className = 'calendar-month-title';
+        title.textContent = monthDate.toLocaleString('default', { month: 'long', year: 'numeric' });
+        div.appendChild(title);
+
+        const grid = document.createElement('div');
+        grid.className = 'calendar-grid';
+
+        ['Su','Mo','Tu','We','Th','Fr','Sa'].forEach(d => {
+            const hdr = document.createElement('div');
+            hdr.className = 'calendar-day-header';
+            hdr.textContent = d;
+            grid.appendChild(hdr);
+        });
+
+        const firstDay = monthDate.getDay();
+        for (let i = 0; i < firstDay; i++) {
+            grid.appendChild(document.createElement('div'));
+        }
+
+        const daysInMonth = new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 0).getDate();
+        const now = new Date();
+        now.setHours(0,0,0,0);
+
+        for (let d = 1; d <= daysInMonth; d++) {
+            const cell = document.createElement('div');
+            cell.className = 'calendar-day';
+            cell.textContent = d;
+
+            const cellDate = new Date(monthDate.getFullYear(), monthDate.getMonth(), d);
+            if (cellDate < now) {
+                cell.classList.add('past');
+            } else if (isDateBooked(cellDate)) {
+                cell.classList.add('booked');
+            } else {
+                cell.classList.add('available');
+            }
+            grid.appendChild(cell);
+        }
+        div.appendChild(grid);
+        return div;
+    }
+
+    function isDateBooked(checkDate) {
+        return bookedRanges.some(range => {
+            const start = new Date(range.start_date + 'T00:00:00');
+            const end = new Date(range.end_date + 'T00:00:00');
+            return checkDate >= start && checkDate < end;
+        });
+    }
+
+    propertySelect.addEventListener('change', () => {
+        updatePropertyPreview();
+        fetchAvailability();
+    });
     startInput.addEventListener('change', updatePriceHint);
     endInput.addEventListener('change', updatePriceHint);
 
     // Initialize on page load
     updatePropertyPreview();
+    if (propertySelect.value) fetchAvailability();
 </script>
 {% endblock %}

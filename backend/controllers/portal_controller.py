@@ -23,7 +23,7 @@ Routes:
     POST /portal/adventures          - Submit adventure request
 """
 
-from flask import Blueprint, request, redirect, url_for, flash, session, render_template, current_app
+from flask import Blueprint, request, redirect, url_for, flash, session, render_template, current_app, jsonify
 from backend.models.booking import Booking
 from backend.models.review import Review
 from backend.models.adventure import Adventure, AdventureBooking
@@ -147,6 +147,14 @@ def bookings_new():
     properties = Property.get_all(active_only=True)
     selected_id = request.args.get('property_id', type=int)
     return render_template('bookings/new.html', properties=properties, property_id=selected_id)
+
+
+@portal_bp.route('/bookings/availability/<int:property_id>')
+@login_required
+def bookings_availability(property_id):
+    """Return booked date ranges for a property as JSON."""
+    booked = Booking.get_booked_dates(property_id)
+    return jsonify(booked)
 
 
 @portal_bp.route('/bookings', methods=['POST'])

@@ -739,6 +739,67 @@ footer a { color: rgba(255,255,255,.75); }
 .text-sm    { font-size: 0.85rem; }
 .text-xs    { font-size: 0.75rem; }
 
+/* ── Availability Calendar ──────────────────────────────── */
+.availability-calendar {
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+}
+.availability-calendar > label {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    display: block;
+}
+.calendar-legend {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 0.75rem;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+.legend-item { display: flex; align-items: center; gap: 0.35rem; }
+.legend-dot {
+    width: 10px; height: 10px; border-radius: 50%; display: inline-block;
+}
+.legend-dot.available { background: var(--success); }
+.legend-dot.booked { background: var(--danger); opacity: 0.6; }
+.calendar-months {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    max-height: 500px;
+    overflow-y: auto;
+}
+.calendar-month { min-width: 200px; }
+.calendar-month-title {
+    font-weight: 600;
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+    text-align: center;
+}
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+    text-align: center;
+    font-size: 0.8rem;
+}
+.calendar-day-header {
+    font-weight: 600;
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    padding: 0.2rem;
+}
+.calendar-day {
+    padding: 0.3rem;
+    border-radius: 4px;
+}
+.calendar-day.available { background: #dcfce7; color: #14532d; }
+.calendar-day.booked { background: #fee2e2; color: #7f1d1d; }
+.calendar-day.past { color: var(--text-muted); opacity: 0.4; }
+
 /* ── Form Link ──────────────────────────────────────────── */
 .form-link {
     color: var(--primary);
