@@ -76,9 +76,20 @@ def setup_logging():
 # ============================================================================
 # APPLICATION INITIALIZATION
 # ============================================================================
+from flask_mail import Mail
+
 app = Flask(__name__)
 csrf = CSRFProtect(app)
 logger = setup_logging()
+
+# Mail configuration
+app.config['MAIL_SERVER'] = os.environ.get('MAIL_SERVER', 'smtp.gmail.com')
+app.config['MAIL_PORT'] = int(os.environ.get('MAIL_PORT', 587))
+app.config['MAIL_USE_TLS'] = os.environ.get('MAIL_USE_TLS', 'true').lower() == 'true'
+app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME', '')
+app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD', '')
+app.config['MAIL_DEFAULT_SENDER'] = os.environ.get('MAIL_DEFAULT_SENDER', 'noreply@cayegardencasita.com')
+mail = Mail(app)
 
 from backend.database.connection import close_connection, DB_PATH
 app.teardown_appcontext(close_connection)

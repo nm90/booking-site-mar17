@@ -1,0 +1,27 @@
+{% extends "emails/base_email.html" %}
+{% block content %}
+<p>Hi {{ guest_name }},</p>
+
+{% if booking.status == 'approved' %}
+<p>Great news &mdash; your booking has been <span class="badge badge-approved">approved</span>!</p>
+{% elif booking.status == 'rejected' %}
+<p>We're sorry, but your booking request has been <span class="badge badge-rejected">declined</span>.</p>
+{% elif booking.status == 'cancelled' %}
+<p>Your booking has been cancelled.</p>
+{% endif %}
+
+<div class="detail-box">
+    <div class="detail-row"><span class="detail-label">Property</span><span class="detail-value">{{ booking.property.name }}</span></div>
+    <div class="detail-row"><span class="detail-label">Dates</span><span class="detail-value">{{ booking.start_date }} &mdash; {{ booking.end_date }}</span></div>
+    <div class="detail-row"><span class="detail-label">Status</span><span class="detail-value">{{ booking.status }}</span></div>
+</div>
+
+{% if booking.admin_notes %}
+<p><strong>Note from host:</strong> {{ booking.admin_notes }}</p>
+{% endif %}
+
+{% if booking.status == 'approved' and booking.property.check_in_instructions %}
+<p><strong>Check-in Instructions:</strong></p>
+<div class="checkin-box">{{ booking.property.check_in_instructions }}</div>
+{% endif %}
+{% endblock %}

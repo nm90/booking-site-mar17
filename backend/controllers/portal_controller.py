@@ -23,13 +23,14 @@ Routes:
     POST /portal/adventures          - Submit adventure request
 """
 
-from flask import Blueprint, request, redirect, url_for, flash, session, render_template
+from flask import Blueprint, request, redirect, url_for, flash, session, render_template, current_app
 from backend.models.booking import Booking
 from backend.models.review import Review
 from backend.models.adventure import Adventure, AdventureBooking
 from backend.models.property import Property
 from backend.models.user import User
 from backend.controllers.auth_controller import login_required
+from backend.services.email import send_booking_confirmation, notify_admin_new_booking
 
 portal_bp = Blueprint('portal', __name__, url_prefix='/portal')
 
@@ -170,6 +171,11 @@ def bookings_create():
             property_id=property_id,
             special_requests=special_requests
         )
+        # Send email notifications
+        send_booking_confirmation(session['user_email'], session['user_first_name'], booking)
+        admin_email = current_app.config.get('ADMIN_EMAIL', 'admin@vacationrental.com')
+        notify_admin_new_booking(admin_email, booking)
+
         flash('Booking request submitted! We will review it shortly.', 'success')
         return redirect(url_for('portal.bookings_show', booking_id=booking['id']))
 

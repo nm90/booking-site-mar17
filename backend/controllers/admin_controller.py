@@ -36,6 +36,7 @@ from backend.models.adventure import Adventure, AdventureBooking
 from backend.models.user import User
 from backend.models.property import Property
 from backend.controllers.auth_controller import admin_required
+from backend.services.email import send_booking_status_change, send_checkin_reminder
 
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
 
@@ -97,6 +98,9 @@ def bookings_approve(booking_id):
         if not booking:
             flash('Booking not found.', 'error')
         else:
+            if booking.get('user'):
+                send_booking_status_change(booking['user']['email'], booking['user']['first_name'], booking)
+                send_checkin_reminder(booking['user']['email'], booking['user']['first_name'], booking)
             flash(f'Booking #{booking_id} has been approved.', 'success')
     except ValueError as e:
         flash(str(e), 'error')
@@ -119,6 +123,8 @@ def bookings_reject(booking_id):
         if not booking:
             flash('Booking not found.', 'error')
         else:
+            if booking.get('user'):
+                send_booking_status_change(booking['user']['email'], booking['user']['first_name'], booking)
             flash(f'Booking #{booking_id} has been rejected.', 'success')
     except ValueError as e:
         flash(str(e), 'error')
