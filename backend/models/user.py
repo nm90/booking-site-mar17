@@ -10,8 +10,10 @@ MVC Role: MODEL
 
 import re
 import hashlib
+import secrets
 import bcrypt
 from typing import Dict, List, Optional
+from datetime import datetime, timedelta
 from backend.database.connection import execute_query
 
 
@@ -193,6 +195,87 @@ class User:
         execute_query(
             "UPDATE users SET status=?, updated_at=CURRENT_TIMESTAMP WHERE id=?",
             (status, user_id), commit=True
+        )
+        return User.get_by_id(user_id)
+
+    @staticmethod
+    def generate_reset_token(email: str) -> Optional[str]:
+        """Generate a password reset token for the given email.
+
+        Returns the token if user exists, None otherwise.
+        Does not reveal whether the email exists (caller handles messaging).
+        """
+        user = User.get_by_email(email)
+        if not user or user['status'] != 'active':
+            return None
+
+        token = secrets.token_urlsafe(32)
+        expires = (datetime.utcnow() + timedelta(hours=1)).strftime('%Y-%m-%d %H:%M:%S')
+
+        execute_query(
+            "UPDATE users SET password_reset_token=?, password_reset_expires=?, updated_at=CURRENT_TIMESTAMP WHERE id=?",
+            (token, expires, user['id']),
+            commit=True
+        )
+        return token
+
+    @staticmethod
+    def get_by_reset_token(token: str) -> Optional[Dict]:
+        """Fetch a user by valid (non-expired) reset token."""
+        if not token:
+            return None
+        return execute_query(
+            """SELECT id, email, first_name, last_name, role, status
+               FROM users
+               WHERE password_reset_token = ?
+                 AND password_reset_expires > CURRENT_TIMESTAMP
+                 AND status = 'active'""",
+            (token,), fetch_one=True
+        )
+
+    @staticmethod
+    def reset_password(token: str, new_password: str) -> Optional[Dict]:
+        """Reset password using a valid token. Returns user dict or None."""
+        if not new_password or len(new_password) < 6:
+            raise ValueError("Password must be at least 6 characters")
+
+        user = User.get_by_reset_token(token)
+        if not user:
+            return None
+
+        password_hash = User.hash_password(new_password)
+        execute_query(
+            """UPDATE users
+               SET password_hash=?, password_reset_token=NULL, password_reset_expires=NULL,
+                   updated_at=CURRENT_TIMESTAMP
+               WHERE id=?""",
+            (password_hash, user['id']),
+            commit=True
+        )
+        return User.get_by_id(user['id'])
+
+    @staticmethod
+    def update_password(user_id: int, current_password: str, new_password: str) -> Optional[Dict]:
+        """Change a user's password after verifying their current password.
+
+        Raises ValueError if current password is wrong or new password is invalid.
+        Returns updated user dict.
+        """
+        user = execute_query("SELECT * FROM users WHERE id = ?", (user_id,), fetch_one=True)
+        if not user:
+            return None
+
+        if not User._verify_password(current_password, user['password_hash']):
+            raise ValueError("Current password is incorrect")
+
+        if not new_password or len(new_password) < 6:
+            raise ValueError("New password must be at least 6 characters")
+
+        password_hash = User.hash_password(new_password)
+        execute_query(
+            "UPDATE users SET password_hash=?, updated_at=CURRENT_TIMESTAMP WHERE id=?",
+            (password_hash, user_id),
+            commit=True
         )
         return User.get_by_id(user_id)
 

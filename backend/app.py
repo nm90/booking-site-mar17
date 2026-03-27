@@ -76,9 +76,20 @@ def setup_logging():
 # ============================================================================
 # APPLICATION INITIALIZATION
 # ============================================================================
+from flask_mail import Mail
+
 app = Flask(__name__)
 csrf = CSRFProtect(app)
 logger = setup_logging()
+
+# Mail configuration
+app.config['MAIL_SERVER'] = os.environ.get('MAIL_SERVER', 'smtp.gmail.com')
+app.config['MAIL_PORT'] = int(os.environ.get('MAIL_PORT', 587))
+app.config['MAIL_USE_TLS'] = os.environ.get('MAIL_USE_TLS', 'true').lower() == 'true'
+app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME', '')
+app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD', '')
+app.config['MAIL_DEFAULT_SENDER'] = os.environ.get('MAIL_DEFAULT_SENDER', 'noreply@cayegardencasita.com')
+mail = Mail(app)
 
 from backend.database.connection import close_connection, DB_PATH
 app.teardown_appcontext(close_connection)
@@ -148,6 +159,63 @@ def init_database():
 
     if os.path.exists(db_path):
         print(f"Database found: {db_path}")
+        # Run safe migrations for new columns (use direct connection —
+        # execute_query() requires Flask request context which doesn't exist at startup)
+        import sqlite3 as _sqlite3
+        conn = _sqlite3.connect(db_path)
+        for migration in [
+            "ALTER TABLE properties ADD COLUMN check_in_instructions TEXT",
+            "ALTER TABLE users ADD COLUMN password_reset_token TEXT",
+            "ALTER TABLE users ADD COLUMN password_reset_expires DATETIME",
+        ]:
+            try:
+                conn.execute(migration)
+            except Exception:
+                pass  # Column already exists
+        conn.commit()
+        conn.close()
+
+        # Migrate bookings table to add 'completed' to status CHECK constraint
+        try:
+            conn = _sqlite3.connect(db_path)
+            conn.execute("PRAGMA foreign_keys = OFF;")
+            # Check if the current constraint already allows 'completed'
+            cursor = conn.execute("SELECT sql FROM sqlite_master WHERE type='table' AND name='bookings'")
+            create_sql = cursor.fetchone()[0]
+            if "'completed'" not in create_sql:
+                conn.execute("BEGIN;")
+                conn.execute("""CREATE TABLE bookings_new (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id INTEGER NOT NULL,
+                    property_id INTEGER NOT NULL DEFAULT 1,
+                    start_date DATE NOT NULL,
+                    end_date DATE NOT NULL,
+                    status TEXT NOT NULL DEFAULT 'pending'
+                        CHECK (status IN ('pending', 'approved', 'rejected', 'cancelled', 'completed')),
+                    total_price REAL NOT NULL DEFAULT 0,
+                    guests INTEGER NOT NULL DEFAULT 1,
+                    special_requests TEXT,
+                    admin_notes TEXT,
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    CONSTRAINT fk_bookings_user
+                        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+                    CONSTRAINT fk_bookings_property
+                        FOREIGN KEY (property_id) REFERENCES properties(id) ON DELETE CASCADE
+                );""")
+                conn.execute("INSERT INTO bookings_new SELECT * FROM bookings;")
+                conn.execute("DROP TABLE bookings;")
+                conn.execute("ALTER TABLE bookings_new RENAME TO bookings;")
+                conn.execute("CREATE INDEX IF NOT EXISTS idx_bookings_user_id ON bookings(user_id);")
+                conn.execute("CREATE INDEX IF NOT EXISTS idx_bookings_status ON bookings(status);")
+                conn.execute("CREATE INDEX IF NOT EXISTS idx_bookings_dates ON bookings(start_date, end_date);")
+                conn.commit()
+                print("Migrated bookings table to support 'completed' status")
+            conn.execute("PRAGMA foreign_keys = ON;")
+            conn.close()
+        except Exception as e:
+            print(f"Bookings migration check: {e}")
+
         return
 
     print(f"Creating new database: {db_path}")

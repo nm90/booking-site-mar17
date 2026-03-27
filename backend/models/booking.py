@@ -9,7 +9,7 @@ MVC Role: MODEL
 """
 
 from typing import Dict, List, Optional
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from backend.database.connection import execute_query, begin_immediate
 from backend.models.property import Property
 
@@ -102,6 +102,28 @@ class Booking:
         return len(result) == 0
 
     @staticmethod
+    def get_booked_dates(property_id: int) -> List[Dict]:
+        """Return all booked date ranges for a property (next 12 months).
+
+        Returns list of dicts with start_date and end_date strings.
+        Only includes bookings that block availability (pending, approved).
+        """
+        today = str(date.today())
+        future = str(date.today() + timedelta(days=365))
+
+        results = execute_query(
+            """SELECT start_date, end_date FROM bookings
+               WHERE property_id = ?
+                 AND status IN ('pending', 'approved')
+                 AND end_date > ?
+                 AND start_date < ?
+               ORDER BY start_date""",
+            (property_id, today, future),
+            fetch_all=True
+        )
+        return [{'start_date': r['start_date'], 'end_date': r['end_date']} for r in results] if results else []
+
+    @staticmethod
     def create(user_id: int, start_date: str, end_date: str,
                guests: int, property_id: int, special_requests: str = None) -> Dict:
         """
@@ -160,6 +182,7 @@ class Booking:
             booking['property'] = {
                 'name': row['property_name'],
                 'location': row['property_location'],
+                'check_in_instructions': row.get('property_check_in_instructions'),
             }
         return booking
 
@@ -169,7 +192,8 @@ class Booking:
         if not include_relations:
             result = execute_query(
                 """SELECT bookings.*, properties.name as property_name,
-                          properties.location as property_location
+                          properties.location as property_location,
+                          properties.check_in_instructions as property_check_in_instructions
                    FROM bookings
                    LEFT JOIN properties ON bookings.property_id = properties.id
                    WHERE bookings.id = ?""",
@@ -187,7 +211,8 @@ class Booking:
                 users.email as user_email,
                 users.phone_number as user_phone,
                 properties.name as property_name,
-                properties.location as property_location
+                properties.location as property_location,
+                properties.check_in_instructions as property_check_in_instructions
             FROM bookings
             INNER JOIN users ON bookings.user_id = users.id
             LEFT JOIN properties ON bookings.property_id = properties.id
@@ -211,7 +236,8 @@ class Booking:
                     users.email as user_email,
                     users.phone_number as user_phone,
                     properties.name as property_name,
-                    properties.location as property_location
+                    properties.location as property_location,
+                    properties.check_in_instructions as property_check_in_instructions
                 FROM bookings
                 INNER JOIN users ON bookings.user_id = users.id
                 LEFT JOIN properties ON bookings.property_id = properties.id
@@ -219,7 +245,8 @@ class Booking:
         else:
             query = """
                 SELECT bookings.*, properties.name as property_name,
-                       properties.location as property_location
+                       properties.location as property_location,
+                       properties.check_in_instructions as property_check_in_instructions
                 FROM bookings
                 LEFT JOIN properties ON bookings.property_id = properties.id
             """
@@ -242,7 +269,8 @@ class Booking:
         """Fetch all bookings for a specific user."""
         query = """
             SELECT bookings.*, properties.name as property_name,
-                   properties.location as property_location
+                   properties.location as property_location,
+                   properties.check_in_instructions as property_check_in_instructions
             FROM bookings
             LEFT JOIN properties ON bookings.property_id = properties.id
             WHERE bookings.user_id = ?

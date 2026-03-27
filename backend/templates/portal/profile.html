@@ -49,6 +49,29 @@
                 >
             </div>
 
+            <hr style="margin: 1.5rem 0; border: none; border-top: 1px solid var(--border);">
+            <h3 style="margin-bottom: 1rem; font-size: 1.1rem;">Change Password</h3>
+            <p class="form-hint" style="margin-bottom: 1rem;">Leave blank to keep your current password</p>
+
+            <div class="form-group">
+                <label for="current_password">Current password</label>
+                <input type="password" id="current_password" name="current_password"
+                       placeholder="Required to change password">
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="new_password">New password</label>
+                    <input type="password" id="new_password" name="new_password"
+                           placeholder="Minimum 6 characters">
+                </div>
+                <div class="form-group">
+                    <label for="new_password_confirm">Confirm new password</label>
+                    <input type="password" id="new_password_confirm" name="new_password_confirm"
+                           placeholder="Re-enter new password">
+                </div>
+            </div>
+
             <div class="form-actions">
                 <a href="{{ url_for('portal.dashboard') }}" class="btn btn-outline">Back to Dashboard</a>
                 <button type="submit" class="btn btn-primary">Save Changes</button>

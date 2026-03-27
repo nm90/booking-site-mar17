@@ -23,13 +23,14 @@ Routes:
     POST /portal/adventures          - Submit adventure request
 """
 
-from flask import Blueprint, request, redirect, url_for, flash, session, render_template
+from flask import Blueprint, request, redirect, url_for, flash, session, render_template, current_app, jsonify
 from backend.models.booking import Booking
 from backend.models.review import Review
 from backend.models.adventure import Adventure, AdventureBooking
 from backend.models.property import Property
 from backend.models.user import User
 from backend.controllers.auth_controller import login_required
+from backend.services.email import send_booking_confirmation, notify_admin_new_booking
 
 portal_bp = Blueprint('portal', __name__, url_prefix='/portal')
 
@@ -81,6 +82,9 @@ def profile_update():
     first_name = request.form.get('first_name', '').strip()
     last_name = request.form.get('last_name', '').strip()
     email = request.form.get('email', '').strip()
+    current_password = request.form.get('current_password', '').strip()
+    new_password = request.form.get('new_password', '').strip()
+    new_password_confirm = request.form.get('new_password_confirm', '').strip()
     form_data = {
         'first_name': first_name,
         'last_name': last_name,
@@ -88,6 +92,15 @@ def profile_update():
     }
 
     try:
+        # Handle password change if any password field is filled
+        if current_password or new_password or new_password_confirm:
+            if not current_password:
+                raise ValueError("Current password is required to change your password")
+            if new_password != new_password_confirm:
+                raise ValueError("New passwords do not match")
+            User.update_password(user_id, current_password, new_password)
+            flash('Password updated successfully.', 'success')
+
         updated_user = User.update(
             user_id=user_id,
             first_name=first_name,
@@ -136,6 +149,14 @@ def bookings_new():
     return render_template('bookings/new.html', properties=properties, property_id=selected_id)
 
 
+@portal_bp.route('/bookings/availability/<int:property_id>')
+@login_required
+def bookings_availability(property_id):
+    """Return booked date ranges for a property as JSON."""
+    booked = Booking.get_booked_dates(property_id)
+    return jsonify(booked)
+
+
 @portal_bp.route('/bookings', methods=['POST'])
 @login_required
 def bookings_create():
@@ -158,6 +179,11 @@ def bookings_create():
             property_id=property_id,
             special_requests=special_requests
         )
+        # Send email notifications
+        send_booking_confirmation(session['user_email'], session['user_first_name'], booking)
+        admin_email = current_app.config.get('ADMIN_EMAIL', 'admin@vacationrental.com')
+        notify_admin_new_booking(admin_email, booking)
+
         flash('Booking request submitted! We will review it shortly.', 'success')
         return redirect(url_for('portal.bookings_show', booking_id=booking['id']))
 

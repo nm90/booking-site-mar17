@@ -54,6 +54,13 @@
                 <p>{{ booking.admin_notes }}</p>
             </div>
             {% endif %}
+
+            {% if booking.status in ['approved', 'completed'] and booking.property.check_in_instructions %}
+            <div class="detail-notes checkin-notes">
+                <span class="detail-label">Check-in Instructions</span>
+                <p>{{ booking.property.check_in_instructions }}</p>
+            </div>
+            {% endif %}
         </div>
 
         <!-- Actions -->
