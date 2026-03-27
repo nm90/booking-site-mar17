@@ -197,6 +197,31 @@ class User:
         return User.get_by_id(user_id)
 
     @staticmethod
+    def update_password(user_id: int, current_password: str, new_password: str) -> Optional[Dict]:
+        """Change a user's password after verifying their current password.
+
+        Raises ValueError if current password is wrong or new password is invalid.
+        Returns updated user dict.
+        """
+        user = execute_query("SELECT * FROM users WHERE id = ?", (user_id,), fetch_one=True)
+        if not user:
+            return None
+
+        if not User._verify_password(current_password, user['password_hash']):
+            raise ValueError("Current password is incorrect")
+
+        if not new_password or len(new_password) < 6:
+            raise ValueError("New password must be at least 6 characters")
+
+        password_hash = User.hash_password(new_password)
+        execute_query(
+            "UPDATE users SET password_hash=?, updated_at=CURRENT_TIMESTAMP WHERE id=?",
+            (password_hash, user_id),
+            commit=True
+        )
+        return User.get_by_id(user_id)
+
+    @staticmethod
     def delete(user_id: int) -> bool:
         """Delete a user. Returns True if deleted, False if not found."""
         existing = User.get_by_id(user_id)

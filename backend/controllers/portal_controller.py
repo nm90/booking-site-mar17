@@ -81,6 +81,9 @@ def profile_update():
     first_name = request.form.get('first_name', '').strip()
     last_name = request.form.get('last_name', '').strip()
     email = request.form.get('email', '').strip()
+    current_password = request.form.get('current_password', '').strip()
+    new_password = request.form.get('new_password', '').strip()
+    new_password_confirm = request.form.get('new_password_confirm', '').strip()
     form_data = {
         'first_name': first_name,
         'last_name': last_name,
@@ -88,6 +91,15 @@ def profile_update():
     }
 
     try:
+        # Handle password change if any password field is filled
+        if current_password or new_password or new_password_confirm:
+            if not current_password:
+                raise ValueError("Current password is required to change your password")
+            if new_password != new_password_confirm:
+                raise ValueError("New passwords do not match")
+            User.update_password(user_id, current_password, new_password)
+            flash('Password updated successfully.', 'success')
+
         updated_user = User.update(
             user_id=user_id,
             first_name=first_name,
