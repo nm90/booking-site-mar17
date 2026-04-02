@@ -106,7 +106,8 @@ class Booking:
         """Return all booked date ranges for a property (next 12 months).
 
         Returns list of dicts with start_date and end_date strings.
-        Only includes bookings that block availability (pending, approved).
+        Statuses match ``check_availability`` (pending, approved, completed)
+        so the availability calendar matches server-side booking rules.
         """
         today = str(date.today())
         future = str(date.today() + timedelta(days=365))
@@ -114,7 +115,7 @@ class Booking:
         results = execute_query(
             """SELECT start_date, end_date FROM bookings
                WHERE property_id = ?
-                 AND status IN ('pending', 'approved')
+                 AND status IN ('pending', 'approved', 'completed')
                  AND end_date > ?
                  AND start_date < ?
                ORDER BY start_date""",
