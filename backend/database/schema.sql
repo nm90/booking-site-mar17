@@ -52,13 +52,13 @@ CREATE TABLE IF NOT EXISTS properties (
 CREATE TABLE IF NOT EXISTS bookings (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL,
-    property_id INTEGER NOT NULL DEFAULT 1,
+    property_id INTEGER NOT NULL,
     start_date DATE NOT NULL,
     end_date DATE NOT NULL,
     status TEXT NOT NULL DEFAULT 'pending'
         CHECK (status IN ('pending', 'approved', 'rejected', 'cancelled', 'completed')),
-    total_price REAL NOT NULL DEFAULT 0,
-    guests INTEGER NOT NULL DEFAULT 1,
+    total_price REAL NOT NULL DEFAULT 0 CHECK (total_price >= 0),
+    guests INTEGER NOT NULL DEFAULT 1 CHECK (guests >= 1),
     special_requests TEXT,
     admin_notes TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -66,7 +66,8 @@ CREATE TABLE IF NOT EXISTS bookings (
     CONSTRAINT fk_bookings_user
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     CONSTRAINT fk_bookings_property
-        FOREIGN KEY (property_id) REFERENCES properties(id) ON DELETE CASCADE
+        FOREIGN KEY (property_id) REFERENCES properties(id) ON DELETE CASCADE,
+    CHECK (end_date > start_date)
 );
 
 CREATE INDEX IF NOT EXISTS idx_bookings_user_id ON bookings(user_id);
@@ -127,11 +128,11 @@ CREATE TABLE IF NOT EXISTS adventure_bookings (
     adventure_id INTEGER NOT NULL,
     booking_id INTEGER,
     scheduled_date DATE NOT NULL,
-    participants INTEGER NOT NULL DEFAULT 1,
+    participants INTEGER NOT NULL DEFAULT 1 CHECK (participants >= 1),
     status TEXT NOT NULL DEFAULT 'pending'
         CHECK (status IN ('pending', 'approved', 'rejected', 'cancelled')),
     special_requests TEXT,
-    total_price REAL NOT NULL DEFAULT 0,
+    total_price REAL NOT NULL DEFAULT 0 CHECK (total_price >= 0),
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_adv_bookings_user
