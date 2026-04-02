@@ -7,8 +7,10 @@ MVC Role: MODEL
 - Enforces business rules (only completed stays can be reviewed)
 """
 
+import sqlite3
 from typing import Dict, List, Optional
-from backend.database.connection import execute_query
+
+from backend.database.connection import begin_immediate, execute_query
 
 
 class Review:
@@ -52,33 +54,39 @@ class Review:
         """
         Review.validate(rating, content)
 
-        # Check booking exists and belongs to this user
-        booking = execute_query(
-            "SELECT * FROM bookings WHERE id=? AND user_id=?",
-            (booking_id, user_id), fetch_one=True
-        )
-        if not booking:
-            raise ValueError("Booking not found or does not belong to you")
+        with begin_immediate():
+            booking = execute_query(
+                "SELECT * FROM bookings WHERE id=? AND user_id=?",
+                (booking_id, user_id), fetch_one=True
+            )
+            if not booking:
+                raise ValueError("Booking not found or does not belong to you")
 
-        if booking['status'] not in ['completed']:
-            raise ValueError("You can only review completed stays")
+            if booking['status'] not in ['completed']:
+                raise ValueError("You can only review completed stays")
 
-        # Check not already reviewed
-        existing = execute_query(
-            "SELECT id FROM reviews WHERE booking_id=? AND user_id=?",
-            (booking_id, user_id), fetch_one=True
-        )
-        if existing:
-            raise ValueError("You have already submitted a review for this booking")
+            existing = execute_query(
+                "SELECT id FROM reviews WHERE booking_id=?",
+                (booking_id,), fetch_one=True
+            )
+            if existing:
+                raise ValueError("You have already submitted a review for this booking")
 
-        query = """
-            INSERT INTO reviews (user_id, booking_id, rating, title, content, status)
-            VALUES (?, ?, ?, ?, ?, 'pending')
-        """
-        review_id = execute_query(
-            query, (user_id, booking_id, int(rating), title, content.strip()),
-            commit=True
-        )
+            query = """
+                INSERT INTO reviews (user_id, booking_id, rating, title, content, status)
+                VALUES (?, ?, ?, ?, ?, 'pending')
+            """
+            try:
+                review_id = execute_query(
+                    query,
+                    (user_id, booking_id, int(rating), title, content.strip()),
+                    commit=True,
+                )
+            except sqlite3.IntegrityError:
+                raise ValueError(
+                    "You have already submitted a review for this booking"
+                ) from None
+
         return Review.get_by_id(review_id, include_relations=True)
 
     @staticmethod

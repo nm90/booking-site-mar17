@@ -91,7 +91,8 @@ CREATE TABLE IF NOT EXISTS reviews (
     CONSTRAINT fk_reviews_user
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     CONSTRAINT fk_reviews_booking
-        FOREIGN KEY (booking_id) REFERENCES bookings(id) ON DELETE CASCADE
+        FOREIGN KEY (booking_id) REFERENCES bookings(id) ON DELETE CASCADE,
+    CONSTRAINT uq_reviews_booking UNIQUE (booking_id)
 );
 
 CREATE INDEX IF NOT EXISTS idx_reviews_user_id ON reviews(user_id);

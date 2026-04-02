@@ -148,6 +148,41 @@ print("=" * 60)
 # ============================================================================
 # DATABASE INITIALIZATION
 # ============================================================================
+def _reviews_has_unique_booking_id(conn: sqlite3.Connection) -> bool:
+    """True if reviews already enforces at most one row per booking_id."""
+    cur = conn.execute("PRAGMA table_info(reviews)")
+    if cur.fetchone() is None:
+        return True
+    for row in conn.execute("PRAGMA index_list('reviews')"):
+        if not row[2]:  # not unique
+            continue
+        name = row[1]
+        cols = {
+            c[2] for c in conn.execute(f"PRAGMA index_info('{name}')").fetchall()
+        }
+        if cols == {"booking_id"}:
+            return True
+    return False
+
+
+def _migrate_reviews_one_per_booking(conn: sqlite3.Connection) -> None:
+    """Dedupe reviews and add UNIQUE(booking_id) for existing databases (W3)."""
+    if _reviews_has_unique_booking_id(conn):
+        return
+    conn.execute(
+        """
+        DELETE FROM reviews
+        WHERE id IN (
+            SELECT r.id FROM reviews r
+            INNER JOIN reviews r2 ON r.booking_id = r2.booking_id AND r2.id < r.id
+        )
+        """
+    )
+    conn.execute(
+        "CREATE UNIQUE INDEX uq_reviews_booking_id ON reviews(booking_id)"
+    )
+
+
 def init_database():
     """Initialize the database if it doesn't exist."""
     db_path = app.config['DATABASE_PATH']
@@ -172,6 +207,10 @@ def init_database():
                 conn.execute(migration)
             except Exception:
                 pass  # Column already exists
+        try:
+            _migrate_reviews_one_per_booking(conn)
+        except Exception as e:
+            print(f"Reviews one-per-booking migration: {e}")
         conn.commit()
         conn.close()
 
