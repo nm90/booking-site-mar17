@@ -2,6 +2,8 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+**Remediation backlog:** For the functional-gap audit and autonomous wave order (security, schema, session/proxy, UX), see [docs/agent-gap-runbook.md](docs/agent-gap-runbook.md).
+
 ## Commands
 
 ```bash
