@@ -9,7 +9,7 @@ MVC Role: MODEL
 
 from typing import Dict, List, Optional
 from datetime import date
-from backend.database.connection import execute_query
+from backend.database.connection import execute_query, begin_immediate
 
 
 class Adventure:
@@ -159,6 +159,38 @@ class AdventureBooking:
     LINKABLE_STAY_STATUSES = ['approved']
 
     @staticmethod
+    def _reserved_participants_for_date(
+        adventure_id: int,
+        scheduled_date: str,
+        exclude_adventure_booking_id: int = None,
+        count_pending: bool = True,
+    ) -> int:
+        """Sum participants on this adventure and date.
+
+        When ``count_pending`` is True (new requests), pending and approved both count.
+        When False (admin approve), only approved rows count so one of several
+        competing pendings can be approved first and the rest rechecked.
+        """
+        if count_pending:
+            status_clause = "status IN ('pending', 'approved')"
+        else:
+            status_clause = "status = 'approved'"
+
+        query = f"""
+            SELECT COALESCE(SUM(participants), 0) AS total
+            FROM adventure_bookings
+            WHERE adventure_id = ?
+              AND scheduled_date = ?
+              AND {status_clause}
+        """
+        params = [adventure_id, scheduled_date]
+        if exclude_adventure_booking_id is not None:
+            query += " AND id != ?"
+            params.append(exclude_adventure_booking_id)
+        row = execute_query(query, tuple(params), fetch_one=True)
+        return int(row["total"]) if row else 0
+
+    @staticmethod
     def validate(adventure_id: int, scheduled_date: str, participants: int) -> None:
         """Validate adventure booking. Raises ValueError if invalid."""
         if not scheduled_date:
@@ -190,6 +222,12 @@ class AdventureBooking:
         if p_int > adventure['max_participants']:
             raise ValueError(f"Maximum {adventure['max_participants']} participants for this activity")
 
+        reserved = AdventureBooking._reserved_participants_for_date(adventure_id, scheduled_date)
+        if reserved + p_int > adventure['max_participants']:
+            raise ValueError(
+                "Maximum participant capacity for this date has been reached for this activity"
+            )
+
     @staticmethod
     def create(user_id: int, adventure_id: int, scheduled_date: str,
                participants: int, booking_id: int = None,
@@ -203,29 +241,32 @@ class AdventureBooking:
         3. Inserts with 'pending' status
         4. Returns complete booking dict
         """
-        AdventureBooking.validate(adventure_id, scheduled_date, participants)
         scheduled = date.fromisoformat(scheduled_date)
 
-        if booking_id is not None:
-            AdventureBooking._validate_linked_stay_booking(
-                booking_id=booking_id,
-                user_id=user_id,
-                scheduled_date=scheduled
+        with begin_immediate():
+            AdventureBooking.validate(adventure_id, scheduled_date, participants)
+
+            if booking_id is not None:
+                AdventureBooking._validate_linked_stay_booking(
+                    booking_id=booking_id,
+                    user_id=user_id,
+                    scheduled_date=scheduled
+                )
+
+            adventure = Adventure.get_by_id(adventure_id)
+            total_price = round(adventure['price'] * int(participants), 2)
+
+            query = """
+                INSERT INTO adventure_bookings
+                    (user_id, adventure_id, booking_id, scheduled_date, participants, status, total_price, special_requests)
+                VALUES (?, ?, ?, ?, ?, 'pending', ?, ?)
+            """
+            ab_id = execute_query(
+                query,
+                (user_id, adventure_id, booking_id, scheduled_date, int(participants), total_price, special_requests),
+                commit=True
             )
 
-        adventure = Adventure.get_by_id(adventure_id)
-        total_price = round(adventure['price'] * int(participants), 2)
-
-        query = """
-            INSERT INTO adventure_bookings
-                (user_id, adventure_id, booking_id, scheduled_date, participants, status, total_price, special_requests)
-            VALUES (?, ?, ?, ?, ?, 'pending', ?, ?)
-        """
-        ab_id = execute_query(
-            query,
-            (user_id, adventure_id, booking_id, scheduled_date, int(participants), total_price, special_requests),
-            commit=True
-        )
         return AdventureBooking.get_by_id(ab_id, include_relations=True)
 
     @staticmethod
@@ -374,13 +415,32 @@ class AdventureBooking:
             return None
 
         if status == 'approved':
-            if existing['status'] != 'pending':
-                raise ValueError(
-                    "This adventure booking is no longer pending and cannot be approved."
+            with begin_immediate():
+                fresh = AdventureBooking.get_by_id(ab_id)
+                if not fresh:
+                    return None
+                if fresh['status'] != 'pending':
+                    raise ValueError(
+                        "This adventure booking is no longer pending and cannot be approved."
+                    )
+                adv = Adventure.get_by_id(fresh['adventure_id'])
+                if not adv or adv.get('status') != 'active':
+                    raise ValueError("Cannot approve: this adventure is not active.")
+                others = AdventureBooking._reserved_participants_for_date(
+                    fresh['adventure_id'],
+                    fresh['scheduled_date'],
+                    exclude_adventure_booking_id=ab_id,
+                    count_pending=False,
                 )
-            adv = Adventure.get_by_id(existing['adventure_id'])
-            if not adv or adv.get('status') != 'active':
-                raise ValueError("Cannot approve: this adventure is not active.")
+                if others + int(fresh['participants']) > adv['max_participants']:
+                    raise ValueError(
+                        "Cannot approve: maximum participants for this date would be exceeded."
+                    )
+                execute_query(
+                    "UPDATE adventure_bookings SET status=?, updated_at=CURRENT_TIMESTAMP WHERE id=?",
+                    (status, ab_id), commit=True
+                )
+            return AdventureBooking.get_by_id(ab_id, include_relations=True)
 
         execute_query(
             "UPDATE adventure_bookings SET status=?, updated_at=CURRENT_TIMESTAMP WHERE id=?",

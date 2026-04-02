@@ -337,11 +337,14 @@ def adventure_bookings_index():
 @admin_required
 def adventure_bookings_approve(ab_id):
     """Approve an adventure booking."""
-    ab = AdventureBooking.update_status(ab_id, 'approved')
-    if not ab:
-        flash('Adventure booking not found.', 'error')
-    else:
-        flash('Adventure booking approved.', 'success')
+    try:
+        ab = AdventureBooking.update_status(ab_id, 'approved')
+        if not ab:
+            flash('Adventure booking not found.', 'error')
+        else:
+            flash('Adventure booking approved.', 'success')
+    except ValueError as e:
+        flash(str(e), 'error')
     return redirect(url_for('admin.adventure_bookings_index'))
 
 
