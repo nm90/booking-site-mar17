@@ -294,3 +294,50 @@ class TestAdventureBookingLinkedStayValidation:
                     participants=2,
                     booking_id=booking_id,
                 )
+
+
+class TestAdventureInactivePolicy:
+    def test_create_rejects_inactive_adventure(self, app):
+        with app.app_context():
+            user_id = _create_customer("inactive-adv-create@test.local")
+            adv = Adventure.create(
+                name="Sunset Sail",
+                description="Evening cruise",
+                category="Water Sports",
+                difficulty="easy",
+                duration_hours=2,
+                price=75.0,
+                max_participants=20,
+            )
+            Adventure.deactivate(adv["id"])
+            sched = (date.today() + timedelta(days=20)).isoformat()
+            with pytest.raises(ValueError, match="not available for booking"):
+                AdventureBooking.create(
+                    user_id=user_id,
+                    adventure_id=adv["id"],
+                    scheduled_date=sched,
+                    participants=2,
+                )
+
+    def test_approve_rejects_when_adventure_inactive(self, app):
+        with app.app_context():
+            user_id = _create_customer("inactive-adv-approve@test.local")
+            adv = Adventure.create(
+                name="Morning Hike",
+                description="Ridge walk",
+                category="Hiking",
+                difficulty="moderate",
+                duration_hours=3,
+                price=40.0,
+                max_participants=15,
+            )
+            sched = (date.today() + timedelta(days=21)).isoformat()
+            pending = AdventureBooking.create(
+                user_id=user_id,
+                adventure_id=adv["id"],
+                scheduled_date=sched,
+                participants=1,
+            )
+            Adventure.deactivate(adv["id"])
+            with pytest.raises(ValueError, match="not active"):
+                AdventureBooking.update_status(pending["id"], "approved")

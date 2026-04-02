@@ -184,6 +184,9 @@ class AdventureBooking:
         if not adventure:
             raise ValueError("Adventure not found")
 
+        if adventure.get('status') != 'active':
+            raise ValueError("This adventure is not available for booking")
+
         if p_int > adventure['max_participants']:
             raise ValueError(f"Maximum {adventure['max_participants']} participants for this activity")
 
@@ -369,6 +372,15 @@ class AdventureBooking:
         existing = AdventureBooking.get_by_id(ab_id)
         if not existing:
             return None
+
+        if status == 'approved':
+            if existing['status'] != 'pending':
+                raise ValueError(
+                    "This adventure booking is no longer pending and cannot be approved."
+                )
+            adv = Adventure.get_by_id(existing['adventure_id'])
+            if not adv or adv.get('status') != 'active':
+                raise ValueError("Cannot approve: this adventure is not active.")
 
         execute_query(
             "UPDATE adventure_bookings SET status=?, updated_at=CURRENT_TIMESTAMP WHERE id=?",
