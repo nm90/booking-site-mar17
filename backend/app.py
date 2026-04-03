@@ -118,6 +118,14 @@ app.config['SECRET_KEY'] = _secret_key
 DATABASE_DIR = os.path.join(os.path.dirname(__file__), 'database')
 app.config['DATABASE_PATH'] = DB_PATH
 
+_landing = os.environ.get('LANDING_SITE_URL', 'https://nm90.github.io/booking-site-mar17/').strip()
+if not _landing.endswith('/'):
+    _landing = _landing + '/'
+app.config['LANDING_SITE_URL'] = _landing
+
+_contact_email = os.environ.get('CONTACT_EMAIL', 'hello@cayegardencasita.com').strip()
+app.config['CONTACT_EMAIL'] = _contact_email
+
 
 # ============================================================================
 # TEMPLATE CONTEXT PROCESSOR
@@ -130,7 +138,9 @@ def inject_session():
         current_user_name=session.get('user_first_name'),
         current_user_role=session.get('user_role'),
         is_admin=session.get('user_role') == 'admin',
-        is_logged_in='user_id' in session
+        is_logged_in='user_id' in session,
+        landing_site_url=app.config['LANDING_SITE_URL'],
+        contact_email=app.config['CONTACT_EMAIL'],
     )
 
 

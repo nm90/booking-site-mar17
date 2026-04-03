@@ -49,10 +49,10 @@ def insert_seed_data():
             INSERT INTO properties (name, description, location, capacity, price_per_night)
             VALUES (?, ?, ?, ?, ?)
         """, (
-            'Sunset Villa',
-            'A beautiful beachfront villa with stunning ocean views, 4 bedrooms and private pool.',
-            'San Pedro Town, Belize',
-            8, 450.00
+            'Caye Garden Casita',
+            'Charming tropical casita in lush gardens — private cottage-style rental in San Pedro Town, Ambergris Caye.',
+            'San Pedro Town, Ambergris Caye, Belize',
+            4, 175.00
         ))
 
         conn.execute("""
@@ -78,24 +78,24 @@ def insert_seed_data():
         # Bookings
         conn.execute("""
             INSERT INTO bookings (user_id, property_id, start_date, end_date, status, total_price, guests)
-            VALUES (2, 1, '2026-04-10', '2026-04-15', 'approved', 2250.00, 4)
+            VALUES (2, 1, '2026-04-10', '2026-04-15', 'approved', 875.00, 4)
         """)
 
         conn.execute("""
             INSERT INTO bookings (user_id, property_id, start_date, end_date, status, total_price, guests, special_requests)
-            VALUES (3, 1, '2026-05-01', '2026-05-07', 'pending', 3150.00, 6, 'Early check-in if possible')
+            VALUES (3, 1, '2026-05-01', '2026-05-07', 'pending', 1225.00, 4, 'Early check-in if possible')
         """)
 
         conn.execute("""
             INSERT INTO bookings (user_id, property_id, start_date, end_date, status, total_price, guests)
-            VALUES (2, 1, '2026-03-01', '2026-03-05', 'completed', 1800.00, 2)
+            VALUES (2, 1, '2026-03-01', '2026-03-05', 'completed', 700.00, 2)
         """)
 
         # Review
         conn.execute("""
             INSERT INTO reviews (user_id, booking_id, rating, title, content, status)
             VALUES (2, 3, 5, 'Absolutely amazing stay!',
-                'The villa exceeded all expectations. The views were breathtaking and the pool was perfect. Will definitely book again!',
+                'The casita exceeded all expectations — lush garden, quiet neighborhood, and a perfect base for the reef. Will definitely book again!',
                 'approved')
         """)
 
