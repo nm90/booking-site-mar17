@@ -13,7 +13,7 @@
     <!-- Open Graph -->
     <meta property="og:title" content="Caye Garden Casita | San Pedro Town, Belize">
     <meta property="og:description" content="Charming tropical casita nestled in lush gardens in San Pedro Town, Ambergris Caye, Belize. Book your Caribbean getaway today.">
-    <meta property="og:image" content="images/casita-exterior.jpg">
+    <meta property="og:image" content="images/hero-sunset-dock-wide.jpg">
     <meta property="og:url" content="https://bze2.wiscomfort.com">
     <meta property="og:type" content="website">
     <meta property="og:locale" content="en_US">
@@ -22,7 +22,7 @@
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Caye Garden Casita | San Pedro Town, Belize">
     <meta name="twitter:description" content="Charming tropical casita in San Pedro Town, Ambergris Caye, Belize. Book your Caribbean getaway.">
-    <meta name="twitter:image" content="images/casita-exterior.jpg">
+    <meta name="twitter:image" content="images/hero-sunset-dock-wide.jpg">
 
     <!-- Structured Data -->
     <script type="application/ld+json">
@@ -32,7 +32,7 @@
         "name": "Caye Garden Casita",
         "description": "A charming tropical casita nestled in lush gardens in San Pedro Town, Ambergris Caye, Belize. Perfect for a relaxing Caribbean getaway.",
         "url": "https://bze2.wiscomfort.com",
-        "image": "images/casita-exterior.jpg",
+        "image": "images/hero-sunset-dock-wide.jpg",
         "address": {
             "@type": "PostalAddress",
             "addressLocality": "San Pedro Town",
@@ -57,6 +57,11 @@
 
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        html {
+            scroll-behavior: smooth;
+            scroll-padding-top: 70px;
+        }
 
         :root {
             --teal: #0e7c6b;
@@ -97,8 +102,36 @@
             font-weight: 700;
             color: var(--teal);
             text-decoration: none;
+            flex-shrink: 0;
         }
         .logo span { color: var(--coral); }
+        .header-nav {
+            display: flex;
+            gap: 1.5rem;
+            align-items: center;
+        }
+        .header-nav a {
+            text-decoration: none;
+            color: var(--charcoal);
+            font-weight: 500;
+            font-size: 0.95rem;
+            position: relative;
+            transition: color 0.2s;
+        }
+        .header-nav a::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--teal);
+            transition: width 0.3s;
+        }
+        .header-nav a:hover,
+        .header-nav a.active { color: var(--teal); }
+        .header-nav a:hover::after,
+        .header-nav a.active::after { width: 100%; }
         .nav-book {
             background: var(--coral);
             color: var(--white);
@@ -107,13 +140,37 @@
             text-decoration: none;
             font-weight: 600;
             transition: background 0.2s;
+            flex-shrink: 0;
         }
         .nav-book:hover { background: var(--coral-dark); }
+        .mobile-menu-toggle {
+            display: none;
+            flex-direction: column;
+            gap: 5px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 4px;
+        }
+        .mobile-menu-toggle span {
+            display: block;
+            width: 24px;
+            height: 2px;
+            background: var(--charcoal);
+            transition: transform 0.3s, opacity 0.3s;
+        }
+        header.nav-open .mobile-menu-toggle span:nth-child(1) {
+            transform: translateY(7px) rotate(45deg);
+        }
+        header.nav-open .mobile-menu-toggle span:nth-child(2) { opacity: 0; }
+        header.nav-open .mobile-menu-toggle span:nth-child(3) {
+            transform: translateY(-7px) rotate(-45deg);
+        }
 
         /* Hero */
         .hero {
             position: relative;
-            min-height: 80vh;
+            min-height: 90vh;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -126,7 +183,23 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
-            opacity: 0.85;
+            animation: hero-zoom 20s ease-out forwards;
+        }
+        @keyframes hero-zoom {
+            from { transform: scale(1.05); }
+            to { transform: scale(1); }
+        }
+        .hero::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(
+                to bottom,
+                rgba(0,0,0,0.2) 0%,
+                rgba(0,0,0,0.05) 40%,
+                rgba(0,0,0,0.45) 100%
+            );
+            z-index: 1;
         }
         .hero-overlay {
             position: relative;
@@ -136,54 +209,12 @@
             padding: 2rem;
             max-width: 800px;
         }
-        .hero-overlay::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 140%;
-            aspect-ratio: 1;
-            transform: translate(-50%, -50%);
-            background: conic-gradient(
-                from 0deg,
-                rgba(224,124,90,0.25) 0deg, transparent 10deg,
-                transparent 20deg, rgba(224,124,90,0.25) 20deg, transparent 30deg,
-                transparent 40deg, rgba(255,255,255,0.15) 40deg, transparent 50deg,
-                transparent 60deg, rgba(224,124,90,0.25) 60deg, transparent 70deg,
-                transparent 80deg, rgba(255,255,255,0.15) 80deg, transparent 90deg,
-                transparent 100deg, rgba(224,124,90,0.25) 100deg, transparent 110deg,
-                transparent 120deg, rgba(255,255,255,0.15) 120deg, transparent 130deg,
-                transparent 140deg, rgba(224,124,90,0.25) 140deg, transparent 150deg,
-                transparent 160deg, rgba(255,255,255,0.15) 160deg, transparent 170deg,
-                transparent 180deg, rgba(224,124,90,0.25) 180deg, transparent 190deg,
-                transparent 200deg, rgba(255,255,255,0.15) 200deg, transparent 210deg,
-                transparent 220deg, rgba(224,124,90,0.25) 220deg, transparent 230deg,
-                transparent 240deg, rgba(255,255,255,0.15) 240deg, transparent 250deg,
-                transparent 260deg, rgba(224,124,90,0.25) 260deg, transparent 270deg,
-                transparent 280deg, rgba(255,255,255,0.15) 280deg, transparent 290deg,
-                transparent 300deg, rgba(224,124,90,0.25) 300deg, transparent 310deg,
-                transparent 320deg, rgba(255,255,255,0.15) 320deg, transparent 330deg,
-                transparent 340deg, rgba(224,124,90,0.25) 340deg, transparent 350deg,
-                transparent 360deg
-            );
-            border-radius: 50%;
-            mask-image: radial-gradient(circle, white 20%, transparent 70%);
-            -webkit-mask-image: radial-gradient(circle, white 20%, transparent 70%);
-            animation: sunburst-spin 60s linear infinite;
-            pointer-events: none;
-            z-index: -1;
-        }
-        @keyframes sunburst-spin {
-            to { transform: translate(-50%, -50%) rotate(360deg); }
-        }
         .hero-overlay h1 {
             font-size: clamp(2rem, 5vw, 3.5rem);
             font-weight: 900;
             margin-bottom: 0.75rem;
             text-shadow: 0 2px 12px rgba(0,0,0,0.7), 0 0 40px rgba(0,0,0,0.4);
-            position: relative;
             letter-spacing: 0.02em;
-            -webkit-text-stroke: 0.5px rgba(255,255,255,0.3);
         }
         .hero-overlay p {
             font-size: clamp(1rem, 2.5vw, 1.35rem);
@@ -191,7 +222,6 @@
             margin-bottom: 2rem;
             text-shadow: 0 2px 12px rgba(0,0,0,0.7), 0 0 40px rgba(0,0,0,0.4);
             letter-spacing: 0.02em;
-            -webkit-text-stroke: 0.5px rgba(255,255,255,0.3);
         }
         .hero-cta {
             display: inline-block;
@@ -229,6 +259,17 @@
             font-size: 1.1rem;
         }
 
+        /* Fade-in animations */
+        .fade-in-up {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+        }
+        .fade-in-up.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
         /* About */
         .about { background: var(--sand); }
         .about-grid {
@@ -239,6 +280,7 @@
         }
         .about-img {
             width: 100%;
+            height: auto;
             border-radius: 12px;
             box-shadow: 0 8px 30px rgba(0,0,0,0.12);
         }
@@ -246,6 +288,119 @@
             margin-bottom: 1rem;
             font-size: 1.05rem;
         }
+
+        /* Accommodations */
+        .accommodations { background: var(--white); }
+        .accommodations-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+            align-items: center;
+        }
+        .accommodations-img {
+            width: 100%;
+            height: auto;
+            border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+        }
+        .accommodations-text h3 {
+            color: var(--teal-dark);
+            margin-bottom: 0.5rem;
+            font-size: 1.15rem;
+        }
+        .accommodations-text p {
+            margin-bottom: 1.5rem;
+            font-size: 1.05rem;
+        }
+        .accommodations-secondary {
+            margin-top: 3rem;
+            display: grid;
+            grid-template-columns: 1.5fr 1fr;
+            gap: 1.5rem;
+        }
+        .accommodations-secondary img {
+            width: 100%;
+            height: 350px;
+            object-fit: cover;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        .accommodations-secondary .floor-plan-img {
+            object-fit: contain;
+            background: var(--sand);
+        }
+
+        /* Experiences */
+        .experiences { background: var(--sand); }
+        .experiences-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+        }
+        .experience-card {
+            position: relative;
+            border-radius: 12px;
+            overflow: hidden;
+            min-height: 420px;
+            display: flex;
+            align-items: flex-end;
+            transition: transform 0.3s ease;
+        }
+        .experience-card:hover { transform: translateY(-4px); }
+        .experience-card img {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .experience-card::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.15) 50%, transparent 100%);
+        }
+        .experience-card-content {
+            position: relative;
+            z-index: 1;
+            padding: 2rem;
+            color: var(--white);
+        }
+        .experience-card-content h3 {
+            font-size: 1.4rem;
+            margin-bottom: 0.5rem;
+            text-shadow: 0 1px 8px rgba(0,0,0,0.5);
+        }
+        .experience-card-content p {
+            font-size: 0.95rem;
+            opacity: 0.9;
+            text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+        }
+
+        /* Gallery */
+        .gallery { background: var(--white); }
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-auto-rows: 200px;
+            gap: 0.75rem;
+        }
+        .gallery-item {
+            border-radius: 8px;
+            overflow: hidden;
+            position: relative;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        .gallery-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.4s ease;
+        }
+        .gallery-item:hover img { transform: scale(1.05); }
+        .gallery-item--tall { grid-row: span 2; }
+        .gallery-item--wide { grid-column: span 2; }
 
         /* Features */
         .features-grid {
@@ -298,10 +453,19 @@
 
         /* CTA */
         .cta-section {
+            position: relative;
             background: var(--teal);
             color: var(--white);
             text-align: center;
+            overflow: hidden;
         }
+        .cta-bg {
+            position: absolute;
+            inset: 0;
+            background: url('images/beach-dusk-palms.jpg') center/cover no-repeat;
+            opacity: 0.2;
+        }
+        .cta-section .section-inner { position: relative; z-index: 1; }
         .cta-section h2 { color: var(--white); }
         .cta-section p {
             font-size: 1.15rem;
@@ -337,11 +501,92 @@
             text-decoration: none;
         }
 
+        /* Lightbox */
+        .lightbox {
+            position: fixed;
+            inset: 0;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        .lightbox.active { opacity: 1; pointer-events: all; }
+        .lightbox-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(0,0,0,0.92);
+        }
+        .lightbox-content {
+            position: relative;
+            z-index: 1;
+            max-width: 90vw;
+            max-height: 85vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .lightbox-img {
+            max-width: 90vw;
+            max-height: 80vh;
+            object-fit: contain;
+            border-radius: 4px;
+        }
+        .lightbox-caption {
+            color: rgba(255,255,255,0.8);
+            margin-top: 1rem;
+            font-size: 0.95rem;
+        }
+        .lightbox-close, .lightbox-prev, .lightbox-next {
+            position: absolute;
+            z-index: 2;
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            padding: 0.5rem;
+            opacity: 0.7;
+            transition: opacity 0.2s;
+        }
+        .lightbox-close:hover, .lightbox-prev:hover, .lightbox-next:hover { opacity: 1; }
+        .lightbox-close { top: 1rem; right: 1.5rem; font-size: 2.5rem; }
+        .lightbox-prev { left: 1.5rem; top: 50%; transform: translateY(-50%); font-size: 3rem; }
+        .lightbox-next { right: 1.5rem; top: 50%; transform: translateY(-50%); font-size: 3rem; }
+
         /* Responsive */
         @media (max-width: 768px) {
+            .header-nav {
+                display: none;
+                position: absolute;
+                top: 100%;
+                left: 0;
+                right: 0;
+                background: var(--white);
+                flex-direction: column;
+                padding: 1rem 2rem 1.5rem;
+                border-bottom: 1px solid var(--sand-dark);
+                box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            }
+            header.nav-open .header-nav { display: flex; }
+            .mobile-menu-toggle { display: flex; }
             .about-grid,
-            .location-grid {
+            .location-grid,
+            .accommodations-grid {
                 grid-template-columns: 1fr;
+            }
+            .accommodations-secondary {
+                grid-template-columns: 1fr;
+            }
+            .accommodations-secondary img { height: 250px; }
+            .experiences-grid {
+                grid-template-columns: 1fr;
+            }
+            .experience-card { min-height: 300px; }
+            .gallery-grid {
+                grid-template-columns: repeat(2, 1fr);
+                grid-auto-rows: 160px;
             }
             header { padding: 0.75rem 1rem; }
             section { padding: 3rem 1.25rem; }
@@ -353,12 +598,27 @@
 <header>
     <div class="header-inner">
         <a href="/" class="logo">Caye Garden <span>Casita</span></a>
+        <nav class="header-nav" aria-label="Main navigation">
+            <a href="#about">About</a>
+            <a href="#accommodations">Stay</a>
+            <a href="#experiences">Explore</a>
+            <a href="#gallery">Photos</a>
+            <a href="#location">Location</a>
+        </nav>
         <a href="https://bze2.wiscomfort.com" class="nav-book">Book Now</a>
+        <button class="mobile-menu-toggle" aria-label="Toggle menu" aria-expanded="false">
+            <span></span><span></span><span></span>
+        </button>
     </div>
 </header>
 
-<section class="hero" aria-label="Hero">
-    <img src="images/casita-exterior.jpg" alt="Caye Garden Casita — a charming white cottage surrounded by tropical plants in San Pedro Town, Belize" class="hero-img" width="1200" height="800" loading="eager">
+<section class="hero" id="hero" aria-label="Hero">
+    <picture>
+        <source media="(max-width: 768px)" srcset="images/hero-sunset-dock.jpg">
+        <img src="images/hero-sunset-dock-wide.jpg"
+             alt="Golden sunset over the Caribbean Sea with island silhouette and dock, Ambergris Caye, Belize"
+             class="hero-img" width="1799" height="1440" loading="eager" fetchpriority="high">
+    </picture>
     <div class="hero-overlay">
         <h1>Caye Garden Casita</h1>
         <p>Your private tropical retreat in San Pedro Town, Ambergris Caye, Belize</p>
@@ -370,12 +630,123 @@
     <div class="section-inner">
         <h2>A Caribbean Hideaway</h2>
         <div class="about-grid">
-            <img src="images/casita-exterior.jpg" alt="Caye Garden Casita exterior with lush tropical garden" class="about-img" width="600" height="400" loading="lazy">
-            <div class="about-text">
+            <img src="images/casita-exterior-front.jpg"
+                 alt="Caye Garden Casita exterior — gray clapboard cottage with red tropical flowers and blue sky"
+                 class="about-img fade-in-up" width="1600" height="1205" loading="lazy">
+            <div class="about-text fade-in-up">
                 <p>Nestled among vibrant crotons, sea grape trees, and tropical palms, Caye Garden Casita is a cozy cottage-style vacation rental in the heart of San Pedro Town on Ambergris Caye, Belize.</p>
                 <p>The casita features classic Caribbean charm — white clapboard siding, lattice detailing, and a private patio surrounded by lush gardens. Wake up to birdsong, stroll to the beach, and experience authentic island life.</p>
                 <p>Whether you're snorkeling the Belize Barrier Reef, exploring local restaurants, or simply relaxing in the garden with a Belikin beer, Caye Garden Casita is your perfect home base.</p>
             </div>
+        </div>
+    </div>
+</section>
+
+<section class="accommodations" id="accommodations">
+    <div class="section-inner">
+        <h2>Your Island Home</h2>
+        <p class="section-subtitle">Comfortable Caribbean living with everything you need to unwind.</p>
+        <div class="accommodations-grid">
+            <div class="accommodations-text fade-in-up">
+                <h3>Cozy Bedroom</h3>
+                <p>Rest easy in the queen-sized bed with a teal accent wall and golden curtains that catch the morning light. The casita is your private retreat — no shared walls, no lobby noise.</p>
+                <h3>Tropical Garden Hammock</h3>
+                <p>Step outside to a turquoise hammock strung among the trees. Read a book, watch the birds, or simply let the sea breeze carry you to sleep.</p>
+            </div>
+            <img src="images/bedroom-interior.jpg"
+                 alt="Casita bedroom with queen bed, teal accent wall, and golden curtains"
+                 class="accommodations-img fade-in-up" width="1600" height="1200" loading="lazy">
+        </div>
+        <div class="accommodations-secondary fade-in-up">
+            <img src="images/hammock-canopy.jpg"
+                 alt="Turquoise hammock in tropical tree canopy"
+                 loading="lazy">
+            <img src="images/casita-floor-plan.jpg"
+                 alt="Casita floor plan showing bedroom, living area, and bathroom layout"
+                 class="floor-plan-img" loading="lazy">
+        </div>
+    </div>
+</section>
+
+<section class="experiences" id="experiences">
+    <div class="section-inner">
+        <h2>Island Experiences</h2>
+        <p class="section-subtitle">Belize offers some of the best wildlife, beaches, and cuisine in the Caribbean.</p>
+        <div class="experiences-grid">
+            <div class="experience-card fade-in-up">
+                <img src="images/beach-dusk-palms.jpg" alt="Beach at dusk with palm tree silhouettes" loading="lazy">
+                <div class="experience-card-content">
+                    <h3>Beach & Reef</h3>
+                    <p>Snorkel the Belize Barrier Reef, kayak turquoise waters, or just sink your toes into the warm Caribbean sand.</p>
+                </div>
+            </div>
+            <div class="experience-card fade-in-up">
+                <img src="images/frigate-birds.jpg" alt="Frigate birds silhouetted in flight against blue sky" loading="lazy">
+                <div class="experience-card-content">
+                    <h3>Tropical Wildlife</h3>
+                    <p>From frigate birds and parrots to iguanas and island cats, Ambergris Caye teems with life at every turn.</p>
+                </div>
+            </div>
+            <div class="experience-card fade-in-up">
+                <img src="images/gourmet-belikin.jpg" alt="Gourmet Belizean meal beautifully plated with Belikin beer" loading="lazy">
+                <div class="experience-card-content">
+                    <h3>Island Dining</h3>
+                    <p>Fresh seafood, Belizean spices, and an ice-cold Belikin beer — San Pedro's restaurants won't disappoint.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="gallery" id="gallery">
+    <div class="section-inner">
+        <h2>Life at the Casita</h2>
+        <p class="section-subtitle">A glimpse of what awaits you in Ambergris Caye.</p>
+        <div class="gallery-grid">
+            <a href="images/hero-sunset-dock.jpg" class="gallery-item gallery-item--tall fade-in-up"
+               data-caption="Golden-hour sunset from the dock">
+                <img src="images/hero-sunset-dock.jpg" alt="Sunset over dock with golden reflections" loading="lazy">
+            </a>
+            <a href="images/casita-exterior-rear.jpg" class="gallery-item gallery-item--wide fade-in-up"
+               data-caption="Casita rear exterior view">
+                <img src="images/casita-exterior-rear.jpg" alt="Rear view of Caye Garden Casita with tropical garden" loading="lazy">
+            </a>
+            <a href="images/beach-dog.jpg" class="gallery-item fade-in-up"
+               data-caption="Beach life with a friendly local">
+                <img src="images/beach-dog.jpg" alt="Dog on sandy beach with palm trees and turquoise water" loading="lazy">
+            </a>
+            <a href="images/bedroom-interior.jpg" class="gallery-item fade-in-up"
+               data-caption="Cozy bedroom with teal accent wall">
+                <img src="images/bedroom-interior.jpg" alt="Bedroom with queen bed and teal wall" loading="lazy">
+            </a>
+            <a href="images/flowering-tree.jpg" class="gallery-item gallery-item--wide fade-in-up"
+               data-caption="Tropical flowering tree in bloom">
+                <img src="images/flowering-tree.jpg" alt="Orange-red blossoms on tropical tree canopy" loading="lazy">
+            </a>
+            <a href="images/moonlit-sea.jpg" class="gallery-item gallery-item--tall fade-in-up"
+               data-caption="Moonlit Caribbean sea">
+                <img src="images/moonlit-sea.jpg" alt="Full moon reflecting on calm Caribbean water" loading="lazy">
+            </a>
+            <a href="images/blue-bird-railing.jpg" class="gallery-item fade-in-up"
+               data-caption="Tropical bird on the porch">
+                <img src="images/blue-bird-railing.jpg" alt="Small blue bird perched on porch railing" loading="lazy">
+            </a>
+            <a href="images/tropical-canopy.jpg" class="gallery-item fade-in-up"
+               data-caption="Looking up through the tropical canopy">
+                <img src="images/tropical-canopy.jpg" alt="Looking up through lush tropical canopy" loading="lazy">
+            </a>
+            <a href="images/beachfront-sunset.jpg" class="gallery-item fade-in-up"
+               data-caption="Beachfront sunset path">
+                <img src="images/beachfront-sunset.jpg" alt="Sunset over beachfront path with palm tree" loading="lazy">
+            </a>
+            <a href="images/casita-rear-garden.jpg" class="gallery-item gallery-item--wide fade-in-up"
+               data-caption="Lush garden at the rear of the property">
+                <img src="images/casita-rear-garden.jpg" alt="Rear garden view with tropical trees and flowering plants" loading="lazy">
+            </a>
+            <a href="images/cat-in-tree.jpg" class="gallery-item fade-in-up"
+               data-caption="Island cat in a flowering tree">
+                <img src="images/cat-in-tree.jpg" alt="Black cat perched in tropical tree branches" loading="lazy">
+            </a>
         </div>
     </div>
 </section>
@@ -429,7 +800,8 @@
     </div>
 </section>
 
-<section class="cta-section">
+<section class="cta-section" id="book">
+    <div class="cta-bg"></div>
     <div class="section-inner">
         <h2>Ready for Your Belize Getaway?</h2>
         <p>Check available dates and book your stay at Caye Garden Casita today.</p>
@@ -443,7 +815,122 @@
 </footer>
 
 <script>
-    fetch('https://bze2.wiscomfort.com/', { mode: 'no-cors' }).catch(function() {});
+// Warm-up fetch for booking site
+fetch('https://bze2.wiscomfort.com/', { mode: 'no-cors' }).catch(function() {});
+
+// Scroll-triggered fade-in animations
+var fadeObserver = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+        if (entry.isIntersecting) {
+            entry.target.classList.add('visible');
+            fadeObserver.unobserve(entry.target);
+        }
+    });
+}, { threshold: 0.15, rootMargin: '0px 0px -50px 0px' });
+
+document.querySelectorAll('.fade-in-up').forEach(function(el) {
+    fadeObserver.observe(el);
+});
+
+// Mobile menu toggle
+var menuToggle = document.querySelector('.mobile-menu-toggle');
+var headerEl = document.querySelector('header');
+menuToggle.addEventListener('click', function() {
+    var expanded = menuToggle.getAttribute('aria-expanded') === 'true';
+    menuToggle.setAttribute('aria-expanded', !expanded);
+    headerEl.classList.toggle('nav-open');
+});
+document.querySelectorAll('.header-nav a').forEach(function(link) {
+    link.addEventListener('click', function() {
+        headerEl.classList.remove('nav-open');
+        menuToggle.setAttribute('aria-expanded', 'false');
+    });
+});
+
+// Active nav highlighting on scroll
+var sections = document.querySelectorAll('section[id]');
+var navLinks = document.querySelectorAll('.header-nav a');
+var navObserver = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+        if (entry.isIntersecting) {
+            navLinks.forEach(function(link) { link.classList.remove('active'); });
+            var activeLink = document.querySelector('.header-nav a[href="#' + entry.target.id + '"]');
+            if (activeLink) activeLink.classList.add('active');
+        }
+    });
+}, { threshold: 0.3, rootMargin: '-70px 0px -50% 0px' });
+sections.forEach(function(section) { navObserver.observe(section); });
+
+// Lightbox
+(function() {
+    var galleryItems = document.querySelectorAll('.gallery-item');
+    var srcs = [];
+    galleryItems.forEach(function(a) {
+        srcs.push({ src: a.href, caption: a.dataset.caption || '' });
+    });
+    var currentIndex = 0;
+
+    var lightbox = document.createElement('div');
+    lightbox.className = 'lightbox';
+    lightbox.innerHTML =
+        '<div class="lightbox-overlay"></div>' +
+        '<button class="lightbox-close" aria-label="Close">&times;</button>' +
+        '<button class="lightbox-prev" aria-label="Previous">&lsaquo;</button>' +
+        '<button class="lightbox-next" aria-label="Next">&rsaquo;</button>' +
+        '<div class="lightbox-content">' +
+            '<img class="lightbox-img" src="" alt="">' +
+            '<p class="lightbox-caption"></p>' +
+        '</div>';
+    document.body.appendChild(lightbox);
+
+    var lbImg = lightbox.querySelector('.lightbox-img');
+    var lbCaption = lightbox.querySelector('.lightbox-caption');
+
+    function showImage(index) {
+        currentIndex = ((index % srcs.length) + srcs.length) % srcs.length;
+        lbImg.src = srcs[currentIndex].src;
+        lbCaption.textContent = srcs[currentIndex].caption;
+    }
+
+    function openLightbox(index) {
+        showImage(index);
+        lightbox.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeLightbox() {
+        lightbox.classList.remove('active');
+        document.body.style.overflow = '';
+    }
+
+    galleryItems.forEach(function(item, i) {
+        item.addEventListener('click', function(e) {
+            e.preventDefault();
+            openLightbox(i);
+        });
+    });
+
+    lightbox.querySelector('.lightbox-close').addEventListener('click', closeLightbox);
+    lightbox.querySelector('.lightbox-overlay').addEventListener('click', closeLightbox);
+    lightbox.querySelector('.lightbox-prev').addEventListener('click', function() { showImage(currentIndex - 1); });
+    lightbox.querySelector('.lightbox-next').addEventListener('click', function() { showImage(currentIndex + 1); });
+
+    document.addEventListener('keydown', function(e) {
+        if (!lightbox.classList.contains('active')) return;
+        if (e.key === 'Escape') closeLightbox();
+        if (e.key === 'ArrowLeft') showImage(currentIndex - 1);
+        if (e.key === 'ArrowRight') showImage(currentIndex + 1);
+    });
+
+    var touchStartX = 0;
+    lightbox.addEventListener('touchstart', function(e) { touchStartX = e.changedTouches[0].clientX; });
+    lightbox.addEventListener('touchend', function(e) {
+        var diff = e.changedTouches[0].clientX - touchStartX;
+        if (Math.abs(diff) > 50) {
+            diff > 0 ? showImage(currentIndex - 1) : showImage(currentIndex + 1);
+        }
+    });
+})();
 </script>
 
 </body>
