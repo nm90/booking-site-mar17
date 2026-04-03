@@ -782,6 +782,11 @@ footer a:hover { text-decoration: underline; color: #f0a080; }
 }
 .legend-dot.available { background: var(--success); }
 .legend-dot.booked { background: var(--danger); opacity: 0.6; }
+.legend-dot.selected { background: var(--primary); }
+.legend-dot.preview { background: var(--border); border: 1px dashed var(--text-muted); }
+.calendar-hint {
+    margin: 0 0 0.75rem 0;
+}
 .calendar-months {
     display: flex;
     flex-wrap: wrap;
@@ -813,9 +818,37 @@ footer a:hover { text-decoration: underline; color: #f0a080; }
     padding: 0.3rem;
     border-radius: 4px;
 }
-.calendar-day.available { background: #dcfce7; color: #14532d; }
+.calendar-day.available { background: #dcfce7; color: #14532d; cursor: pointer; }
 .calendar-day.booked { background: #fee2e2; color: #7f1d1d; }
 .calendar-day.past { color: var(--text-muted); opacity: 0.4; }
+
+.calendar-day.sel-start,
+.calendar-day.sel-end {
+    font-weight: 700;
+    outline: 2px solid var(--primary);
+    outline-offset: 1px;
+    z-index: 1;
+}
+.calendar-day.sel-between {
+    background: color-mix(in srgb, var(--primary) 18%, #dcfce7);
+    color: #14532d;
+}
+.calendar-day.pre-start,
+.calendar-day.pre-end {
+    font-weight: 600;
+    outline: 2px dashed color-mix(in srgb, var(--primary) 70%, transparent);
+    outline-offset: 1px;
+}
+.calendar-day.pre-between {
+    background: color-mix(in srgb, var(--primary) 12%, #dcfce7);
+    color: #14532d;
+}
+.calendar-day.pre-invalid {
+    background: color-mix(in srgb, var(--danger) 15%, var(--surface));
+    color: var(--text-muted);
+    outline: 1px dashed var(--danger);
+    outline-offset: 0;
+}
 
 /* ── Form Link ──────────────────────────────────────────── */
 .form-link {

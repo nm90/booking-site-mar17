@@ -44,7 +44,10 @@
                 <div class="calendar-legend">
                     <span class="legend-item"><span class="legend-dot available"></span> Available</span>
                     <span class="legend-item"><span class="legend-dot booked"></span> Booked</span>
+                    <span class="legend-item"><span class="legend-dot selected"></span> Selected</span>
+                    <span class="legend-item"><span class="legend-dot preview"></span> Preview</span>
                 </div>
+                <p class="calendar-hint text-sm text-muted">Click a day for check-in, then hover and click check-out.</p>
                 <div id="calendar-months" class="calendar-months"></div>
             </div>
 
@@ -149,17 +152,37 @@
     function updatePriceHint() {
         const prop = getSelectedProperty();
         if (!prop) return;
-        const start = new Date(startInput.value);
-        const end = new Date(endInput.value);
-        if (start && end && end > start) {
-            const nights = Math.round((end - start) / (1000 * 60 * 60 * 24));
-            const total = (nights * prop.price).toLocaleString('en-US', {style: 'currency', currency: 'USD'});
-            previewPrice.textContent = '$' + prop.price.toFixed(2) + ' / night \u00b7 ' + nights + ' night' + (nights > 1 ? 's' : '') + ' = ' + total + ' estimated';
-        }
+        if (!startInput.value || !endInput.value) return;
+        const start = new Date(startInput.value + 'T12:00:00');
+        const end = new Date(endInput.value + 'T12:00:00');
+        if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || end <= start) return;
+        const nights = Math.round((end - start) / (1000 * 60 * 60 * 24));
+        const total = (nights * prop.price).toLocaleString('en-US', {style: 'currency', currency: 'USD'});
+        previewPrice.textContent = '$' + prop.price.toFixed(2) + ' / night \u00b7 ' + nights + ' night' + (nights > 1 ? 's' : '') + ' = ' + total + ' estimated';
     }
 
     // Availability calendar
     let bookedRanges = [];
+    let hoverEndIso = null;
+
+    function formatDateISO(d) {
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return y + '-' + m + '-' + day;
+    }
+
+    function rangeAvailable(startIso, endIso) {
+        if (!startIso || !endIso) return false;
+        const start = new Date(startIso + 'T00:00:00');
+        const end = new Date(endIso + 'T00:00:00');
+        if (!(end > start)) return false;
+        return !bookedRanges.some(range => {
+            const bs = new Date(range.start_date + 'T00:00:00');
+            const be = new Date(range.end_date + 'T00:00:00');
+            return start < be && end > bs;
+        });
+    }
 
     function fetchAvailability() {
         const prop = getSelectedProperty();
@@ -173,6 +196,7 @@
             .then(r => r.json())
             .then(data => {
                 bookedRanges = data;
+                hoverEndIso = null;
                 renderCalendar();
                 calendarEl.style.display = '';
             })
@@ -187,6 +211,89 @@
             const monthDate = new Date(today.getFullYear(), today.getMonth() + m, 1);
             container.appendChild(buildMonth(monthDate));
         }
+        bindCalendarInteraction();
+        refreshSelectionStyles();
+    }
+
+    function bindCalendarInteraction() {
+        const months = document.getElementById('calendar-months');
+        if (months.dataset.bound === '1') return;
+        months.dataset.bound = '1';
+        months.addEventListener('click', onCalendarClick);
+        months.addEventListener('mouseover', onCalendarHover);
+        months.addEventListener('mouseleave', onCalendarLeave);
+    }
+
+    function onCalendarClick(ev) {
+        const cell = ev.target.closest('.calendar-day[data-date]');
+        if (!cell) return;
+        if (cell.classList.contains('past') || cell.classList.contains('booked')) return;
+        const iso = cell.dataset.date;
+        const start = startInput.value;
+        const end = endInput.value;
+
+        if (!start || (start && end)) {
+            startInput.value = iso;
+            endInput.value = '';
+            hoverEndIso = null;
+            onDateInputsChange();
+            return;
+        }
+
+        if (iso <= start) return;
+        if (!rangeAvailable(start, iso)) return;
+        endInput.value = iso;
+        hoverEndIso = null;
+        onDateInputsChange();
+    }
+
+    function onCalendarHover(ev) {
+        const cell = ev.target.closest('.calendar-day[data-date]');
+        if (!cell) return;
+        if (!startInput.value || endInput.value) return;
+        hoverEndIso = cell.dataset.date;
+        refreshSelectionStyles();
+    }
+
+    function onCalendarLeave() {
+        if (hoverEndIso === null) return;
+        hoverEndIso = null;
+        refreshSelectionStyles();
+    }
+
+    function refreshSelectionStyles() {
+        document.querySelectorAll('#calendar-months .calendar-day[data-date]').forEach(cell => {
+            const iso = cell.dataset.date;
+            cell.classList.remove(
+                'sel-start', 'sel-end', 'sel-between',
+                'pre-start', 'pre-end', 'pre-between', 'pre-invalid'
+            );
+
+            const startIso = startInput.value;
+            const endIso = endInput.value;
+
+            if (startIso && !endIso && hoverEndIso) {
+                const h = hoverEndIso;
+                const valid = h > startIso && rangeAvailable(startIso, h);
+                const lo = startIso < h ? startIso : h;
+                const hi = startIso < h ? h : startIso;
+                if (valid) {
+                    if (iso === startIso) cell.classList.add('pre-start');
+                    else if (iso === h) cell.classList.add('pre-end');
+                    else if (iso > startIso && iso < h) cell.classList.add('pre-between');
+                } else if (iso >= lo && iso <= hi) {
+                    cell.classList.add('pre-invalid');
+                }
+            }
+
+            if (startIso && endIso && endIso > startIso) {
+                if (iso === startIso) cell.classList.add('sel-start');
+                else if (iso === endIso) cell.classList.add('sel-end');
+                else if (iso > startIso && iso < endIso) cell.classList.add('sel-between');
+            } else if (startIso && !endIso && !hoverEndIso) {
+                if (iso === startIso) cell.classList.add('sel-start');
+            }
+        });
     }
 
     function buildMonth(monthDate) {
@@ -222,13 +329,19 @@
             cell.textContent = d;
 
             const cellDate = new Date(monthDate.getFullYear(), monthDate.getMonth(), d);
+            const iso = formatDateISO(cellDate);
+            cell.dataset.date = iso;
+
             if (cellDate < now) {
                 cell.classList.add('past');
             } else if (isDateBooked(cellDate)) {
                 cell.classList.add('booked');
             } else {
                 cell.classList.add('available');
+                cell.setAttribute('role', 'button');
+                cell.tabIndex = 0;
             }
+
             grid.appendChild(cell);
         }
         div.appendChild(grid);
@@ -243,15 +356,22 @@
         });
     }
 
+    function onDateInputsChange() {
+        hoverEndIso = null;
+        updatePriceHint();
+        refreshSelectionStyles();
+    }
+
     propertySelect.addEventListener('change', () => {
         updatePropertyPreview();
         fetchAvailability();
     });
-    startInput.addEventListener('change', updatePriceHint);
-    endInput.addEventListener('change', updatePriceHint);
+    startInput.addEventListener('change', onDateInputsChange);
+    endInput.addEventListener('change', onDateInputsChange);
 
     // Initialize on page load
     updatePropertyPreview();
     if (propertySelect.value) fetchAvailability();
+    else refreshSelectionStyles();
 </script>
 {% endblock %}
