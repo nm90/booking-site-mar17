@@ -107,13 +107,20 @@ class Property:
 
     @staticmethod
     def delete(property_id: int) -> bool:
-        """Delete a property if it has no active/pending bookings."""
-        active_bookings = execute_query(
-            "SELECT COUNT(*) as cnt FROM bookings WHERE property_id = ? AND status IN ('pending', 'approved')",
+        """Delete a property only when it has no bookings (any status).
+
+        Bookings and reviews are tied to rows that would be removed by ON DELETE CASCADE;
+        refusing delete whenever any booking exists preserves that history.
+        """
+        any_bookings = execute_query(
+            "SELECT COUNT(*) as cnt FROM bookings WHERE property_id = ?",
             (property_id,), fetch_one=True
         )
-        if active_bookings and active_bookings['cnt'] > 0:
-            raise ValueError("Cannot delete a property with active or pending bookings")
+        if any_bookings and any_bookings['cnt'] > 0:
+            raise ValueError(
+                "Cannot delete a property that has any booking history. "
+                "Remove or reassign bookings first."
+            )
 
         execute_query("DELETE FROM properties WHERE id = ?", (property_id,), commit=True)
         return True

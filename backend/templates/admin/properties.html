@@ -38,7 +38,7 @@
                     <form action="{{ url_for('admin.properties_delete', property_id=prop.id) }}" method="POST" style="display:inline">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <button type="submit" class="btn btn-danger btn-sm"
-                                onclick="return confirm('Delete this property?')">Delete</button>
+                                onclick="return confirm('Delete this property? This is only allowed if the property has no bookings (including past stays).')">Delete</button>
                     </form>
                 </td>
             </tr>

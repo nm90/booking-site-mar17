@@ -79,15 +79,25 @@ class Booking:
 
     @staticmethod
     def check_availability(start_date: str, end_date: str, property_id: int,
-                           exclude_booking_id: int = None) -> bool:
+                           exclude_booking_id: int = None,
+                           count_pending: bool = True) -> bool:
         """
         Check if a property is available for the requested dates.
 
         Returns True if available, False if dates overlap with an existing booking.
+
+        ``count_pending`` — when False, only approved/completed stays block (used when
+        approving a pending request so another overlapping pending can still be
+        resolved first; overlapping pendings cannot both end up approved).
         """
-        query = """
+        if count_pending:
+            status_clause = "status IN ('pending', 'approved', 'completed')"
+        else:
+            status_clause = "status IN ('approved', 'completed')"
+
+        query = f"""
             SELECT id FROM bookings
-            WHERE status IN ('pending', 'approved', 'completed')
+            WHERE {status_clause}
             AND property_id = ?
             AND start_date < ?
             AND end_date > ?
@@ -106,7 +116,8 @@ class Booking:
         """Return all booked date ranges for a property (next 12 months).
 
         Returns list of dicts with start_date and end_date strings.
-        Only includes bookings that block availability (pending, approved).
+        Statuses match ``check_availability`` (pending, approved, completed)
+        so the availability calendar matches server-side booking rules.
         """
         today = str(date.today())
         future = str(date.today() + timedelta(days=365))
@@ -114,7 +125,7 @@ class Booking:
         results = execute_query(
             """SELECT start_date, end_date FROM bookings
                WHERE property_id = ?
-                 AND status IN ('pending', 'approved')
+                 AND status IN ('pending', 'approved', 'completed')
                  AND end_date > ?
                  AND start_date < ?
                ORDER BY start_date""",
@@ -164,7 +175,8 @@ class Booking:
     def _build_booking_dict(row: Dict) -> Dict:
         """Build a booking dict with nested user and property from a joined row."""
         booking = {k: v for k, v in row.items()
-                   if k == 'user_id' or (not k.startswith('user_') and not k.startswith('property_'))}
+                   if k in ('user_id', 'property_id')
+                   or (not k.startswith('user_') and not k.startswith('property_'))}
         try:
             start = date.fromisoformat(booking['start_date'])
             end = date.fromisoformat(booking['end_date'])
@@ -301,6 +313,34 @@ class Booking:
             raise ValueError(
                 f"Cannot transition from '{current_status}' to '{status}'"
             )
+
+        if status == 'approved':
+            with begin_immediate():
+                fresh = Booking.get_by_id(booking_id)
+                if not fresh:
+                    return None
+                if fresh['status'] != 'pending':
+                    raise ValueError(
+                        "This booking is no longer pending and cannot be approved."
+                    )
+                if not Booking.check_availability(
+                    fresh['start_date'],
+                    fresh['end_date'],
+                    fresh['property_id'],
+                    exclude_booking_id=booking_id,
+                    count_pending=False,
+                ):
+                    raise ValueError(
+                        "Cannot approve: the property already has another booking "
+                        "that overlaps these dates."
+                    )
+                execute_query(
+                    "UPDATE bookings SET status=?, admin_notes=?, "
+                    "updated_at=CURRENT_TIMESTAMP WHERE id=?",
+                    (status, admin_notes, booking_id),
+                    commit=True,
+                )
+            return Booking.get_by_id(booking_id, include_relations=True)
 
         execute_query(
             "UPDATE bookings SET status=?, admin_notes=?, updated_at=CURRENT_TIMESTAMP WHERE id=?",
