@@ -467,6 +467,19 @@ def handle_csrf_error(error):
     return render_template('errors/403.html'), 403
 
 
+# Honor X-Forwarded-* from one reverse proxy (TLS terminators, e.g. Koyeb) when enabled.
+if os.environ.get('TRUST_PROXY_HEADERS', '').lower() in ('1', 'true', 'yes'):
+    from werkzeug.middleware.proxy_fix import ProxyFix
+    app.wsgi_app = ProxyFix(
+        app.wsgi_app,
+        x_for=1,
+        x_proto=1,
+        x_host=1,
+        x_port=1,
+        x_prefix=1,
+    )
+
+
 # ============================================================================
 # MAIN EXECUTION
 # ============================================================================
