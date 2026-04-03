@@ -9,7 +9,7 @@ services:
       # SECRET_KEY is intentionally omitted here so the entrypoint generates
       # a cryptographically random key automatically on each container start.
       # To use a persistent key (e.g. for production), set SECRET_KEY in a
-      # .env file or pass it via: SECRET_KEY=<value> docker-compose up
+      # .env file or pass it via: SECRET_KEY=<value> docker compose up
       - DATABASE_PATH=/app/data/booking_site.db
       - FLASK_ENV=development
     volumes:

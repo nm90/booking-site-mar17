@@ -5,9 +5,13 @@ alwaysApply: true
 
 # Docker
 
+**Always prefer Compose v2** (`docker compose` — space, plugin). Legacy **Compose v1** (`docker-compose` Python 1.29.x) is end-of-life and breaks against current Docker Engine with `KeyError: 'ContainerConfig'` when recreating containers.
+
 ```bash
-# Detect Docker Compose version
+# Prefer v2; fall back only if v2 is not installed
 docker compose version || docker-compose version
 ```
 
-- Use `docker-compose` (v1) if `docker compose` (v2) is unavailable.
+Install the v2 plugin on Debian/Ubuntu if missing: `sudo apt-get install docker-compose-v2` (package name may vary by distro).
+
+- Use `docker compose up --build`, not `docker-compose up --build`, for local dev.

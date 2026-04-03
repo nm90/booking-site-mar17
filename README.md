@@ -64,15 +64,19 @@ Visit http://localhost:5000
 
 ## Running with Docker
 
+Use **Docker Compose v2** (the `docker compose` plugin — note the space). Legacy `docker-compose` v1 is incompatible with current Docker Engine and fails with `KeyError: 'ContainerConfig'` when recreating containers.
+
 ```bash
-docker-compose up --build
+docker compose up --build
 ```
+
+If `docker: unknown command: docker compose`, install the plugin (e.g. on Debian/Ubuntu: `sudo apt-get install docker-compose-v2`).
 
 The Docker entrypoint automatically generates a random `SECRET_KEY` if one is not provided.
 To use a persistent key across restarts, pass it explicitly:
 
 ```bash
-SECRET_KEY=$(python3 -c "import secrets; print(secrets.token_hex(32))") docker-compose up --build
+SECRET_KEY=$(python3 -c "import secrets; print(secrets.token_hex(32))") docker compose up --build
 ```
 
 ## Features

@@ -77,11 +77,11 @@ koyeb service logs 53d7d5ba
 ## Docker
 
 ```bash
-# Detect Docker Compose version
+# Prefer Compose v2 (legacy docker-compose v1 breaks on modern Engine)
 docker compose version || docker-compose version
 ```
 
-- Use `docker-compose` (v1) if `docker compose` (v2) is unavailable.
+- Prefer `docker compose` (v2). Legacy `docker-compose` v1 can raise `KeyError: 'ContainerConfig'`; install the compose plugin if needed.
 
 ## Testing
 
