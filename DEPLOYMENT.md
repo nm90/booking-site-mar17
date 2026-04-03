@@ -4,7 +4,7 @@
 
 - [ ] Build the image locally:
   ```bash
-  docker compose version || docker-compose version  # confirm which is installed
+  docker compose version || docker-compose version  # use v2 for compose files; v1 is EOL
   docker build -t fauxtoe/booking-site .
   ```
 - [ ] Run the container locally and verify it starts:
