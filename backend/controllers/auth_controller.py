@@ -190,7 +190,7 @@ def do_forgot_password():
     if token:
         reset_url = url_for('auth.reset_password', token=token, _external=True)
         send_password_reset(email, reset_url)
-        logging.getLogger(__name__).info(f"Password reset requested for {email}: {reset_url}")
+        logging.getLogger(__name__).info("Password reset requested (email redacted; token not logged)")
 
     # Same message whether email exists or not (prevents enumeration)
     flash('If an account exists with that email, a reset link has been sent.', 'success')
