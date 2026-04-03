@@ -12,6 +12,7 @@ MVC Role: Application Bootstrap
 import os
 import sys
 import sqlite3
+import fcntl
 import logging
 from logging.handlers import RotatingFileHandler
 from flask import Flask, jsonify, request, session, render_template, redirect, url_for
@@ -302,98 +303,106 @@ def init_database():
     if db_dir and not os.path.exists(db_dir):
         os.makedirs(db_dir, exist_ok=True)
 
-    if os.path.exists(db_path):
-        print(f"Database found: {db_path}")
-        # Run safe migrations for new columns (use direct connection —
-        # execute_query() requires Flask request context which doesn't exist at startup)
-        import sqlite3 as _sqlite3
-        conn = _sqlite3.connect(db_path)
-        for migration in [
-            "ALTER TABLE properties ADD COLUMN check_in_instructions TEXT",
-            "ALTER TABLE users ADD COLUMN password_reset_token TEXT",
-            "ALTER TABLE users ADD COLUMN password_reset_expires DATETIME",
-        ]:
-            try:
-                conn.execute(migration)
-            except Exception:
-                pass  # Column already exists
-        try:
-            _migrate_reviews_one_per_booking(conn)
-        except Exception as e:
-            print(f"Reviews one-per-booking migration: {e}")
-        conn.commit()
-        conn.close()
-
-        # Bookings: 'completed' status, no unsafe property_id default, CHECK constraints (W6)
-        try:
-            conn = _sqlite3.connect(db_path)
-            conn.execute("PRAGMA foreign_keys = OFF;")
-            cursor = conn.execute(
-                "SELECT sql FROM sqlite_master WHERE type='table' AND name='bookings'"
-            )
-            row = cursor.fetchone()
-            create_sql = row[0] if row else ""
-            need_completed = "'completed'" not in create_sql
-            need_hardening = _bookings_table_needs_hardening(create_sql)
-            if need_completed or need_hardening:
-                conn.execute("BEGIN;")
-                _replace_bookings_with_hardened_schema(conn)
-                conn.commit()
-                if need_completed:
-                    print("Migrated bookings table to support 'completed' status")
-                if need_hardening:
-                    print("Migrated bookings table schema constraints (property_id, CHECKs)")
-            conn.execute("PRAGMA foreign_keys = ON;")
-            conn.close()
-        except Exception as e:
-            print(f"Bookings migration check: {e}")
-
-        # Adventure bookings: participant/price CHECKs for existing DBs (W6)
-        try:
-            conn = _sqlite3.connect(db_path)
-            conn.execute("PRAGMA foreign_keys = OFF;")
-            cursor = conn.execute(
-                "SELECT sql FROM sqlite_master WHERE type='table' AND name='adventure_bookings'"
-            )
-            row = cursor.fetchone()
-            adv_sql = row[0] if row else ""
-            if adv_sql and _adventure_bookings_table_needs_hardening(adv_sql):
-                conn.execute("BEGIN;")
-                _replace_adventure_bookings_with_hardened_schema(conn)
-                conn.commit()
-                print("Migrated adventure_bookings CHECK constraints")
-            conn.execute("PRAGMA foreign_keys = ON;")
-            conn.close()
-        except Exception as e:
-            print(f"Adventure bookings migration check: {e}")
-
-        return
-
-    print(f"Creating new database: {db_path}")
-
+    lock_path = f"{db_path}.init.lock"
+    lock_file = open(lock_path, "a+b")
     try:
-        conn = sqlite3.connect(db_path)
-        conn.execute("PRAGMA foreign_keys = ON;")
+        fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX)
 
-        with open(schema_path, 'r') as f:
-            schema_sql = f.read()
+        if os.path.exists(db_path):
+            print(f"Database found: {db_path}")
+            # Run safe migrations for new columns (use direct connection —
+            # execute_query() requires Flask request context which doesn't exist at startup)
+            import sqlite3 as _sqlite3
+            conn = _sqlite3.connect(db_path)
+            for migration in [
+                "ALTER TABLE properties ADD COLUMN check_in_instructions TEXT",
+                "ALTER TABLE users ADD COLUMN password_reset_token TEXT",
+                "ALTER TABLE users ADD COLUMN password_reset_expires DATETIME",
+            ]:
+                try:
+                    conn.execute(migration)
+                except Exception:
+                    pass  # Column already exists
+            try:
+                _migrate_reviews_one_per_booking(conn)
+            except Exception as e:
+                print(f"Reviews one-per-booking migration: {e}")
+            conn.commit()
+            conn.close()
 
-        conn.executescript(schema_sql)
-        conn.commit()
-        conn.close()
-        print("Schema created successfully!")
+            # Bookings: 'completed' status, no unsafe property_id default, CHECK constraints (W6)
+            try:
+                conn = _sqlite3.connect(db_path)
+                conn.execute("PRAGMA foreign_keys = OFF;")
+                cursor = conn.execute(
+                    "SELECT sql FROM sqlite_master WHERE type='table' AND name='bookings'"
+                )
+                row = cursor.fetchone()
+                create_sql = row[0] if row else ""
+                need_completed = "'completed'" not in create_sql
+                need_hardening = _bookings_table_needs_hardening(create_sql)
+                if need_completed or need_hardening:
+                    conn.execute("BEGIN;")
+                    _replace_bookings_with_hardened_schema(conn)
+                    conn.commit()
+                    if need_completed:
+                        print("Migrated bookings table to support 'completed' status")
+                    if need_hardening:
+                        print("Migrated bookings table schema constraints (property_id, CHECKs)")
+                conn.execute("PRAGMA foreign_keys = ON;")
+                conn.close()
+            except Exception as e:
+                print(f"Bookings migration check: {e}")
 
-        # Import and run seed data
-        import sys
-        sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
-        from backend.database.seed import insert_seed_data
-        insert_seed_data()
-        print("Database initialization complete!")
+            # Adventure bookings: participant/price CHECKs for existing DBs (W6)
+            try:
+                conn = _sqlite3.connect(db_path)
+                conn.execute("PRAGMA foreign_keys = OFF;")
+                cursor = conn.execute(
+                    "SELECT sql FROM sqlite_master WHERE type='table' AND name='adventure_bookings'"
+                )
+                row = cursor.fetchone()
+                adv_sql = row[0] if row else ""
+                if adv_sql and _adventure_bookings_table_needs_hardening(adv_sql):
+                    conn.execute("BEGIN;")
+                    _replace_adventure_bookings_with_hardened_schema(conn)
+                    conn.commit()
+                    print("Migrated adventure_bookings CHECK constraints")
+                conn.execute("PRAGMA foreign_keys = ON;")
+                conn.close()
+            except Exception as e:
+                print(f"Adventure bookings migration check: {e}")
 
-    except Exception as e:
-        logger.error(f"Database initialization failed: {e}", exc_info=True)
-        print(f"Error initializing database: {e}")
-        raise
+            return
+
+        print(f"Creating new database: {db_path}")
+
+        try:
+            conn = sqlite3.connect(db_path)
+            conn.execute("PRAGMA foreign_keys = ON;")
+
+            with open(schema_path, 'r') as f:
+                schema_sql = f.read()
+
+            conn.executescript(schema_sql)
+            conn.commit()
+            conn.close()
+            print("Schema created successfully!")
+
+            # Import and run seed data
+            import sys
+            sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
+            from backend.database.seed import insert_seed_data
+            insert_seed_data()
+            print("Database initialization complete!")
+
+        except Exception as e:
+            logger.error(f"Database initialization failed: {e}", exc_info=True)
+            print(f"Error initializing database: {e}")
+            raise
+    finally:
+        fcntl.flock(lock_file.fileno(), fcntl.LOCK_UN)
+        lock_file.close()
 
 
 init_database()
@@ -406,6 +415,9 @@ from backend.models.booking import Booking
 
 @app.before_request
 def auto_complete_bookings():
+    # Skip DB work for health checks and static assets (critical-before-request).
+    if request.path == '/health' or request.endpoint == 'static':
+        return None
     Booking.transition_completed()
 
 
@@ -453,6 +465,19 @@ from flask_wtf.csrf import CSRFError
 @app.errorhandler(CSRFError)
 def handle_csrf_error(error):
     return render_template('errors/403.html'), 403
+
+
+# Honor X-Forwarded-* from one reverse proxy (TLS terminators, e.g. Koyeb) when enabled.
+if os.environ.get('TRUST_PROXY_HEADERS', '').lower() in ('1', 'true', 'yes'):
+    from werkzeug.middleware.proxy_fix import ProxyFix
+    app.wsgi_app = ProxyFix(
+        app.wsgi_app,
+        x_for=1,
+        x_proto=1,
+        x_host=1,
+        x_port=1,
+        x_prefix=1,
+    )
 
 
 # ============================================================================

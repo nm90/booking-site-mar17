@@ -29,7 +29,7 @@ Routes:
     POST /admin/users/<id>/status         - Update user status
 """
 
-from flask import Blueprint, request, redirect, url_for, flash, render_template
+from flask import Blueprint, request, redirect, url_for, flash, render_template, session
 from backend.models.booking import Booking
 from backend.models.review import Review
 from backend.models.adventure import Adventure, AdventureBooking
@@ -376,6 +376,10 @@ def users_index():
 def users_update_status(user_id):
     """Suspend or activate a user account."""
     status = request.form.get('status', '').strip()
+
+    if user_id == session.get('user_id') and status in ('inactive', 'suspended'):
+        flash('You cannot deactivate or suspend your own account.', 'error')
+        return redirect(url_for('admin.users_index'))
 
     try:
         user = User.update_status(user_id, status)
