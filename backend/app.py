@@ -406,6 +406,9 @@ from backend.models.booking import Booking
 
 @app.before_request
 def auto_complete_bookings():
+    # Skip DB work for health checks and static assets (critical-before-request).
+    if request.path == '/health' or request.endpoint == 'static':
+        return None
     Booking.transition_completed()
 
 
