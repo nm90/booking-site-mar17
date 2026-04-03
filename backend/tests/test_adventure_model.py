@@ -294,3 +294,111 @@ class TestAdventureBookingLinkedStayValidation:
                     participants=2,
                     booking_id=booking_id,
                 )
+
+
+class TestAdventureInactivePolicy:
+    def test_create_rejects_inactive_adventure(self, app):
+        with app.app_context():
+            user_id = _create_customer("inactive-adv-create@test.local")
+            adv = Adventure.create(
+                name="Sunset Sail",
+                description="Evening cruise",
+                category="Water Sports",
+                difficulty="easy",
+                duration_hours=2,
+                price=75.0,
+                max_participants=20,
+            )
+            Adventure.deactivate(adv["id"])
+            sched = (date.today() + timedelta(days=20)).isoformat()
+            with pytest.raises(ValueError, match="not available for booking"):
+                AdventureBooking.create(
+                    user_id=user_id,
+                    adventure_id=adv["id"],
+                    scheduled_date=sched,
+                    participants=2,
+                )
+
+    def test_approve_rejects_when_adventure_inactive(self, app):
+        with app.app_context():
+            user_id = _create_customer("inactive-adv-approve@test.local")
+            adv = Adventure.create(
+                name="Morning Hike",
+                description="Ridge walk",
+                category="Hiking",
+                difficulty="moderate",
+                duration_hours=3,
+                price=40.0,
+                max_participants=15,
+            )
+            sched = (date.today() + timedelta(days=21)).isoformat()
+            pending = AdventureBooking.create(
+                user_id=user_id,
+                adventure_id=adv["id"],
+                scheduled_date=sched,
+                participants=1,
+            )
+            Adventure.deactivate(adv["id"])
+            with pytest.raises(ValueError, match="not active"):
+                AdventureBooking.update_status(pending["id"], "approved")
+
+
+class TestAdventureDateCapacity:
+    def test_create_rejects_when_date_already_at_capacity(self, app):
+        with app.app_context():
+            u1 = _create_customer("cap-a@test.local")
+            u2 = _create_customer("cap-b@test.local")
+            adv = Adventure.create(
+                name="Group Snorkel",
+                description="Reef tour",
+                category="Water Sports",
+                difficulty="easy",
+                duration_hours=2,
+                price=60.0,
+                max_participants=8,
+            )
+            sched = (date.today() + timedelta(days=30)).isoformat()
+            AdventureBooking.create(
+                user_id=u1, adventure_id=adv["id"], scheduled_date=sched, participants=5
+            )
+            with pytest.raises(ValueError, match="capacity for this date"):
+                AdventureBooking.create(
+                    user_id=u2, adventure_id=adv["id"], scheduled_date=sched, participants=5
+                )
+
+    def test_second_pending_cannot_be_approved_over_capacity(self, app):
+        """Two overlapping pendings that exceed max (e.g. legacy rows): only one can be approved."""
+        with app.app_context():
+            u1 = _create_customer("cap-c@test.local")
+            u2 = _create_customer("cap-d@test.local")
+            adv = Adventure.create(
+                name="Zip Line",
+                description="Canopy run",
+                category="Adventure",
+                difficulty="moderate",
+                duration_hours=2,
+                price=120.0,
+                max_participants=10,
+            )
+            sched = (date.today() + timedelta(days=31)).isoformat()
+            aid1 = execute_query(
+                """
+                INSERT INTO adventure_bookings
+                    (user_id, adventure_id, scheduled_date, participants, status, total_price)
+                VALUES (?, ?, ?, 6, 'pending', 1.0)
+                """,
+                (u1, adv["id"], sched),
+                commit=True,
+            )
+            aid2 = execute_query(
+                """
+                INSERT INTO adventure_bookings
+                    (user_id, adventure_id, scheduled_date, participants, status, total_price)
+                VALUES (?, ?, ?, 6, 'pending', 1.0)
+                """,
+                (u2, adv["id"], sched),
+                commit=True,
+            )
+            AdventureBooking.update_status(aid1, "approved")
+            with pytest.raises(ValueError, match="would be exceeded"):
+                AdventureBooking.update_status(aid2, "approved")

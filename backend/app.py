@@ -12,6 +12,7 @@ MVC Role: Application Bootstrap
 import os
 import sys
 import sqlite3
+import fcntl
 import logging
 from logging.handlers import RotatingFileHandler
 from flask import Flask, jsonify, request, session, render_template, redirect, url_for
@@ -148,6 +149,151 @@ print("=" * 60)
 # ============================================================================
 # DATABASE INITIALIZATION
 # ============================================================================
+def _reviews_has_unique_booking_id(conn: sqlite3.Connection) -> bool:
+    """True if reviews already enforces at most one row per booking_id."""
+    cur = conn.execute("PRAGMA table_info(reviews)")
+    if cur.fetchone() is None:
+        return True
+    for row in conn.execute("PRAGMA index_list('reviews')"):
+        if not row[2]:  # not unique
+            continue
+        name = row[1]
+        cols = {
+            c[2] for c in conn.execute(f"PRAGMA index_info('{name}')").fetchall()
+        }
+        if cols == {"booking_id"}:
+            return True
+    return False
+
+
+def _migrate_reviews_one_per_booking(conn: sqlite3.Connection) -> None:
+    """Dedupe reviews and add UNIQUE(booking_id) for existing databases (W3)."""
+    if _reviews_has_unique_booking_id(conn):
+        return
+    conn.execute(
+        """
+        DELETE FROM reviews
+        WHERE id IN (
+            SELECT r.id FROM reviews r
+            INNER JOIN reviews r2 ON r.booking_id = r2.booking_id AND r2.id < r.id
+        )
+        """
+    )
+    conn.execute(
+        "CREATE UNIQUE INDEX uq_reviews_booking_id ON reviews(booking_id)"
+    )
+
+
+_BOOKINGS_NEW_DDL = """
+CREATE TABLE bookings_new (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    property_id INTEGER NOT NULL,
+    start_date DATE NOT NULL,
+    end_date DATE NOT NULL,
+    status TEXT NOT NULL DEFAULT 'pending'
+        CHECK (status IN ('pending', 'approved', 'rejected', 'cancelled', 'completed')),
+    total_price REAL NOT NULL DEFAULT 0 CHECK (total_price >= 0),
+    guests INTEGER NOT NULL DEFAULT 1 CHECK (guests >= 1),
+    special_requests TEXT,
+    admin_notes TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_bookings_user
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT fk_bookings_property
+        FOREIGN KEY (property_id) REFERENCES properties(id) ON DELETE CASCADE,
+    CHECK (end_date > start_date)
+);
+"""
+
+_BOOKINGS_COPY_COLS = (
+    "id, user_id, property_id, start_date, end_date, status, total_price, guests, "
+    "special_requests, admin_notes, created_at, updated_at"
+)
+
+_ADV_BOOKINGS_NEW_DDL = """
+CREATE TABLE adventure_bookings_new (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    adventure_id INTEGER NOT NULL,
+    booking_id INTEGER,
+    scheduled_date DATE NOT NULL,
+    participants INTEGER NOT NULL DEFAULT 1 CHECK (participants >= 1),
+    status TEXT NOT NULL DEFAULT 'pending'
+        CHECK (status IN ('pending', 'approved', 'rejected', 'cancelled')),
+    special_requests TEXT,
+    total_price REAL NOT NULL DEFAULT 0 CHECK (total_price >= 0),
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_adv_bookings_user
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT fk_adv_bookings_adventure
+        FOREIGN KEY (adventure_id) REFERENCES adventures(id) ON DELETE CASCADE,
+    CONSTRAINT fk_adv_bookings_booking
+        FOREIGN KEY (booking_id) REFERENCES bookings(id) ON DELETE SET NULL
+);
+"""
+
+_ADV_BOOKINGS_COPY_COLS = (
+    "id, user_id, adventure_id, booking_id, scheduled_date, participants, status, "
+    "special_requests, total_price, created_at, updated_at"
+)
+
+
+def _bookings_table_needs_hardening(sql: str) -> bool:
+    """True if bookings should be rebuilt (unsafe default or missing CHECKs)."""
+    if not sql:
+        return False
+    compact = " ".join(sql.split())
+    if "property_id INTEGER NOT NULL DEFAULT 1" in compact:
+        return True
+    markers = ("end_date > start_date", "total_price >= 0", "guests >= 1")
+    return any(m not in sql for m in markers)
+
+
+def _adventure_bookings_table_needs_hardening(sql: str) -> bool:
+    if not sql:
+        return False
+    markers = ("participants >= 1", "total_price >= 0")
+    return any(m not in sql for m in markers)
+
+
+def _replace_bookings_with_hardened_schema(conn: sqlite3.Connection) -> None:
+    conn.execute("DROP TABLE IF EXISTS bookings_new;")
+    conn.execute(_BOOKINGS_NEW_DDL.strip())
+    conn.execute(
+        f"INSERT INTO bookings_new ({_BOOKINGS_COPY_COLS}) "
+        f"SELECT {_BOOKINGS_COPY_COLS} FROM bookings"
+    )
+    conn.execute("DROP TABLE bookings;")
+    conn.execute("ALTER TABLE bookings_new RENAME TO bookings;")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_bookings_user_id ON bookings(user_id);")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_bookings_status ON bookings(status);")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_bookings_dates ON bookings(start_date, end_date);")
+
+
+def _replace_adventure_bookings_with_hardened_schema(conn: sqlite3.Connection) -> None:
+    conn.execute("DROP TABLE IF EXISTS adventure_bookings_new;")
+    conn.execute(_ADV_BOOKINGS_NEW_DDL.strip())
+    conn.execute(
+        f"INSERT INTO adventure_bookings_new ({_ADV_BOOKINGS_COPY_COLS}) "
+        f"SELECT {_ADV_BOOKINGS_COPY_COLS} FROM adventure_bookings"
+    )
+    conn.execute("DROP TABLE adventure_bookings;")
+    conn.execute("ALTER TABLE adventure_bookings_new RENAME TO adventure_bookings;")
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_adv_bookings_user_id ON adventure_bookings(user_id);"
+    )
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_adv_bookings_adventure_id "
+        "ON adventure_bookings(adventure_id);"
+    )
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_adv_bookings_status ON adventure_bookings(status);"
+    )
+
+
 def init_database():
     """Initialize the database if it doesn't exist."""
     db_path = app.config['DATABASE_PATH']
@@ -157,92 +303,106 @@ def init_database():
     if db_dir and not os.path.exists(db_dir):
         os.makedirs(db_dir, exist_ok=True)
 
-    if os.path.exists(db_path):
-        print(f"Database found: {db_path}")
-        # Run safe migrations for new columns (use direct connection —
-        # execute_query() requires Flask request context which doesn't exist at startup)
-        import sqlite3 as _sqlite3
-        conn = _sqlite3.connect(db_path)
-        for migration in [
-            "ALTER TABLE properties ADD COLUMN check_in_instructions TEXT",
-            "ALTER TABLE users ADD COLUMN password_reset_token TEXT",
-            "ALTER TABLE users ADD COLUMN password_reset_expires DATETIME",
-        ]:
-            try:
-                conn.execute(migration)
-            except Exception:
-                pass  # Column already exists
-        conn.commit()
-        conn.close()
-
-        # Migrate bookings table to add 'completed' to status CHECK constraint
-        try:
-            conn = _sqlite3.connect(db_path)
-            conn.execute("PRAGMA foreign_keys = OFF;")
-            # Check if the current constraint already allows 'completed'
-            cursor = conn.execute("SELECT sql FROM sqlite_master WHERE type='table' AND name='bookings'")
-            create_sql = cursor.fetchone()[0]
-            if "'completed'" not in create_sql:
-                conn.execute("BEGIN;")
-                conn.execute("""CREATE TABLE bookings_new (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    user_id INTEGER NOT NULL,
-                    property_id INTEGER NOT NULL DEFAULT 1,
-                    start_date DATE NOT NULL,
-                    end_date DATE NOT NULL,
-                    status TEXT NOT NULL DEFAULT 'pending'
-                        CHECK (status IN ('pending', 'approved', 'rejected', 'cancelled', 'completed')),
-                    total_price REAL NOT NULL DEFAULT 0,
-                    guests INTEGER NOT NULL DEFAULT 1,
-                    special_requests TEXT,
-                    admin_notes TEXT,
-                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                    CONSTRAINT fk_bookings_user
-                        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-                    CONSTRAINT fk_bookings_property
-                        FOREIGN KEY (property_id) REFERENCES properties(id) ON DELETE CASCADE
-                );""")
-                conn.execute("INSERT INTO bookings_new SELECT * FROM bookings;")
-                conn.execute("DROP TABLE bookings;")
-                conn.execute("ALTER TABLE bookings_new RENAME TO bookings;")
-                conn.execute("CREATE INDEX IF NOT EXISTS idx_bookings_user_id ON bookings(user_id);")
-                conn.execute("CREATE INDEX IF NOT EXISTS idx_bookings_status ON bookings(status);")
-                conn.execute("CREATE INDEX IF NOT EXISTS idx_bookings_dates ON bookings(start_date, end_date);")
-                conn.commit()
-                print("Migrated bookings table to support 'completed' status")
-            conn.execute("PRAGMA foreign_keys = ON;")
-            conn.close()
-        except Exception as e:
-            print(f"Bookings migration check: {e}")
-
-        return
-
-    print(f"Creating new database: {db_path}")
-
+    lock_path = f"{db_path}.init.lock"
+    lock_file = open(lock_path, "a+b")
     try:
-        conn = sqlite3.connect(db_path)
-        conn.execute("PRAGMA foreign_keys = ON;")
+        fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX)
 
-        with open(schema_path, 'r') as f:
-            schema_sql = f.read()
+        if os.path.exists(db_path):
+            print(f"Database found: {db_path}")
+            # Run safe migrations for new columns (use direct connection —
+            # execute_query() requires Flask request context which doesn't exist at startup)
+            import sqlite3 as _sqlite3
+            conn = _sqlite3.connect(db_path)
+            for migration in [
+                "ALTER TABLE properties ADD COLUMN check_in_instructions TEXT",
+                "ALTER TABLE users ADD COLUMN password_reset_token TEXT",
+                "ALTER TABLE users ADD COLUMN password_reset_expires DATETIME",
+            ]:
+                try:
+                    conn.execute(migration)
+                except Exception:
+                    pass  # Column already exists
+            try:
+                _migrate_reviews_one_per_booking(conn)
+            except Exception as e:
+                print(f"Reviews one-per-booking migration: {e}")
+            conn.commit()
+            conn.close()
 
-        conn.executescript(schema_sql)
-        conn.commit()
-        conn.close()
-        print("Schema created successfully!")
+            # Bookings: 'completed' status, no unsafe property_id default, CHECK constraints (W6)
+            try:
+                conn = _sqlite3.connect(db_path)
+                conn.execute("PRAGMA foreign_keys = OFF;")
+                cursor = conn.execute(
+                    "SELECT sql FROM sqlite_master WHERE type='table' AND name='bookings'"
+                )
+                row = cursor.fetchone()
+                create_sql = row[0] if row else ""
+                need_completed = "'completed'" not in create_sql
+                need_hardening = _bookings_table_needs_hardening(create_sql)
+                if need_completed or need_hardening:
+                    conn.execute("BEGIN;")
+                    _replace_bookings_with_hardened_schema(conn)
+                    conn.commit()
+                    if need_completed:
+                        print("Migrated bookings table to support 'completed' status")
+                    if need_hardening:
+                        print("Migrated bookings table schema constraints (property_id, CHECKs)")
+                conn.execute("PRAGMA foreign_keys = ON;")
+                conn.close()
+            except Exception as e:
+                print(f"Bookings migration check: {e}")
 
-        # Import and run seed data
-        import sys
-        sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
-        from backend.database.seed import insert_seed_data
-        insert_seed_data()
-        print("Database initialization complete!")
+            # Adventure bookings: participant/price CHECKs for existing DBs (W6)
+            try:
+                conn = _sqlite3.connect(db_path)
+                conn.execute("PRAGMA foreign_keys = OFF;")
+                cursor = conn.execute(
+                    "SELECT sql FROM sqlite_master WHERE type='table' AND name='adventure_bookings'"
+                )
+                row = cursor.fetchone()
+                adv_sql = row[0] if row else ""
+                if adv_sql and _adventure_bookings_table_needs_hardening(adv_sql):
+                    conn.execute("BEGIN;")
+                    _replace_adventure_bookings_with_hardened_schema(conn)
+                    conn.commit()
+                    print("Migrated adventure_bookings CHECK constraints")
+                conn.execute("PRAGMA foreign_keys = ON;")
+                conn.close()
+            except Exception as e:
+                print(f"Adventure bookings migration check: {e}")
 
-    except Exception as e:
-        logger.error(f"Database initialization failed: {e}", exc_info=True)
-        print(f"Error initializing database: {e}")
-        raise
+            return
+
+        print(f"Creating new database: {db_path}")
+
+        try:
+            conn = sqlite3.connect(db_path)
+            conn.execute("PRAGMA foreign_keys = ON;")
+
+            with open(schema_path, 'r') as f:
+                schema_sql = f.read()
+
+            conn.executescript(schema_sql)
+            conn.commit()
+            conn.close()
+            print("Schema created successfully!")
+
+            # Import and run seed data
+            import sys
+            sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
+            from backend.database.seed import insert_seed_data
+            insert_seed_data()
+            print("Database initialization complete!")
+
+        except Exception as e:
+            logger.error(f"Database initialization failed: {e}", exc_info=True)
+            print(f"Error initializing database: {e}")
+            raise
+    finally:
+        fcntl.flock(lock_file.fileno(), fcntl.LOCK_UN)
+        lock_file.close()
 
 
 init_database()
@@ -255,6 +415,9 @@ from backend.models.booking import Booking
 
 @app.before_request
 def auto_complete_bookings():
+    # Skip DB work for health checks and static assets (critical-before-request).
+    if request.path == '/health' or request.endpoint == 'static':
+        return None
     Booking.transition_completed()
 
 
@@ -302,6 +465,19 @@ from flask_wtf.csrf import CSRFError
 @app.errorhandler(CSRFError)
 def handle_csrf_error(error):
     return render_template('errors/403.html'), 403
+
+
+# Honor X-Forwarded-* from one reverse proxy (TLS terminators, e.g. Koyeb) when enabled.
+if os.environ.get('TRUST_PROXY_HEADERS', '').lower() in ('1', 'true', 'yes'):
+    from werkzeug.middleware.proxy_fix import ProxyFix
+    app.wsgi_app = ProxyFix(
+        app.wsgi_app,
+        x_for=1,
+        x_proto=1,
+        x_host=1,
+        x_port=1,
+        x_prefix=1,
+    )
 
 
 # ============================================================================

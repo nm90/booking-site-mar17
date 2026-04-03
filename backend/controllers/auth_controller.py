@@ -24,6 +24,13 @@ from backend.services.email import send_password_reset
 auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
 
 
+def _sync_session_from_db_user(user: dict) -> None:
+    """Refresh cached session fields from the database (role, name, email)."""
+    session['user_email'] = user['email']
+    session['user_first_name'] = user['first_name']
+    session['user_role'] = user['role']
+
+
 def login_required(f):
     """Decorator: redirect to login if user is not authenticated.
 
@@ -41,6 +48,7 @@ def login_required(f):
             session.clear()
             flash('Your account is no longer active. Please log in again.', 'warning')
             return redirect(url_for('auth.login'))
+        _sync_session_from_db_user(user)
         return f(*args, **kwargs)
     return decorated
 
@@ -65,6 +73,7 @@ def admin_required(f):
         if user['role'] != 'admin':
             flash('Access denied. Admin privileges required.', 'error')
             return redirect(url_for('portal.dashboard'))
+        _sync_session_from_db_user(user)
         return f(*args, **kwargs)
     return decorated
 
@@ -144,7 +153,7 @@ def do_login():
         flash('Invalid email or password.', 'error')
         return render_template('users/login.html', email=email)
 
-    # Establish session
+    session.clear()
     session['user_id'] = user['id']
     session['user_email'] = user['email']
     session['user_first_name'] = user['first_name']
@@ -190,7 +199,7 @@ def do_forgot_password():
     if token:
         reset_url = url_for('auth.reset_password', token=token, _external=True)
         send_password_reset(email, reset_url)
-        logging.getLogger(__name__).info(f"Password reset requested for {email}: {reset_url}")
+        logging.getLogger(__name__).info("Password reset requested (email redacted; token not logged)")
 
     # Same message whether email exists or not (prevents enumeration)
     flash('If an account exists with that email, a reset link has been sent.', 'success')
