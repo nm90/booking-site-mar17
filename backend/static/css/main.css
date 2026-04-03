@@ -3,26 +3,37 @@
    ============================================================ */
 
 :root {
-  --primary:       #2563eb;
-  --primary-dark:  #1d4ed8;
-  --primary-light: #dbeafe;
+  /* Landing-site palette (Caye Garden Casita) */
+  --teal:          #0e7c6b;
+  --teal-dark:     #095e52;
+  --coral:         #e07c5a;
+  --coral-dark:    #c96842;
+  --sand:          #f5f0e8;
+  --sand-dark:     #e8dfd2;
+  --charcoal:      #2c3e3a;
+
+  --primary:       var(--teal);
+  --primary-dark:  var(--teal-dark);
+  --primary-light: #d4ede8;
+  --cta:           var(--coral);
+  --cta-dark:      var(--coral-dark);
   --success:       #16a34a;
   --success-light: #dcfce7;
   --warning:       #d97706;
   --warning-light: #fef3c7;
   --danger:        #dc2626;
   --danger-light:  #fee2e2;
-  --info:          #0891b2;
-  --info-light:    #cffafe;
-  --accent:        #7c3aed;
-  --accent-light:  #ede9fe;
+  --info:          #0e7c6b;
+  --info-light:    #d4ede8;
+  --accent:        var(--coral);
+  --accent-light:  #fce8e2;
 
-  --text:          #111827;
-  --text-muted:    #6b7280;
-  --border:        #e5e7eb;
-  --bg:            #f9fafb;
+  --text:          var(--charcoal);
+  --text-muted:    #5a6b68;
+  --border:        var(--sand-dark);
+  --bg:            var(--sand);
   --surface:       #ffffff;
-  --header-bg:     #1e293b;
+  --footer-bg:     var(--charcoal);
 
   --radius:   8px;
   --radius-lg: 12px;
@@ -50,12 +61,13 @@ a:hover { text-decoration: underline; }
 
 /* ── Header ─────────────────────────────────────────────── */
 header {
-  background: var(--header-bg);
-  color: #fff;
+  background: var(--surface);
+  color: var(--text);
+  border-bottom: 1px solid var(--sand-dark);
   position: sticky;
   top: 0;
   z-index: 100;
-  box-shadow: 0 2px 8px rgba(0,0,0,.25);
+  box-shadow: 0 1px 0 rgba(0,0,0,.04);
 }
 
 .header-inner {
@@ -71,10 +83,14 @@ header {
 .logo {
   font-size: 1.2rem;
   font-weight: 700;
-  color: #fff;
+  color: var(--teal);
   text-decoration: none;
   letter-spacing: -.3px;
 }
+
+.logo:hover { text-decoration: none; color: var(--teal-dark); }
+
+.logo-accent { color: var(--coral); }
 
 header nav {
   display: flex;
@@ -83,7 +99,7 @@ header nav {
 }
 
 header nav a {
-  color: rgba(255,255,255,.8);
+  color: var(--charcoal);
   padding: 0.4rem 0.75rem;
   border-radius: var(--radius);
   font-size: 0.9rem;
@@ -93,8 +109,8 @@ header nav a {
 
 header nav a:hover,
 header nav a.active {
-  background: rgba(255,255,255,.15);
-  color: #fff;
+  background: rgba(14,124,107,.1);
+  color: var(--teal);
 }
 
 .nav-user {
@@ -103,12 +119,12 @@ header nav a.active {
   gap: 0.75rem;
   margin-left: 0.75rem;
   padding-left: 0.75rem;
-  border-left: 1px solid rgba(255,255,255,.2);
+  border-left: 1px solid var(--sand-dark);
 }
 
 .user-greeting {
   font-size: 0.875rem;
-  color: rgba(255,255,255,.85);
+  color: var(--text-muted);
   display: flex;
   align-items: center;
   gap: 0.4rem;
@@ -125,8 +141,8 @@ main {
 
 /* ── Footer ──────────────────────────────────────────────── */
 footer {
-  background: var(--header-bg);
-  color: rgba(255,255,255,.6);
+  background: var(--footer-bg);
+  color: rgba(255,255,255,.7);
   font-size: 0.85rem;
   padding: 1.5rem;
 }
@@ -141,7 +157,8 @@ footer {
   flex-wrap: wrap;
 }
 
-footer a { color: rgba(255,255,255,.75); }
+footer a { color: var(--coral); text-decoration: none; }
+footer a:hover { text-decoration: underline; color: #f0a080; }
 
 /* ── Buttons ─────────────────────────────────────────────── */
 .btn {
@@ -160,8 +177,8 @@ footer a { color: rgba(255,255,255,.75); }
   white-space: nowrap;
 }
 
-.btn-primary  { background: var(--primary); color: #fff; }
-.btn-primary:hover { background: var(--primary-dark); text-decoration: none; color: #fff; }
+.btn-primary  { background: var(--cta); color: #fff; }
+.btn-primary:hover { background: var(--cta-dark); text-decoration: none; color: #fff; }
 
 .btn-success  { background: var(--success); color: #fff; }
 .btn-success:hover { background: #15803d; text-decoration: none; color: #fff; }
@@ -179,8 +196,8 @@ footer a { color: rgba(255,255,255,.75); }
 }
 .btn-outline:hover { border-color: #9ca3af; background: #f3f4f6; text-decoration: none; }
 
-.btn-ghost    { background: transparent; color: rgba(255,255,255,.8); border: none; }
-.btn-ghost:hover { background: rgba(255,255,255,.15); color: #fff; }
+.btn-ghost    { background: transparent; color: var(--text-muted); border: none; }
+.btn-ghost:hover { background: rgba(14,124,107,.1); color: var(--teal); }
 
 .btn-sm  { padding: 0.3rem 0.75rem; font-size: 0.8rem; }
 .btn-full { width: 100%; justify-content: center; }
@@ -288,7 +305,7 @@ footer a { color: rgba(255,255,255,.75); }
   font-size: 0.9rem;
 }
 
-.table thead tr { background: #f8fafc; }
+.table thead tr { background: var(--sand); }
 .table th {
   padding: 0.75rem 1rem;
   text-align: left;
@@ -332,7 +349,7 @@ footer a { color: rgba(255,255,255,.75); }
 .badge-approved  { background: var(--success-light); color: #14532d; }
 .badge-rejected  { background: var(--danger-light);  color: #7f1d1d; }
 .badge-cancelled { background: #f3f4f6; color: #6b7280; }
-.badge-completed { background: #dbeafe; color: #1e40af; }
+.badge-completed { background: var(--primary-light); color: var(--teal-dark); }
 
 .badge-status-active    { background: var(--success-light); color: #14532d; }
 .badge-status-suspended { background: var(--danger-light);  color: #7f1d1d; }
@@ -340,9 +357,9 @@ footer a { color: rgba(255,255,255,.75); }
 
 .badge-lg { font-size: 0.875rem; padding: 0.3em 0.9em; }
 
-.role-badge { font-size: 0.7rem; background: var(--accent-light); color: var(--accent); padding: 0.15em 0.5em; border-radius: 999px; }
+.role-badge { font-size: 0.7rem; background: var(--primary-light); color: var(--teal-dark); padding: 0.15em 0.5em; border-radius: 999px; }
 .role-tag   { font-size: 0.8rem; font-weight: 600; }
-.role-admin { color: var(--accent); }
+.role-admin { color: var(--teal-dark); }
 .role-customer { color: var(--text-muted); }
 
 /* ── Forms ───────────────────────────────────────────────── */
@@ -392,7 +409,7 @@ footer a { color: rgba(255,255,255,.75); }
 .form-group select:focus,
 .form-group textarea:focus {
   border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(37,99,235,.12);
+  box-shadow: 0 0 0 3px rgba(14,124,107,.18);
 }
 
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
@@ -465,9 +482,9 @@ footer a { color: rgba(255,255,255,.75); }
 
 .demo-title { font-size: 0.8rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 0.75rem; }
 .demo-accounts { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
-.demo-account  { background: #f8fafc; border-radius: var(--radius); padding: 0.75rem; font-size: 0.8rem; }
+.demo-account  { background: var(--sand); border-radius: var(--radius); padding: 0.75rem; font-size: 0.8rem; }
 .demo-account strong { display: block; margin-bottom: 0.3rem; }
-.demo-account code { display: block; background: #e5e7eb; border-radius: 4px; padding: 0.2rem 0.4rem; margin: 0.15rem 0; font-family: monospace; }
+.demo-account code { display: block; background: var(--sand-dark); border-radius: 4px; padding: 0.2rem 0.4rem; margin: 0.15rem 0; font-family: monospace; }
 
 /* ── Detail Layout ───────────────────────────────────────── */
 .detail-layout {
@@ -543,7 +560,7 @@ footer a { color: rgba(255,255,255,.75); }
 .admin-actions h3 { font-size: 1rem; font-weight: 700; margin-bottom: 1rem; }
 
 .action-forms { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-.action-form { background: #f8fafc; border-radius: var(--radius); padding: 1rem; }
+.action-form { background: var(--sand); border-radius: var(--radius); padding: 1rem; }
 
 /* ── Filter Tabs ─────────────────────────────────────────── */
 .filter-tabs {
@@ -577,7 +594,7 @@ footer a { color: rgba(255,255,255,.75); }
 
 /* ── Property Preview ─────────────────────────────────────── */
 .property-preview {
-  background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%);
+  background: linear-gradient(135deg, var(--teal-dark) 0%, var(--teal) 100%);
   border-radius: var(--radius);
   padding: 1.25rem;
   margin-bottom: 1.5rem;
@@ -594,7 +611,7 @@ footer a { color: rgba(255,255,255,.75); }
   align-items: center;
   justify-content: space-between;
   background: var(--primary-light);
-  border: 1px solid #bfdbfe;
+  border: 1px solid #a8d4cc;
   border-radius: var(--radius);
   padding: 0.75rem 1rem;
   font-size: 0.9rem;

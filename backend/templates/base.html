@@ -3,14 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Sunset Villa{% endblock %} — Vacation Rental</title>
+    <title>{% block title %}Caye Garden Casita{% endblock %} — Vacation Rental</title>
+    <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml">
     <link rel="stylesheet" href="/static/css/main.css">
 </head>
 <body>
 
 <header>
     <div class="header-inner">
-        <a href="/" class="logo">🌅 Sunset Villa</a>
+        <a href="{{ landing_site_url }}" class="logo" rel="noopener noreferrer">Caye Garden <span class="logo-accent">Casita</span></a>
         <nav>
             {% if is_logged_in %}
                 {% if is_admin %}
@@ -62,8 +63,8 @@
 
 <footer>
     <div class="footer-inner">
-        <p><strong>🌅 Sunset Villa</strong> — San Pedro Town, Belize</p>
-        <p>Questions? <a href="mailto:hello@sunsetvilla.com">hello@sunsetvilla.com</a></p>
+        <p><strong>Caye Garden Casita</strong> — San Pedro Town, Ambergris Caye, Belize</p>
+        <p>Questions? <a href="mailto:{{ contact_email }}">{{ contact_email }}</a></p>
     </div>
 </footer>
 

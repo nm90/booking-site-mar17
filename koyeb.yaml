@@ -10,6 +10,8 @@ services:
         value: /tmp/booking_site.db
       - key: SECRET_KEY
         secret: secret-key
+      - key: LANDING_SITE_URL
+        value: https://nm90.github.io/booking-site-mar17/
     ports:
       - name: http
         port: 5000
