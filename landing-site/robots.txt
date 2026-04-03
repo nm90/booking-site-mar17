@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://bze2.wiscomfort.com/sitemap.xml
+Sitemap: https://nm90.github.io/booking-site-mar17/sitemap.xml
