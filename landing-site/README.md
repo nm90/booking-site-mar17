@@ -1,6 +1,6 @@
 # Caye Garden Casita — Landing Page
 
-Static landing page for [Caye Garden Casita](https://bze2.wiscomfort.com) in San Pedro Town, Belize.
+Static landing page for [Caye Garden Casita](https://nm90.github.io/booking-site-mar17) in San Pedro Town, Belize.
 
 ## Setup
 
