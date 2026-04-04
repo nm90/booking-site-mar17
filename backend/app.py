@@ -90,6 +90,8 @@ app.config['MAIL_USE_TLS'] = os.environ.get('MAIL_USE_TLS', 'true').lower() == '
 app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME', '')
 app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD', '')
 app.config['MAIL_DEFAULT_SENDER'] = os.environ.get('MAIL_DEFAULT_SENDER', 'noreply@cayegardencasita.com')
+app.config['BREVO_API_KEY'] = os.environ.get('BREVO_API_KEY', '').strip()
+app.config['BREVO_SENDER_NAME'] = os.environ.get('BREVO_SENDER_NAME', '').strip()
 mail = Mail(app)
 
 from backend.database.connection import close_connection, DB_PATH

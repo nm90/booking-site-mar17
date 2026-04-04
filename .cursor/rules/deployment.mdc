@@ -14,6 +14,7 @@ The production app is `booking-site-mar17`, service `booking-site`. It uses arch
 3. Run `koyeb deploy` from project root
 4. Verify service is healthy with `koyeb services get <app-name>`
 5. If volumes are configured, confirm they are necessary — avoid persistent volumes on Koyeb; use managed databases instead
+6. **Transactional email (Brevo):** Create a Koyeb secret (e.g. `brevo-api-key`) with your [Brevo](https://developers.brevo.com/docs/getting-started) API key and map it to env `BREVO_API_KEY` (see `koyeb.yaml`). Set `MAIL_DEFAULT_SENDER` to an address (or domain) **verified in Brevo**. Optional: `BREVO_SENDER_NAME` for the display name. If `BREVO_API_KEY` is unset, the app falls back to SMTP when `MAIL_USERNAME` / `MAIL_PASSWORD` are configured.
 
 ## Commands
 

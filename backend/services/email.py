@@ -1,15 +1,22 @@
 """
 Email Service - Sends transactional emails for key booking events.
 
-Uses Flask-Mail. Falls back gracefully if mail is not configured
-(logs the email instead of sending).
+Uses Brevo's Transactional API when BREVO_API_KEY is set; otherwise Flask-Mail
+(SMTP) when MAIL_USERNAME is set. Falls back to logging if neither is configured.
 """
 
+import json
 import logging
+import urllib.error
+import urllib.request
+from typing import Any, Dict, List, Optional
+
 from flask import current_app, render_template
 from flask_mail import Message
 
 logger = logging.getLogger(__name__)
+
+BREVO_SMTP_EMAIL_URL = "https://api.brevo.com/v3/smtp/email"
 
 
 def _get_mail():
@@ -17,12 +24,96 @@ def _get_mail():
     return current_app.extensions.get('mail')
 
 
+def _brevo_sender_from_config(config: dict) -> Optional[Dict[str, str]]:
+    """Build Brevo sender dict from MAIL_DEFAULT_SENDER and optional BREVO_SENDER_NAME."""
+    raw = config.get('MAIL_DEFAULT_SENDER')
+    brevo_name = (config.get('BREVO_SENDER_NAME') or '').strip() or None
+
+    if isinstance(raw, tuple) and len(raw) >= 2:
+        name_part = (raw[0] or '').strip() or brevo_name
+        email = (raw[1] or '').strip()
+        if not email:
+            return None
+        out: Dict[str, str] = {'email': email}
+        if name_part:
+            out['name'] = name_part
+        return out
+
+    if isinstance(raw, str):
+        email = raw.strip()
+        if not email:
+            return None
+        out = {'email': email}
+        if brevo_name:
+            out['name'] = brevo_name
+        return out
+
+    return None
+
+
+def _send_via_brevo(
+    api_key: str,
+    sender: Dict[str, str],
+    subject: str,
+    recipients: List[str],
+    html_body: str,
+    text_body: Optional[str],
+) -> bool:
+    payload: Dict[str, Any] = {
+        'sender': sender,
+        'to': [{'email': r} for r in recipients],
+        'subject': subject,
+        'htmlContent': html_body,
+    }
+    if text_body:
+        payload['textContent'] = text_body
+
+    data = json.dumps(payload).encode('utf-8')
+    req = urllib.request.Request(
+        BREVO_SMTP_EMAIL_URL,
+        data=data,
+        headers={
+            'Content-Type': 'application/json',
+            'api-key': api_key,
+        },
+        method='POST',
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            if 200 <= resp.status < 300:
+                return True
+            logger.error("Brevo API returned unexpected status %s", resp.status)
+            return False
+    except urllib.error.HTTPError as e:
+        logger.error("Brevo API error: HTTP %s", e.code)
+        return False
+    except urllib.error.URLError as e:
+        logger.error("Brevo API request failed: %s", e.reason)
+        return False
+    except OSError as e:
+        logger.error("Brevo API request failed: %s", e)
+        return False
+
+
 def _send(subject: str, recipients: list, html_body: str, text_body: str = None):
-    """Send an email. Logs instead of sending if mail is not configured."""
+    """Send an email via Brevo, SMTP, or log if not configured."""
+    api_key = (current_app.config.get('BREVO_API_KEY') or '').strip()
+    if api_key:
+        sender = _brevo_sender_from_config(current_app.config)
+        if not sender:
+            logger.warning(
+                "BREVO_API_KEY is set but MAIL_DEFAULT_SENDER has no valid email; skipping send."
+            )
+            return False
+        ok = _send_via_brevo(api_key, sender, subject, recipients, html_body, text_body)
+        if ok:
+            logger.info("Email sent (Brevo): '%s' to %s", subject, recipients)
+        return ok
+
     mail = _get_mail()
     if not mail or not current_app.config.get('MAIL_USERNAME'):
-        logger.info(f"[EMAIL NOT CONFIGURED] To: {recipients} | Subject: {subject}")
-        logger.debug(f"Body: {text_body or html_body}")
+        logger.info("[EMAIL NOT CONFIGURED] To: %s | Subject: %s", recipients, subject)
+        logger.debug("Body: %s", text_body or html_body)
         return False
 
     try:
@@ -31,10 +122,10 @@ def _send(subject: str, recipients: list, html_body: str, text_body: str = None)
         if text_body:
             msg.body = text_body
         mail.send(msg)
-        logger.info(f"Email sent: '{subject}' to {recipients}")
+        logger.info("Email sent: '%s' to %s", subject, recipients)
         return True
     except Exception as e:
-        logger.error(f"Failed to send email: {e}")
+        logger.error("Failed to send email: %s", e)
         return False
 
 
