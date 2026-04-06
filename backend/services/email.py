@@ -172,6 +172,18 @@ def send_password_reset(email: str, reset_url: str):
     )
 
 
+def send_email_verification(email: str, verification_url: str):
+    """Email user an email verification link."""
+    _send(
+        subject="Verify Your Email \u2014 Caye Garden Casita",
+        recipients=[email],
+        html_body=render_template('emails/email_verification.html',
+                                  verification_url=verification_url),
+        text_body=f"Welcome to Caye Garden Casita! Please verify your email by clicking this link: {verification_url}\n"
+                  f"This link expires in 24 hours."
+    )
+
+
 def send_checkin_reminder(guest_email: str, guest_name: str, booking: dict):
     """Email guest check-in instructions before arrival (for approved bookings)."""
     if not booking.get('property', {}).get('check_in_instructions'):

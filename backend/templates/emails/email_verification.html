@@ -1,0 +1,10 @@
+{% extends "emails/base_email.html" %}
+{% block content %}
+<p>Hi,</p>
+<p>Welcome to Caye Garden Casita! Please verify your email address to activate your account.</p>
+<p>Click the button below to verify:</p>
+<p style="text-align: center; margin: 1.5rem 0;">
+    <a href="{{ verification_url }}" class="btn">Verify Email</a>
+</p>
+<p style="font-size: 0.9rem; color: #64748b;">This link expires in 24 hours. If you didn't create this account, you can safely ignore this email.</p>
+{% endblock %}

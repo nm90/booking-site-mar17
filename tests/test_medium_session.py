@@ -12,8 +12,8 @@ def test_login_clears_stale_session_keys(app):
     conn.execute("PRAGMA foreign_keys = ON;")
     pw = User.hash_password("secret12ab")
     conn.execute(
-        "INSERT INTO users (email, password_hash, first_name, last_name, role, status) "
-        "VALUES ('sync@example.com', ?, 'Sync', 'User', 'customer', 'active')",
+        "INSERT INTO users (email, password_hash, first_name, last_name, role, status, email_verified) "
+        "VALUES ('sync@example.com', ?, 'Sync', 'User', 'customer', 'active', 1)",
         (pw,),
     )
     conn.commit()
@@ -38,8 +38,8 @@ def test_login_required_syncs_role_from_db(app):
     conn.execute("PRAGMA foreign_keys = ON;")
     pw = User.hash_password("adminpw12")
     conn.execute(
-        "INSERT INTO users (email, password_hash, first_name, last_name, role, status) "
-        "VALUES ('admin@example.com', ?, 'Ad', 'Min', 'admin', 'active')",
+        "INSERT INTO users (email, password_hash, first_name, last_name, role, status, email_verified) "
+        "VALUES ('admin@example.com', ?, 'Ad', 'Min', 'admin', 'active', 1)",
         (pw,),
     )
     conn.commit()
@@ -62,8 +62,8 @@ def test_admin_cannot_suspend_self(app):
     conn.execute("PRAGMA foreign_keys = ON;")
     pw = User.hash_password("adminpw12")
     conn.execute(
-        "INSERT INTO users (email, password_hash, first_name, last_name, role, status) "
-        "VALUES ('admin@example.com', ?, 'Ad', 'Min', 'admin', 'active')",
+        "INSERT INTO users (email, password_hash, first_name, last_name, role, status, email_verified) "
+        "VALUES ('admin@example.com', ?, 'Ad', 'Min', 'admin', 'active', 1)",
         (pw,),
     )
     conn.commit()

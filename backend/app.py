@@ -330,6 +330,9 @@ def init_database():
                 "ALTER TABLE properties ADD COLUMN check_in_instructions TEXT",
                 "ALTER TABLE users ADD COLUMN password_reset_token TEXT",
                 "ALTER TABLE users ADD COLUMN password_reset_expires DATETIME",
+                "ALTER TABLE users ADD COLUMN email_verification_token TEXT",
+                "ALTER TABLE users ADD COLUMN email_verification_expires DATETIME",
+                "ALTER TABLE users ADD COLUMN email_verified INTEGER NOT NULL DEFAULT 1",
             ]:
                 try:
                     conn.execute(migration)

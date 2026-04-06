@@ -103,7 +103,7 @@ class User:
     def get_by_id(user_id: int) -> Optional[Dict]:
         """Fetch a user by their ID. Returns None if not found."""
         return execute_query(
-            "SELECT id, email, first_name, last_name, phone_number, role, status, created_at FROM users WHERE id = ?",
+            "SELECT id, email, first_name, last_name, phone_number, role, status, email_verified, created_at FROM users WHERE id = ?",
             (user_id,), fetch_one=True
         )
 
@@ -253,6 +253,61 @@ class User:
             commit=True
         )
         return User.get_by_id(user['id'])
+
+    @staticmethod
+    def generate_verification_token(user_id: int) -> str:
+        """Generate an email verification token for the given user.
+
+        Returns the token string. Expires in 24 hours.
+        """
+        token = secrets.token_urlsafe(32)
+        expires = (datetime.utcnow() + timedelta(hours=24)).strftime('%Y-%m-%d %H:%M:%S')
+
+        execute_query(
+            "UPDATE users SET email_verification_token=?, email_verification_expires=?, updated_at=CURRENT_TIMESTAMP WHERE id=?",
+            (token, expires, user_id),
+            commit=True
+        )
+        return token
+
+    @staticmethod
+    def verify_email(token: str) -> Optional[Dict]:
+        """Verify a user's email using a valid (non-expired) token.
+
+        Sets email_verified=1, clears token columns. Returns user dict or None.
+        """
+        if not token:
+            return None
+
+        user = execute_query(
+            """SELECT id FROM users
+               WHERE email_verification_token = ?
+                 AND email_verification_expires > CURRENT_TIMESTAMP""",
+            (token,), fetch_one=True
+        )
+        if not user:
+            return None
+
+        execute_query(
+            """UPDATE users
+               SET email_verified = 1, email_verification_token = NULL,
+                   email_verification_expires = NULL, updated_at = CURRENT_TIMESTAMP
+               WHERE id = ?""",
+            (user['id'],),
+            commit=True
+        )
+        return User.get_by_id(user['id'])
+
+    @staticmethod
+    def is_email_verified(user_id: int) -> bool:
+        """Check whether a user's email is verified."""
+        user = execute_query(
+            "SELECT email_verified FROM users WHERE id = ?",
+            (user_id,), fetch_one=True
+        )
+        if not user:
+            return False
+        return bool(user.get('email_verified', 1))
 
     @staticmethod
     def update_password(user_id: int, current_password: str, new_password: str) -> Optional[Dict]:
