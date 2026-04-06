@@ -30,18 +30,18 @@ def insert_seed_data():
     try:
         # Users
         conn.execute("""
-            INSERT INTO users (email, password_hash, first_name, last_name, role)
-            VALUES (?, ?, ?, ?, ?)
+            INSERT INTO users (email, password_hash, first_name, last_name, role, email_verified)
+            VALUES (?, ?, ?, ?, ?, 1)
         """, ('admin@vacationrental.com', hash_password('admin123'), 'Admin', 'User', 'admin'))
 
         conn.execute("""
-            INSERT INTO users (email, password_hash, first_name, last_name, phone_number, role)
-            VALUES (?, ?, ?, ?, ?, ?)
+            INSERT INTO users (email, password_hash, first_name, last_name, phone_number, role, email_verified)
+            VALUES (?, ?, ?, ?, ?, ?, 1)
         """, ('alice@example.com', hash_password('pass123'), 'Alice', 'Johnson', '555-0101', 'customer'))
 
         conn.execute("""
-            INSERT INTO users (email, password_hash, first_name, last_name, phone_number, role)
-            VALUES (?, ?, ?, ?, ?, ?)
+            INSERT INTO users (email, password_hash, first_name, last_name, phone_number, role, email_verified)
+            VALUES (?, ?, ?, ?, ?, ?, 1)
         """, ('bob@example.com', hash_password('pass123'), 'Bob', 'Smith', '555-0102', 'customer'))
 
         # Properties

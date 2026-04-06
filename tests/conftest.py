@@ -49,12 +49,12 @@ def seed_user(app):
     conn = sqlite3.connect(db_path)
     conn.execute("PRAGMA foreign_keys = ON;")
     conn.execute(
-        "INSERT INTO users (id, email, password_hash, first_name, last_name, role) "
-        "VALUES (1, 'test@example.com', 'hash', 'Test', 'User', 'customer')"
+        "INSERT INTO users (id, email, password_hash, first_name, last_name, role, email_verified) "
+        "VALUES (1, 'test@example.com', 'hash', 'Test', 'User', 'customer', 1)"
     )
     conn.execute(
-        "INSERT INTO users (id, email, password_hash, first_name, last_name, role) "
-        "VALUES (2, 'test2@example.com', 'hash', 'Test2', 'User2', 'customer')"
+        "INSERT INTO users (id, email, password_hash, first_name, last_name, role, email_verified) "
+        "VALUES (2, 'test2@example.com', 'hash', 'Test2', 'User2', 'customer', 1)"
     )
     conn.execute(
         "INSERT INTO properties (id, name, location, capacity, price_per_night) "

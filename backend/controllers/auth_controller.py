@@ -19,7 +19,7 @@ Routes:
 import logging
 from flask import Blueprint, request, redirect, url_for, flash, session, render_template
 from backend.models.user import User
-from backend.services.email import send_password_reset
+from backend.services.email import send_password_reset, send_email_verification
 
 auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
 
@@ -107,7 +107,13 @@ def do_register():
             phone_number=phone_number,
             role='customer'
         )
-        flash('Account created successfully! Please log in.', 'success')
+
+        # Send verification email
+        token = User.generate_verification_token(user['id'])
+        verification_url = url_for('auth.verify_email', token=token, _external=True)
+        send_email_verification(email, verification_url)
+
+        flash('Account created! Please check your email to verify your account before logging in.', 'success')
         return redirect(url_for('auth.login'))
 
     except ValueError as e:
@@ -153,6 +159,12 @@ def do_login():
         flash('Invalid email or password.', 'error')
         return render_template('users/login.html', email=email)
 
+    if not User.is_email_verified(user['id']):
+        session.clear()
+        session['pending_verification_email'] = email
+        flash('Please verify your email address before logging in. Check your inbox for a verification link.', 'warning')
+        return redirect(url_for('auth.login'))
+
     session.clear()
     session['user_id'] = user['id']
     session['user_email'] = user['email']
@@ -171,6 +183,40 @@ def logout():
     """Clear session and redirect to login."""
     session.clear()
     flash('You have been logged out.', 'success')
+    return redirect(url_for('auth.login'))
+
+
+# ============================================================================
+# EMAIL VERIFICATION
+# ============================================================================
+@auth_bp.route('/verify-email/<token>', methods=['GET'])
+def verify_email(token):
+    """Verify a user's email address via token link."""
+    user = User.verify_email(token)
+    if user:
+        session.pop('pending_verification_email', None)
+        flash('Email verified successfully! You can now log in.', 'success')
+    else:
+        flash('This verification link is invalid or has expired.', 'error')
+    return redirect(url_for('auth.login'))
+
+
+@auth_bp.route('/resend-verification', methods=['POST'])
+def resend_verification():
+    """Resend the verification email for an unverified account."""
+    email = request.form.get('email', '').strip()
+    if not email:
+        flash('Email address is required.', 'error')
+        return redirect(url_for('auth.login'))
+
+    user = User.get_by_email(email)
+    if user and not user.get('email_verified'):
+        token = User.generate_verification_token(user['id'])
+        verification_url = url_for('auth.verify_email', token=token, _external=True)
+        send_email_verification(email, verification_url)
+
+    # Same message whether user exists or not (prevents enumeration)
+    flash('If an unverified account exists with that email, a new verification link has been sent.', 'success')
     return redirect(url_for('auth.login'))
 
 

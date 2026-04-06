@@ -31,6 +31,19 @@
             <button type="submit" class="btn btn-primary btn-full">Log In</button>
         </form>
 
+        {% if session.get('pending_verification_email') %}
+        <div class="verification-notice" style="background: #fef3c7; border: 1px solid #f59e0b; border-radius: 0.5rem; padding: 1rem; margin-bottom: 1rem; text-align: center;">
+            <p style="margin: 0 0 0.5rem 0; color: #92400e;">Your email is not yet verified.</p>
+            <form action="{{ url_for('auth.resend_verification') }}" method="POST" style="display: inline;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="email" value="{{ session['pending_verification_email'] }}">
+                <button type="submit" style="background: none; border: none; cursor: pointer; color: #0e7c6b; text-decoration: underline; font-size: inherit;">
+                    Resend verification email
+                </button>
+            </form>
+        </div>
+        {% endif %}
+
         <div class="auth-footer">
             <p>Don't have an account? <a href="{{ url_for('auth.register') }}">Sign up</a></p>
         </div>
