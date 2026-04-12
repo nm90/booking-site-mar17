@@ -78,5 +78,24 @@
             </div>
         </form>
     </div>
+
+    <div class="form-card" style="margin-top: 2rem; border: 1px solid var(--danger, #dc3545);">
+        <h3 style="color: var(--danger, #dc3545); margin-bottom: 0.5rem;">Danger Zone</h3>
+        <p style="margin-bottom: 1rem; color: var(--text-muted);">
+            Deactivating your account will cancel all pending and approved bookings
+            (including adventure bookings) and log you out. Contact support if you need
+            to reactivate your account.
+        </p>
+        <form action="{{ url_for('portal.deactivate_account') }}" method="POST"
+              onsubmit="return confirm('Are you sure you want to deactivate your account? All active bookings will be cancelled.')">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="form-group">
+                <label for="deactivate_password">Confirm your password</label>
+                <input type="password" id="deactivate_password" name="password"
+                       placeholder="Enter your current password" required>
+            </div>
+            <button type="submit" class="btn btn-danger">Deactivate My Account</button>
+        </form>
+    </div>
 </div>
 {% endblock %}

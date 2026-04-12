@@ -14,7 +14,7 @@ import secrets
 import bcrypt
 from typing import Dict, List, Optional
 from datetime import datetime, timedelta
-from backend.database.connection import execute_query
+from backend.database.connection import execute_query, begin_immediate
 
 
 class User:
@@ -342,4 +342,44 @@ class User:
             return False
 
         execute_query("DELETE FROM users WHERE id=?", (user_id,), commit=True)
+        return True
+
+    @staticmethod
+    def deactivate(user_id: int, password: str) -> bool:
+        """Deactivate a user account after verifying their password.
+
+        Cancels all pending/approved bookings and adventure bookings,
+        then sets the user status to 'inactive'. All changes are atomic.
+
+        Raises ValueError if password is wrong, user is not active, or user is admin.
+        """
+        user = execute_query("SELECT * FROM users WHERE id = ?", (user_id,), fetch_one=True)
+        if not user:
+            raise ValueError("User not found")
+
+        if not User._verify_password(password, user['password_hash']):
+            raise ValueError("Password is incorrect")
+
+        if user['status'] != 'active':
+            raise ValueError("Account is already deactivated")
+
+        if user['role'] == 'admin':
+            raise ValueError("Admin accounts cannot be deactivated from the profile page")
+
+        with begin_immediate():
+            execute_query(
+                "UPDATE bookings SET status='cancelled', updated_at=CURRENT_TIMESTAMP "
+                "WHERE user_id=? AND status IN ('pending','approved')",
+                (user_id,)
+            )
+            execute_query(
+                "UPDATE adventure_bookings SET status='cancelled', updated_at=CURRENT_TIMESTAMP "
+                "WHERE user_id=? AND status IN ('pending','approved')",
+                (user_id,)
+            )
+            execute_query(
+                "UPDATE users SET status='inactive', updated_at=CURRENT_TIMESTAMP WHERE id=?",
+                (user_id,)
+            )
+
         return True

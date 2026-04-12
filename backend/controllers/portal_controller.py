@@ -11,6 +11,7 @@ Routes:
     GET  /portal/                    - Customer dashboard
     GET  /portal/profile             - Show and edit user profile
     POST /portal/profile             - Update user profile
+    POST /portal/deactivate-account  - Deactivate user account
     GET  /portal/bookings            - View all bookings
     GET  /portal/bookings/new        - Show booking form
     POST /portal/bookings            - Submit booking request
@@ -126,6 +127,27 @@ def profile_update():
         error_message = getattr(e, 'user_message', str(e))
         flash(error_message, 'error')
         return render_template('portal/profile.html', form_data=form_data)
+
+
+@portal_bp.route('/deactivate-account', methods=['POST'])
+@login_required
+def deactivate_account():
+    """Deactivate the current user's account and cancel active bookings."""
+    user_id = session['user_id']
+    password = request.form.get('password', '')
+
+    if not password:
+        flash('Password is required to deactivate your account.', 'error')
+        return redirect(url_for('portal.profile'))
+
+    try:
+        User.deactivate(user_id, password)
+        session.clear()
+        flash('Your account has been deactivated and any active bookings have been cancelled.', 'success')
+        return redirect(url_for('auth.login'))
+    except ValueError as e:
+        flash(str(e), 'error')
+        return redirect(url_for('portal.profile'))
 
 
 # ============================================================================
