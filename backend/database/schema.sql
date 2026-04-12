@@ -135,6 +135,7 @@ CREATE TABLE IF NOT EXISTS adventure_bookings (
     status TEXT NOT NULL DEFAULT 'pending'
         CHECK (status IN ('pending', 'approved', 'rejected', 'cancelled')),
     special_requests TEXT,
+    admin_notes TEXT,
     total_price REAL NOT NULL DEFAULT 0 CHECK (total_price >= 0),
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,

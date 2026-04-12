@@ -23,6 +23,7 @@ Routes:
     POST /admin/adventures/<id>           - Update adventure
     POST /admin/adventures/<id>/deactivate - Deactivate adventure
     GET  /admin/adventure-bookings        - Adventure bookings
+    GET  /admin/adventure-bookings/<id> - View adventure booking
     POST /admin/adventure-bookings/<id>/approve - Approve adventure booking
     POST /admin/adventure-bookings/<id>/reject  - Reject adventure booking
     GET  /admin/users                     - Manage users
@@ -333,31 +334,50 @@ def adventure_bookings_index():
     return render_template('admin/adventure_bookings.html', bookings=bookings, current_status=status)
 
 
+@admin_bp.route('/adventure-bookings/<int:ab_id>')
+@admin_required
+def adventure_bookings_show(ab_id):
+    """View a single adventure booking's full details."""
+    booking = AdventureBooking.get_by_id(ab_id, include_relations=True)
+    if not booking:
+        flash('Adventure booking not found.', 'error')
+        return redirect(url_for('admin.adventure_bookings_index'))
+    return render_template('admin/adventure_booking_detail.html', booking=booking)
+
+
 @admin_bp.route('/adventure-bookings/<int:ab_id>/approve', methods=['POST'])
 @admin_required
 def adventure_bookings_approve(ab_id):
     """Approve an adventure booking."""
+    admin_notes = request.form.get('admin_notes', '').strip() or None
     try:
-        ab = AdventureBooking.update_status(ab_id, 'approved')
+        ab = AdventureBooking.update_status(ab_id, 'approved', admin_notes)
         if not ab:
             flash('Adventure booking not found.', 'error')
         else:
             flash('Adventure booking approved.', 'success')
     except ValueError as e:
         flash(str(e), 'error')
-    return redirect(url_for('admin.adventure_bookings_index'))
+    return redirect(url_for('admin.adventure_bookings_show', ab_id=ab_id))
 
 
 @admin_bp.route('/adventure-bookings/<int:ab_id>/reject', methods=['POST'])
 @admin_required
 def adventure_bookings_reject(ab_id):
     """Reject an adventure booking."""
-    ab = AdventureBooking.update_status(ab_id, 'rejected')
-    if not ab:
-        flash('Adventure booking not found.', 'error')
-    else:
-        flash('Adventure booking rejected.', 'success')
-    return redirect(url_for('admin.adventure_bookings_index'))
+    admin_notes = request.form.get('admin_notes', '').strip() or None
+    if not admin_notes:
+        flash('A reason is required when rejecting an adventure booking.', 'error')
+        return redirect(url_for('admin.adventure_bookings_show', ab_id=ab_id))
+    try:
+        ab = AdventureBooking.update_status(ab_id, 'rejected', admin_notes)
+        if not ab:
+            flash('Adventure booking not found.', 'error')
+        else:
+            flash('Adventure booking rejected.', 'success')
+    except ValueError as e:
+        flash(str(e), 'error')
+    return redirect(url_for('admin.adventure_bookings_show', ab_id=ab_id))
 
 
 # ============================================================================

@@ -9,6 +9,11 @@
     </div>
 </div>
 
+<div class="filter-tabs" style="margin-bottom: 0.5rem;">
+    <a href="{{ url_for('admin.adventures_index') }}" class="filter-tab">Catalog</a>
+    <a href="{{ url_for('admin.adventure_bookings_index') }}" class="filter-tab active">Bookings</a>
+</div>
+
 <div class="filter-tabs">
     <a href="{{ url_for('admin.adventure_bookings_index') }}"
        class="filter-tab {% if not current_status %}active{% endif %}">All</a>
@@ -38,7 +43,7 @@
         <tbody>
             {% for ab in bookings %}
             <tr class="{% if ab.status == 'pending' %}row-highlight{% endif %}">
-                <td class="text-muted">#{{ ab.id }}</td>
+                <td><a href="{{ url_for('admin.adventure_bookings_show', ab_id=ab.id) }}">#{{ ab.id }}</a></td>
                 <td>
                     <strong>{{ ab.user.first_name }} {{ ab.user.last_name }}</strong>
                     <div class="text-sm text-muted">{{ ab.user.email }}</div>
@@ -49,20 +54,7 @@
                 <td>${{ "%.2f" | format(ab.total_price) }}</td>
                 <td><span class="badge badge-{{ ab.status }}">{{ ab.status }}</span></td>
                 <td>
-                    {% if ab.status == 'pending' %}
-                    <form action="{{ url_for('admin.adventure_bookings_approve', ab_id=ab.id) }}" method="POST" style="display:inline">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <button type="submit" class="btn btn-success btn-sm">✓</button>
-                    </form>
-                    <form action="{{ url_for('admin.adventure_bookings_reject', ab_id=ab.id) }}" method="POST"
-                          style="display:inline"
-                          onsubmit="return confirm('Reject this adventure booking?')">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <button type="submit" class="btn btn-danger btn-sm">✗</button>
-                    </form>
-                    {% else %}
-                        <span class="text-muted text-sm">—</span>
-                    {% endif %}
+                    <a href="{{ url_for('admin.adventure_bookings_show', ab_id=ab.id) }}" class="btn btn-outline btn-sm">View</a>
                 </td>
             </tr>
             {% endfor %}
