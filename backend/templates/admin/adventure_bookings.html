@@ -15,7 +15,7 @@
 </div>
 
 <div class="filter-tabs">
-    <a href="{{ url_for('admin.adventure_bookings_index') }}"
+    <a href="?status=all"
        class="filter-tab {% if not current_status %}active{% endif %}">All</a>
     <a href="?status=pending"
        class="filter-tab {% if current_status == 'pending' %}active{% endif %}">Pending</a>

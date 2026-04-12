@@ -329,7 +329,9 @@ def adventures_deactivate(adventure_id):
 @admin_required
 def adventure_bookings_index():
     """View all adventure booking requests."""
-    status = request.args.get('status')
+    status = request.args.get('status', 'pending')
+    if status == 'all':
+        status = None
     bookings = AdventureBooking.get_all(status=status)
     return render_template('admin/adventure_bookings.html', bookings=bookings, current_status=status)
 
