@@ -235,6 +235,7 @@ CREATE TABLE adventure_bookings_new (
     status TEXT NOT NULL DEFAULT 'pending'
         CHECK (status IN ('pending', 'approved', 'rejected', 'cancelled')),
     special_requests TEXT,
+    admin_notes TEXT,
     total_price REAL NOT NULL DEFAULT 0 CHECK (total_price >= 0),
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -249,7 +250,7 @@ CREATE TABLE adventure_bookings_new (
 
 _ADV_BOOKINGS_COPY_COLS = (
     "id, user_id, adventure_id, booking_id, scheduled_date, participants, status, "
-    "special_requests, total_price, created_at, updated_at"
+    "special_requests, admin_notes, total_price, created_at, updated_at"
 )
 
 
@@ -333,6 +334,7 @@ def init_database():
                 "ALTER TABLE users ADD COLUMN email_verification_token TEXT",
                 "ALTER TABLE users ADD COLUMN email_verification_expires DATETIME",
                 "ALTER TABLE users ADD COLUMN email_verified INTEGER NOT NULL DEFAULT 1",
+                "ALTER TABLE adventure_bookings ADD COLUMN admin_notes TEXT",
             ]:
                 try:
                     conn.execute(migration)

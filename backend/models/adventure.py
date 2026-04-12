@@ -405,7 +405,7 @@ class AdventureBooking:
         return bookings
 
     @staticmethod
-    def update_status(ab_id: int, status: str) -> Optional[Dict]:
+    def update_status(ab_id: int, status: str, admin_notes: str = None) -> Optional[Dict]:
         """Update adventure booking status (admin action)."""
         if status not in AdventureBooking.VALID_STATUSES:
             raise ValueError(f"Status must be one of {AdventureBooking.VALID_STATUSES}")
@@ -437,13 +437,13 @@ class AdventureBooking:
                         "Cannot approve: maximum participants for this date would be exceeded."
                     )
                 execute_query(
-                    "UPDATE adventure_bookings SET status=?, updated_at=CURRENT_TIMESTAMP WHERE id=?",
-                    (status, ab_id), commit=True
+                    "UPDATE adventure_bookings SET status=?, admin_notes=?, updated_at=CURRENT_TIMESTAMP WHERE id=?",
+                    (status, admin_notes, ab_id), commit=True
                 )
             return AdventureBooking.get_by_id(ab_id, include_relations=True)
 
         execute_query(
-            "UPDATE adventure_bookings SET status=?, updated_at=CURRENT_TIMESTAMP WHERE id=?",
-            (status, ab_id), commit=True
+            "UPDATE adventure_bookings SET status=?, admin_notes=?, updated_at=CURRENT_TIMESTAMP WHERE id=?",
+            (status, admin_notes, ab_id), commit=True
         )
         return AdventureBooking.get_by_id(ab_id, include_relations=True)

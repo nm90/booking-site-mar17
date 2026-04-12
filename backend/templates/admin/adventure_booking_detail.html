@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% block title %}Adventure Booking #{{ booking.id }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1>Adventure Booking #{{ booking.id }}</h1>
+        <p class="subtitle">{{ booking.user.first_name }} {{ booking.user.last_name }} — {{ booking.adventure.name }}</p>
+    </div>
+    <a href="{{ url_for('admin.adventure_bookings_index') }}" class="btn btn-outline">&larr; All Adventure Bookings</a>
+</div>
+
+<div class="filter-tabs" style="margin-bottom: 0.5rem;">
+    <a href="{{ url_for('admin.adventures_index') }}" class="filter-tab">Catalog</a>
+    <a href="{{ url_for('admin.adventure_bookings_index') }}" class="filter-tab active">Bookings</a>
+</div>
+
+<div class="detail-layout">
+    <div class="detail-main">
+        <div class="detail-card">
+            <div class="detail-card-header">
+                <h2>Booking Details</h2>
+                <span class="badge badge-{{ booking.status }} badge-lg">{{ booking.status }}</span>
+            </div>
+
+            <div class="detail-grid">
+                <div class="detail-item">
+                    <span class="detail-label">Guest</span>
+                    <span class="detail-value">{{ booking.user.first_name }} {{ booking.user.last_name }}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Email</span>
+                    <span class="detail-value">{{ booking.user.email }}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Adventure</span>
+                    <span class="detail-value">{{ booking.adventure.name }}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Category</span>
+                    <span class="detail-value">{{ booking.adventure.category }}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Difficulty</span>
+                    <span class="detail-value">{{ booking.adventure.difficulty }}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Scheduled Date</span>
+                    <span class="detail-value">{{ booking.scheduled_date }}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Participants</span>
+                    <span class="detail-value">{{ booking.participants }}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Total Price</span>
+                    <span class="detail-value price">${{ "%.2f" | format(booking.total_price) }}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Submitted</span>
+                    <span class="detail-value">{{ booking.created_at[:10] }}</span>
+                </div>
+                {% if booking.booking_id %}
+                <div class="detail-item">
+                    <span class="detail-label">Linked Stay</span>
+                    <span class="detail-value"><a href="{{ url_for('admin.bookings_show', booking_id=booking.booking_id) }}">Booking #{{ booking.booking_id }}</a></span>
+                </div>
+                {% endif %}
+            </div>
+
+            {% if booking.special_requests %}
+            <div class="detail-notes">
+                <span class="detail-label">Special Requests</span>
+                <p>{{ booking.special_requests }}</p>
+            </div>
+            {% endif %}
+
+            {% if booking.admin_notes %}
+            <div class="detail-notes admin-notes">
+                <span class="detail-label">Host Notes</span>
+                <p>{{ booking.admin_notes }}</p>
+            </div>
+            {% endif %}
+        </div>
+
+        {% if booking.status == 'pending' %}
+        <div class="admin-actions">
+            <h3>Take Action</h3>
+            <div class="action-forms">
+                <form action="{{ url_for('admin.adventure_bookings_approve', ab_id=booking.id) }}" method="POST" class="action-form">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="form-group">
+                        <label for="approve_notes">Note to guest (optional)</label>
+                        <input type="text" id="approve_notes" name="admin_notes"
+                               placeholder="e.g. Looking forward to the adventure!">
+                    </div>
+                    <button type="submit" class="btn btn-success">Approve Booking</button>
+                </form>
+
+                <form action="{{ url_for('admin.adventure_bookings_reject', ab_id=booking.id) }}" method="POST" class="action-form">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="form-group">
+                        <label for="reject_notes">Reason for rejection <span class="required">*</span></label>
+                        <input type="text" id="reject_notes" name="admin_notes"
+                               placeholder="e.g. Activity unavailable on this date" required>
+                    </div>
+                    <button type="submit" class="btn btn-danger">Reject Booking</button>
+                </form>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="detail-sidebar">
+        <div class="info-card">
+            <h3>Quick Actions</h3>
+            <ul class="quick-links">
+                <li><a href="{{ url_for('admin.adventure_bookings_index') }}?status=pending">View all pending</a></li>
+                <li><a href="{{ url_for('admin.adventures_index') }}">Adventure catalog</a></li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

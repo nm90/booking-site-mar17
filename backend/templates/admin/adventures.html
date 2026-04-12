@@ -10,6 +10,11 @@
     <a href="{{ url_for('admin.adventures_new') }}" class="btn btn-primary">+ Add Adventure</a>
 </div>
 
+<div class="filter-tabs" style="margin-bottom: 0.5rem;">
+    <a href="{{ url_for('admin.adventures_index') }}" class="filter-tab active">Catalog</a>
+    <a href="{{ url_for('admin.adventure_bookings_index') }}" class="filter-tab">Bookings</a>
+</div>
+
 {% if adventures %}
 <div class="table-container">
     <table class="table">
