@@ -89,7 +89,7 @@ app.config['MAIL_PORT'] = int(os.environ.get('MAIL_PORT', 587))
 app.config['MAIL_USE_TLS'] = os.environ.get('MAIL_USE_TLS', 'true').lower() == 'true'
 app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME', '')
 app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD', '')
-app.config['MAIL_DEFAULT_SENDER'] = os.environ.get('MAIL_DEFAULT_SENDER', 'noreply@cayegardencasita.com')
+app.config['MAIL_DEFAULT_SENDER'] = os.environ.get('MAIL_DEFAULT_SENDER', 'bze@wiscomfort.com')
 app.config['BREVO_API_KEY'] = os.environ.get('BREVO_API_KEY', '').strip()
 app.config['BREVO_SENDER_NAME'] = os.environ.get('BREVO_SENDER_NAME', '').strip()
 mail = Mail(app)
@@ -125,7 +125,7 @@ if not _landing.endswith('/'):
     _landing = _landing + '/'
 app.config['LANDING_SITE_URL'] = _landing
 
-_contact_email = os.environ.get('CONTACT_EMAIL', 'hello@cayegardencasita.com').strip()
+_contact_email = os.environ.get('CONTACT_EMAIL', 'bze@wiscomfort.com').strip()
 app.config['CONTACT_EMAIL'] = _contact_email
 
 

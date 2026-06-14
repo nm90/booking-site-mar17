@@ -24,7 +24,7 @@
                 {% else %}
                     <a href="{{ url_for('portal.dashboard') }}" {% if request.endpoint == 'portal.dashboard' %}class="active"{% endif %}>Dashboard</a>
                     <a href="{{ url_for('portal.bookings_index') }}" {% if request.endpoint and 'booking' in request.endpoint %}class="active"{% endif %}>My Bookings</a>
-                    <a href="{{ url_for('portal.adventures_index') }}" {% if request.endpoint and 'adventure' in request.endpoint %}class="active"{% endif %}>Adventures</a>
+<!--                    <a href="{{ url_for('portal.adventures_index') }}" {% if request.endpoint and 'adventure' in request.endpoint %}class="active"{% endif %}>Adventures</a>-->
                 {% endif %}
                 <a href="{{ url_for('portal.profile') }}" {% if request.endpoint and request.endpoint.startswith('portal.profile') %}class="active"{% endif %}>Profile</a>
                 <div class="nav-user">

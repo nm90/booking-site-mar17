@@ -32,7 +32,7 @@ def insert_seed_data():
         conn.execute("""
             INSERT INTO users (email, password_hash, first_name, last_name, role, email_verified)
             VALUES (?, ?, ?, ?, ?, 1)
-        """, ('admin@vacationrental.com', hash_password('admin123'), 'Admin', 'User', 'admin'))
+        """, ('happy@wiscomfort.com', hash_password('test1234'), 'Admin', 'User', 'admin'))
 
         conn.execute("""
             INSERT INTO users (email, password_hash, first_name, last_name, phone_number, role, email_verified)
@@ -52,28 +52,28 @@ def insert_seed_data():
             'Caye Garden Casita',
             'Charming tropical casita in lush gardens — private cottage-style rental in San Pedro Town, Ambergris Caye.',
             'San Pedro Town, Ambergris Caye, Belize',
-            4, 175.00
+            4, 200.00
         ))
 
-        conn.execute("""
-            INSERT INTO properties (name, description, location, capacity, price_per_night)
-            VALUES (?, ?, ?, ?, ?)
-        """, (
-            'Ocean Breeze Cottage',
-            'A cozy seaside cottage perfect for couples or small families, steps from the beach.',
-            'Placencia, Belize',
-            4, 250.00
-        ))
-
-        conn.execute("""
-            INSERT INTO properties (name, description, location, capacity, price_per_night)
-            VALUES (?, ?, ?, ?, ?)
-        """, (
-            'Mountain Retreat Lodge',
-            'Spacious lodge nestled in the hills with panoramic views and hiking trails.',
-            'San Ignacio, Belize',
-            12, 600.00
-        ))
+        # conn.execute("""
+        #     INSERT INTO properties (name, description, location, capacity, price_per_night)
+        #     VALUES (?, ?, ?, ?, ?)
+        # """, (
+        #     'Ocean Breeze Cottage',
+        #     'A cozy seaside cottage perfect for couples or small families, steps from the beach.',
+        #     'Placencia, Belize',
+        #     4, 250.00
+        # ))
+        #
+        # conn.execute("""
+        #     INSERT INTO properties (name, description, location, capacity, price_per_night)
+        #     VALUES (?, ?, ?, ?, ?)
+        # """, (
+        #     'Mountain Retreat Lodge',
+        #     'Spacious lodge nestled in the hills with panoramic views and hiking trails.',
+        #     'San Ignacio, Belize',
+        #     12, 600.00
+        # ))
 
         # Bookings
         conn.execute("""
@@ -100,31 +100,31 @@ def insert_seed_data():
         """)
 
         # Adventures
-        conn.execute("""
-            INSERT INTO adventures (name, description, category, difficulty, duration_hours, price, max_participants)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-        """, ('Sunset Kayaking', 'Paddle along the coastline and watch the sunset from the water.', 'Water Sports', 'easy', 2, 75.00, 8))
-
-        conn.execute("""
-            INSERT INTO adventures (name, description, category, difficulty, duration_hours, price, max_participants)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-        """, ('Cliff Hiking Trail', 'Explore dramatic coastal cliffs with guided hiking tour.', 'Hiking', 'moderate', 4, 55.00, 12))
-
-        conn.execute("""
-            INSERT INTO adventures (name, description, category, difficulty, duration_hours, price, max_participants)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-        """, ('Scuba Diving Discovery', 'Discover underwater life with professional PADI instructors.', 'Diving', 'easy', 3, 120.00, 6))
-
-        conn.execute("""
-            INSERT INTO adventures (name, description, category, difficulty, duration_hours, price, max_participants)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-        """, ('Surf Lessons', 'Learn to surf with experienced local instructors on the best breaks.', 'Water Sports', 'easy', 2, 85.00, 4))
-
-        # Adventure Booking
-        conn.execute("""
-            INSERT INTO adventure_bookings (user_id, adventure_id, booking_id, scheduled_date, participants, status, total_price)
-            VALUES (2, 1, 3, '2026-03-03', 2, 'approved', 150.00)
-        """)
+        # conn.execute("""
+        #     INSERT INTO adventures (name, description, category, difficulty, duration_hours, price, max_participants)
+        #     VALUES (?, ?, ?, ?, ?, ?, ?)
+        # """, ('Sunset Kayaking', 'Paddle along the coastline and watch the sunset from the water.', 'Water Sports', 'easy', 2, 75.00, 8))
+        #
+        # conn.execute("""
+        #     INSERT INTO adventures (name, description, category, difficulty, duration_hours, price, max_participants)
+        #     VALUES (?, ?, ?, ?, ?, ?, ?)
+        # """, ('Cliff Hiking Trail', 'Explore dramatic coastal cliffs with guided hiking tour.', 'Hiking', 'moderate', 4, 55.00, 12))
+        #
+        # conn.execute("""
+        #     INSERT INTO adventures (name, description, category, difficulty, duration_hours, price, max_participants)
+        #     VALUES (?, ?, ?, ?, ?, ?, ?)
+        # """, ('Scuba Diving Discovery', 'Discover underwater life with professional PADI instructors.', 'Diving', 'easy', 3, 120.00, 6))
+        #
+        # conn.execute("""
+        #     INSERT INTO adventures (name, description, category, difficulty, duration_hours, price, max_participants)
+        #     VALUES (?, ?, ?, ?, ?, ?, ?)
+        # """, ('Surf Lessons', 'Learn to surf with experienced local instructors on the best breaks.', 'Water Sports', 'easy', 2, 85.00, 4))
+        #
+        # # Adventure Booking
+        # conn.execute("""
+        #     INSERT INTO adventure_bookings (user_id, adventure_id, booking_id, scheduled_date, participants, status, total_price)
+        #     VALUES (2, 1, 3, '2026-03-03', 2, 'approved', 150.00)
+        # """)
 
         conn.commit()
         print("Seed data inserted successfully!")
@@ -136,6 +136,8 @@ def insert_seed_data():
     finally:
         conn.close()
 
+
+seed_database = insert_seed_data
 
 if __name__ == '__main__':
     insert_seed_data()
