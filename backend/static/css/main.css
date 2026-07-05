@@ -782,6 +782,7 @@ footer a:hover { text-decoration: underline; color: #f0a080; }
 }
 .legend-dot.available { background: var(--success); }
 .legend-dot.booked { background: var(--danger); opacity: 0.6; }
+.legend-dot.pending { background: var(--warning); opacity: 0.8; }
 .legend-dot.selected { background: var(--primary); }
 .legend-dot.preview { background: var(--border); border: 1px dashed var(--text-muted); }
 .calendar-hint {
@@ -820,6 +821,7 @@ footer a:hover { text-decoration: underline; color: #f0a080; }
 }
 .calendar-day.available { background: #dcfce7; color: #14532d; cursor: pointer; }
 .calendar-day.booked { background: #fee2e2; color: #7f1d1d; }
+.calendar-day.pending { background: #fef3c7; color: #92400e; cursor: pointer; }
 .calendar-day.past { color: var(--text-muted); opacity: 0.4; }
 
 .calendar-day.sel-start,

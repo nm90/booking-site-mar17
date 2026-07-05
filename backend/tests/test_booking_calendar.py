@@ -39,8 +39,67 @@ def test_get_booked_dates_includes_completed_stays(app):
         assert len(ranges) == 1
         assert ranges[0]["start_date"] == start
         assert ranges[0]["end_date"] == end
+        assert ranges[0]["status"] == "booked"
 
         assert Booking.check_availability(start, end, 1) is False
+
+
+def test_get_booked_dates_marks_pending_ranges(app):
+    with app.app_context():
+        _seed_property_and_user()
+        start = (date.today() + timedelta(days=10)).isoformat()
+        end = (date.today() + timedelta(days=15)).isoformat()
+        execute_query(
+            """INSERT INTO bookings
+               (user_id, property_id, start_date, end_date, status, total_price, guests)
+               VALUES (1, 1, ?, ?, 'pending', 100.0, 2)""",
+            (start, end),
+            commit=True,
+        )
+
+        ranges = Booking.get_booked_dates(1)
+        assert len(ranges) == 1
+        assert ranges[0]["status"] == "pending"
+
+
+def test_create_allows_overlap_with_pending(app):
+    """Overlapping pending requests are allowed; only one can later be approved."""
+    with app.app_context():
+        _seed_property_and_user()
+        start = (date.today() + timedelta(days=20)).isoformat()
+        end = (date.today() + timedelta(days=25)).isoformat()
+        execute_query(
+            """INSERT INTO bookings
+               (user_id, property_id, start_date, end_date, status, total_price, guests)
+               VALUES (1, 1, ?, ?, 'pending', 100.0, 2)""",
+            (start, end),
+            commit=True,
+        )
+
+        booking = Booking.create(
+            user_id=1, start_date=start, end_date=end, guests=2, property_id=1
+        )
+        assert booking["status"] == "pending"
+
+
+@pytest.mark.parametrize("blocking_status", ["approved", "completed"])
+def test_create_still_blocked_by_confirmed_stays(app, blocking_status):
+    with app.app_context():
+        _seed_property_and_user()
+        start = (date.today() + timedelta(days=30)).isoformat()
+        end = (date.today() + timedelta(days=35)).isoformat()
+        execute_query(
+            """INSERT INTO bookings
+               (user_id, property_id, start_date, end_date, status, total_price, guests)
+               VALUES (1, 1, ?, ?, ?, 100.0, 2)""",
+            (start, end, blocking_status),
+            commit=True,
+        )
+
+        with pytest.raises(ValueError, match="not available"):
+            Booking.create(
+                user_id=1, start_date=start, end_date=end, guests=2, property_id=1
+            )
 
 
 def test_overlapping_second_pending_cannot_be_approved(app):

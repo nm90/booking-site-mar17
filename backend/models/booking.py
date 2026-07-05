@@ -86,9 +86,10 @@ class Booking:
 
         Returns True if available, False if dates overlap with an existing booking.
 
-        ``count_pending`` — when False, only approved/completed stays block (used when
-        approving a pending request so another overlapping pending can still be
-        resolved first; overlapping pendings cannot both end up approved).
+        ``count_pending`` — when False, only approved/completed stays block (used
+        both when creating a request — overlapping pendings are allowed and shown
+        as "may not be confirmed" — and when approving one; the approval re-check
+        guarantees overlapping pendings cannot both end up approved).
         """
         if count_pending:
             status_clause = "status IN ('pending', 'approved', 'completed')"
@@ -115,15 +116,15 @@ class Booking:
     def get_booked_dates(property_id: int) -> List[Dict]:
         """Return all booked date ranges for a property (next 12 months).
 
-        Returns list of dicts with start_date and end_date strings.
-        Statuses match ``check_availability`` (pending, approved, completed)
-        so the availability calendar matches server-side booking rules.
+        Returns list of dicts with start_date, end_date and a normalized
+        status: 'booked' (approved/completed — hard-blocked) or 'pending'
+        (still selectable but may not be confirmed).
         """
         today = str(date.today())
         future = str(date.today() + timedelta(days=365))
 
         results = execute_query(
-            """SELECT start_date, end_date FROM bookings
+            """SELECT start_date, end_date, status FROM bookings
                WHERE property_id = ?
                  AND status IN ('pending', 'approved', 'completed')
                  AND end_date > ?
@@ -132,7 +133,9 @@ class Booking:
             (property_id, today, future),
             fetch_all=True
         )
-        return [{'start_date': r['start_date'], 'end_date': r['end_date']} for r in results] if results else []
+        return [{'start_date': r['start_date'], 'end_date': r['end_date'],
+                 'status': 'pending' if r['status'] == 'pending' else 'booked'}
+                for r in results] if results else []
 
     @staticmethod
     def create(user_id: int, start_date: str, end_date: str,
@@ -156,7 +159,8 @@ class Booking:
         total_price = Booking.calculate_price(start_date, end_date, prop['price_per_night'])
 
         with begin_immediate():
-            if not Booking.check_availability(start_date, end_date, property_id):
+            if not Booking.check_availability(start_date, end_date, property_id,
+                                              count_pending=False):
                 raise ValueError("The property is not available for the selected dates")
 
             query = """

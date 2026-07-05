@@ -44,6 +44,7 @@
                 <div class="calendar-legend">
                     <span class="legend-item"><span class="legend-dot available"></span> Available</span>
                     <span class="legend-item"><span class="legend-dot booked"></span> Booked</span>
+                    <span class="legend-item"><span class="legend-dot pending"></span> Pending (may free up)</span>
                     <span class="legend-item"><span class="legend-dot selected"></span> Selected</span>
                     <span class="legend-item"><span class="legend-dot preview"></span> Preview</span>
                 </div>
@@ -62,6 +63,10 @@
                     <input type="date" id="end_date" name="end_date"
                            value="{{ end_date or '' }}" required>
                 </div>
+            </div>
+
+            <div id="pending-warning" class="flash flash-warning" style="display:none">
+                &#9888; These dates overlap a pending request from another guest and may not be confirmed.
             </div>
 
             <div class="form-group">
@@ -172,16 +177,24 @@
         return y + '-' + m + '-' + day;
     }
 
-    function rangeAvailable(startIso, endIso) {
-        if (!startIso || !endIso) return false;
+    function rangesOverlap(ranges, startIso, endIso) {
         const start = new Date(startIso + 'T00:00:00');
         const end = new Date(endIso + 'T00:00:00');
-        if (!(end > start)) return false;
-        return !bookedRanges.some(range => {
+        return ranges.some(range => {
             const bs = new Date(range.start_date + 'T00:00:00');
             const be = new Date(range.end_date + 'T00:00:00');
             return start < be && end > bs;
         });
+    }
+
+    function rangeAvailable(startIso, endIso) {
+        if (!startIso || !endIso) return false;
+        if (!(new Date(endIso + 'T00:00:00') > new Date(startIso + 'T00:00:00'))) return false;
+        return !rangesOverlap(bookedRanges.filter(r => r.status !== 'pending'), startIso, endIso);
+    }
+
+    function rangeOverlapsPending(startIso, endIso) {
+        return rangesOverlap(bookedRanges.filter(r => r.status === 'pending'), startIso, endIso);
     }
 
     function fetchAvailability() {
@@ -198,6 +211,7 @@
                 bookedRanges = data;
                 hoverEndIso = null;
                 renderCalendar();
+                updatePendingWarning();
                 calendarEl.style.display = '';
             })
             .catch(() => { calendarEl.style.display = 'none'; });
@@ -334,10 +348,10 @@
 
             if (cellDate < now) {
                 cell.classList.add('past');
-            } else if (isDateBooked(cellDate)) {
+            } else if (dateInRanges(cellDate, r => r.status !== 'pending')) {
                 cell.classList.add('booked');
             } else {
-                cell.classList.add('available');
+                cell.classList.add(dateInRanges(cellDate, r => r.status === 'pending') ? 'pending' : 'available');
                 cell.setAttribute('role', 'button');
                 cell.tabIndex = 0;
             }
@@ -348,18 +362,27 @@
         return div;
     }
 
-    function isDateBooked(checkDate) {
-        return bookedRanges.some(range => {
+    function dateInRanges(checkDate, statusFilter) {
+        return bookedRanges.filter(statusFilter).some(range => {
             const start = new Date(range.start_date + 'T00:00:00');
             const end = new Date(range.end_date + 'T00:00:00');
             return checkDate >= start && checkDate < end;
         });
     }
 
+    function updatePendingWarning() {
+        const warning = document.getElementById('pending-warning');
+        const start = startInput.value;
+        const end = endInput.value;
+        const show = start && end && rangeAvailable(start, end) && rangeOverlapsPending(start, end);
+        warning.style.display = show ? '' : 'none';
+    }
+
     function onDateInputsChange() {
         hoverEndIso = null;
         updatePriceHint();
         refreshSelectionStyles();
+        updatePendingWarning();
     }
 
     propertySelect.addEventListener('change', () => {

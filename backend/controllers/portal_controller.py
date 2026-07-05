@@ -207,6 +207,12 @@ def bookings_create():
         notify_admin_new_booking(admin_email, booking)
 
         flash('Booking request submitted! We will review it shortly.', 'success')
+        # Create only blocks on approved/completed stays, so any remaining
+        # overlap here is with another pending request.
+        if not Booking.check_availability(start_date, end_date, property_id,
+                                          exclude_booking_id=booking['id']):
+            flash('Note: your dates overlap another pending request; '
+                  'only one can be approved.', 'warning')
         return redirect(url_for('portal.bookings_show', booking_id=booking['id']))
 
     except ValueError as e:
