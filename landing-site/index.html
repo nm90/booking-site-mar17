@@ -5,16 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Caye Garden Casita | Vacation Rental in San Pedro Town, Belize</title>
     <meta name="description" content="Book your stay at Caye Garden Casita, a charming tropical vacation rental in San Pedro Town, Ambergris Caye, Belize. Steps from the Caribbean Sea with lush garden surroundings.">
-    <meta name="keywords" content="Caye Garden Casita, San Pedro Town, Belize vacation rental, Ambergris Caye, Caribbean rental, Belize accommodation, San Pedro Belize, tropical casita, beach house Belize">
     <meta name="robots" content="index, follow">
-    <link rel="canonical" href="https://nm90.github.io/booking-site-mar17">
+    <link rel="canonical" href="https://nm90.github.io/booking-site-mar17/">
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="preload" href="fonts/fraunces-latin.woff2" as="font" type="font/woff2" crossorigin>
+    <script>document.documentElement.classList.add('js');</script>
 
     <!-- Open Graph -->
     <meta property="og:title" content="Caye Garden Casita | San Pedro Town, Belize">
     <meta property="og:description" content="Charming tropical casita nestled in lush gardens in San Pedro Town, Ambergris Caye, Belize. Book your Caribbean getaway today.">
-    <meta property="og:image" content="images/hero-sunset-dock-wide.jpg">
-    <meta property="og:url" content="https://nm90.github.io/booking-site-mar17">
+    <meta property="og:image" content="https://nm90.github.io/booking-site-mar17/images/hero-sunset-dock-wide.jpg">
+    <meta property="og:image:width" content="1799">
+    <meta property="og:image:height" content="1440">
+    <meta property="og:url" content="https://nm90.github.io/booking-site-mar17/">
     <meta property="og:type" content="website">
     <meta property="og:locale" content="en_US">
 
@@ -22,7 +25,7 @@
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Caye Garden Casita | San Pedro Town, Belize">
     <meta name="twitter:description" content="Charming tropical casita in San Pedro Town, Ambergris Caye, Belize. Book your Caribbean getaway.">
-    <meta name="twitter:image" content="images/hero-sunset-dock-wide.jpg">
+    <meta name="twitter:image" content="https://nm90.github.io/booking-site-mar17/images/hero-sunset-dock-wide.jpg">
 
     <!-- Structured Data -->
     <script type="application/ld+json">
@@ -31,8 +34,8 @@
         "@type": "LodgingBusiness",
         "name": "Caye Garden Casita",
         "description": "A charming tropical casita nestled in lush gardens in San Pedro Town, Ambergris Caye, Belize. Perfect for a relaxing Caribbean getaway.",
-        "url": "https://nm90.github.io/booking-site-mar17",
-        "image": "images/hero-sunset-dock-wide.jpg",
+        "url": "https://nm90.github.io/booking-site-mar17/",
+        "image": "https://nm90.github.io/booking-site-mar17/images/hero-sunset-dock-wide.jpg",
         "address": {
             "@type": "PostalAddress",
             "addressLocality": "San Pedro Town",
@@ -63,13 +66,21 @@
             scroll-padding-top: 70px;
         }
 
+        @font-face {
+            font-family: 'Fraunces';
+            src: url('fonts/fraunces-latin.woff2') format('woff2');
+            font-weight: 600 700;
+            font-display: swap;
+        }
+
         :root {
             --teal: #0e7c6b;
             --teal-dark: #095e52;
             --sand: #f5f0e8;
             --sand-dark: #e8dfd2;
             --coral: #e07c5a;
-            --coral-dark: #c96842;
+            --coral-deep: #b05a36;
+            --coral-deeper: #96482a;
             --charcoal: #2c3e3a;
             --white: #ffffff;
         }
@@ -79,6 +90,10 @@
             color: var(--charcoal);
             line-height: 1.6;
             background: var(--white);
+        }
+
+        h1, h2, h3, .logo {
+            font-family: 'Fraunces', Georgia, 'Times New Roman', serif;
         }
 
         /* Header */
@@ -133,7 +148,7 @@
         .header-nav a:hover::after,
         .header-nav a.active::after { width: 100%; }
         .nav-book {
-            background: var(--coral);
+            background: var(--coral-deep);
             color: var(--white);
             padding: 0.6rem 1.5rem;
             border-radius: 6px;
@@ -142,7 +157,7 @@
             transition: background 0.2s;
             flex-shrink: 0;
         }
-        .nav-book:hover { background: var(--coral-dark); }
+        .nav-book:hover { background: var(--coral-deeper); }
         .mobile-menu-toggle {
             display: none;
             flex-direction: column;
@@ -171,6 +186,7 @@
         .hero {
             position: relative;
             min-height: 90vh;
+            min-height: 90svh;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -211,7 +227,7 @@
         }
         .hero-overlay h1 {
             font-size: clamp(2rem, 5vw, 3.5rem);
-            font-weight: 900;
+            font-weight: 700;
             margin-bottom: 0.75rem;
             text-shadow: 0 2px 12px rgba(0,0,0,0.7), 0 0 40px rgba(0,0,0,0.4);
             letter-spacing: 0.02em;
@@ -225,7 +241,7 @@
         }
         .hero-cta {
             display: inline-block;
-            background: var(--coral);
+            background: var(--coral-deep);
             color: var(--white);
             padding: 1rem 2.5rem;
             font-size: 1.15rem;
@@ -235,7 +251,7 @@
             transition: background 0.2s, transform 0.2s;
         }
         .hero-cta:hover {
-            background: var(--coral-dark);
+            background: var(--coral-deeper);
             transform: translateY(-2px);
         }
 
@@ -251,6 +267,15 @@
             margin-bottom: 1.5rem;
             text-align: center;
         }
+        .eyebrow {
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 0.16em;
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--coral-deep);
+            margin-bottom: 0.4rem;
+        }
         .section-subtitle {
             text-align: center;
             max-width: 650px;
@@ -259,13 +284,13 @@
             font-size: 1.1rem;
         }
 
-        /* Fade-in animations */
-        .fade-in-up {
+        /* Fade-in animations (only hidden when JS is available to reveal them) */
+        .js .fade-in-up {
             opacity: 0;
             transform: translateY(30px);
             transition: opacity 0.8s ease-out, transform 0.8s ease-out;
         }
-        .fade-in-up.visible {
+        .js .fade-in-up.visible {
             opacity: 1;
             transform: translateY(0);
         }
@@ -403,20 +428,25 @@
         .gallery-item--wide { grid-column: span 2; }
 
         /* Features */
+        .features { background: var(--sand); }
         .features-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 2rem;
         }
         .feature-card {
-            background: var(--sand);
+            background: var(--white);
             padding: 2rem;
             border-radius: 12px;
             text-align: center;
         }
         .feature-icon {
-            font-size: 2.5rem;
+            color: var(--teal);
             margin-bottom: 1rem;
+        }
+        .feature-icon svg {
+            display: block;
+            margin: 0 auto;
         }
         .feature-card h3 {
             font-size: 1.2rem;
@@ -474,7 +504,7 @@
         }
         .cta-btn {
             display: inline-block;
-            background: var(--coral);
+            background: var(--coral-deep);
             color: var(--white);
             padding: 1rem 3rem;
             font-size: 1.15rem;
@@ -484,7 +514,7 @@
             transition: background 0.2s, transform 0.2s;
         }
         .cta-btn:hover {
-            background: var(--coral-dark);
+            background: var(--coral-deeper);
             transform: translateY(-2px);
         }
 
@@ -554,6 +584,39 @@
         .lightbox-close { top: 1rem; right: 1.5rem; font-size: 2.5rem; }
         .lightbox-prev { left: 1.5rem; top: 50%; transform: translateY(-50%); font-size: 3rem; }
         .lightbox-next { right: 1.5rem; top: 50%; transform: translateY(-50%); font-size: 3rem; }
+
+        /* Focus visibility */
+        a:focus-visible, button:focus-visible {
+            outline: 3px solid var(--teal);
+            outline-offset: 3px;
+            border-radius: 4px;
+        }
+        .hero-cta:focus-visible,
+        .cta-btn:focus-visible,
+        .lightbox button:focus-visible {
+            outline-color: var(--white);
+        }
+
+        /* Reduced motion */
+        @media (prefers-reduced-motion: reduce) {
+            html { scroll-behavior: auto; }
+            .hero-img { animation: none; }
+            .js .fade-in-up {
+                opacity: 1;
+                transform: none;
+                transition: none;
+            }
+            .experience-card,
+            .gallery-item img,
+            .hero-cta, .cta-btn {
+                transition: none;
+            }
+            .experience-card:hover,
+            .gallery-item:hover img,
+            .hero-cta:hover, .cta-btn:hover {
+                transform: none;
+            }
+        }
 
         /* Responsive */
         @media (max-width: 768px) {
@@ -628,6 +691,7 @@
 
 <section class="about" id="about">
     <div class="section-inner">
+        <p class="eyebrow">The Casita</p>
         <h2>A Caribbean Hideaway</h2>
         <div class="about-grid">
             <img src="images/casita-exterior-front.jpg"
@@ -644,6 +708,7 @@
 
 <section class="accommodations" id="accommodations">
     <div class="section-inner">
+        <p class="eyebrow">Your Stay</p>
         <h2>Your Island Home</h2>
         <p class="section-subtitle">Comfortable Caribbean living with everything you need to unwind.</p>
         <div class="accommodations-grid">
@@ -670,6 +735,7 @@
 
 <section class="experiences" id="experiences">
     <div class="section-inner">
+        <p class="eyebrow">Explore</p>
         <h2>Island Experiences</h2>
         <p class="section-subtitle">Belize offers some of the best wildlife, beaches, and cuisine in the Caribbean.</p>
         <div class="experiences-grid">
@@ -700,6 +766,7 @@
 
 <section class="gallery" id="gallery">
     <div class="section-inner">
+        <p class="eyebrow">Gallery</p>
         <h2>Life at the Casita</h2>
         <p class="section-subtitle">A glimpse of what awaits you in Ambergris Caye.</p>
         <div class="gallery-grid">
@@ -753,26 +820,35 @@
 
 <section class="features" id="amenities">
     <div class="section-inner">
+        <p class="eyebrow">Amenities</p>
         <h2>What Makes Us Special</h2>
         <p class="section-subtitle">Everything you need for a comfortable Caribbean vacation, with the charm of a true island home.</p>
         <div class="features-grid">
             <div class="feature-card">
-                <div class="feature-icon" aria-hidden="true">&#127965;</div>
+                <div class="feature-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" width="44" height="44" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="6.5" r="3"/><path d="M12 .75v1.25M6.9 2.9l1 1M17.1 2.9l-1 1M4.5 6.5H6M18 6.5h1.5"/><path d="M2 14c1.67 0 1.67 1.4 3.33 1.4S7 14 8.67 14s1.66 1.4 3.33 1.4S13.67 14 15.33 14s1.67 1.4 3.34 1.4S20.33 14 22 14"/><path d="M2 19c1.67 0 1.67 1.4 3.33 1.4S7 19 8.67 19s1.66 1.4 3.33 1.4S13.67 19 15.33 19s1.67 1.4 3.34 1.4S20.33 19 22 19"/></svg>
+                </div>
                 <h3>Steps from the Beach</h3>
                 <p>A short walk to the turquoise Caribbean Sea and the world-famous Belize Barrier Reef.</p>
             </div>
             <div class="feature-card">
-                <div class="feature-icon" aria-hidden="true">&#127796;</div>
+                <div class="feature-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" width="44" height="44" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>
+                </div>
                 <h3>Tropical Garden</h3>
                 <p>Surrounded by lush tropical plants, crotons, and sea grapes for a true island atmosphere.</p>
             </div>
             <div class="feature-card">
-                <div class="feature-icon" aria-hidden="true">&#127968;</div>
+                <div class="feature-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" width="44" height="44" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                </div>
                 <h3>Private Casita</h3>
                 <p>Your own standalone cottage with all the comforts of home — no shared walls or lobbies.</p>
             </div>
             <div class="feature-card">
-                <div class="feature-icon" aria-hidden="true">&#129517;</div>
+                <div class="feature-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" width="44" height="44" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>
+                </div>
                 <h3>Island Adventures</h3>
                 <p>Snorkeling, diving, fishing, and island hopping — all easily arranged from San Pedro.</p>
             </div>
@@ -782,6 +858,7 @@
 
 <section class="location" id="location">
     <div class="section-inner">
+        <p class="eyebrow">Location</p>
         <h2>San Pedro Town, Belize</h2>
         <p class="section-subtitle">Located on Ambergris Caye, the largest island in Belize and a top Caribbean destination.</p>
         <div class="location-grid">
@@ -794,7 +871,7 @@
                 <p>The Belize Barrier Reef — a UNESCO World Heritage Site and the second-largest reef system in the world — is just a short boat ride away.</p>
             </div>
             <div class="location-map">
-                <iframe src="https://www.openstreetmap.org/export/embed.html?bbox=-87.975,-87.95,17.91,17.94&layer=mapnik&marker=17.9214,-87.9611" title="Map showing San Pedro Town, Ambergris Caye, Belize" loading="lazy" referrerpolicy="no-referrer"></iframe>
+                <iframe src="https://www.openstreetmap.org/export/embed.html?bbox=-87.975,17.91,-87.95,17.94&layer=mapnik&marker=17.9214,-87.9611" title="Map showing San Pedro Town, Ambergris Caye, Belize" loading="lazy" referrerpolicy="no-referrer"></iframe>
             </div>
         </div>
     </div>

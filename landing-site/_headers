@@ -9,3 +9,6 @@
 
 /index.html
   Cache-Control: public, max-age=3600, s-maxage=86400
+
+/fonts/*
+  Cache-Control: public, max-age=2592000, s-maxage=31536000, immutable

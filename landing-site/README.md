@@ -4,7 +4,7 @@ Static landing page for [Caye Garden Casita](https://nm90.github.io/booking-site
 
 ## Setup
 
-1. Place the casita exterior photo as `images/casita-exterior.jpg`
+1. All photos live in `images/` and are referenced directly from `index.html`
 2. Deploy to any static hosting (GitHub Pages, Cloudflare Pages, Netlify, etc.)
 
 ## Deployment
