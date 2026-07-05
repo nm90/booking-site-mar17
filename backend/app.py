@@ -317,11 +317,32 @@ def _replace_adventure_bookings_with_hardened_schema(conn: sqlite3.Connection) -
     )
 
 
+# Idempotent column additions for Postgres databases initialized from an
+# older schema_postgres.sql. Keep in sync with the SQLite migration list in
+# init_database() below.
+_POSTGRES_MIGRATIONS = [
+    "ALTER TABLE bookings ADD COLUMN IF NOT EXISTS accommodation_subtotal "
+    "DOUBLE PRECISION NOT NULL DEFAULT 0 CHECK (accommodation_subtotal >= 0)",
+    "ALTER TABLE bookings ADD COLUMN IF NOT EXISTS btb_tax "
+    "DOUBLE PRECISION NOT NULL DEFAULT 0 CHECK (btb_tax >= 0)",
+    "ALTER TABLE bookings ADD COLUMN IF NOT EXISTS has_pet "
+    "INTEGER NOT NULL DEFAULT 0 CHECK (has_pet IN (0, 1))",
+    "ALTER TABLE bookings ADD COLUMN IF NOT EXISTS pet_fee "
+    "DOUBLE PRECISION NOT NULL DEFAULT 0 CHECK (pet_fee >= 0)",
+    "ALTER TABLE bookings ADD COLUMN IF NOT EXISTS terms_accepted_at TIMESTAMP(0)",
+    "ALTER TABLE bookings ADD COLUMN IF NOT EXISTS baha_verified "
+    "TEXT NOT NULL DEFAULT 'not_applicable' "
+    "CHECK (baha_verified IN ('not_applicable', 'pending', 'verified'))",
+    "UPDATE bookings SET accommodation_subtotal = total_price "
+    "WHERE accommodation_subtotal = 0 AND total_price > 0",
+]
+
+
 def _init_postgres_database():
     """Create schema + seed on Postgres (Supabase) if not already initialized.
 
-    No runtime migrations here: schema_postgres.sql is authoritative and
-    Postgres databases start fresh (SQLite keeps its migration path below).
+    On an existing database, run the idempotent migrations in
+    _POSTGRES_MIGRATIONS instead (mirrors the SQLite path below).
     """
     import psycopg
 
@@ -333,6 +354,9 @@ def _init_postgres_database():
         )
         if cur.fetchone():
             print("Postgres database found; schema already initialized")
+            for migration in _POSTGRES_MIGRATIONS:
+                conn.execute(migration)
+            conn.commit()
             return
 
         print("Creating Postgres schema...")

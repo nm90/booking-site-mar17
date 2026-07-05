@@ -68,7 +68,7 @@ CREATE TABLE IF NOT EXISTS bookings (
         CHECK (status IN ('pending', 'approved', 'rejected', 'cancelled', 'completed')),
     accommodation_subtotal DOUBLE PRECISION NOT NULL DEFAULT 0 CHECK (accommodation_subtotal >= 0),
     btb_tax DOUBLE PRECISION NOT NULL DEFAULT 0 CHECK (btb_tax >= 0),
-    has_pet BOOLEAN NOT NULL DEFAULT FALSE,
+    has_pet INTEGER NOT NULL DEFAULT 0 CHECK (has_pet IN (0, 1)),
     pet_fee DOUBLE PRECISION NOT NULL DEFAULT 0 CHECK (pet_fee >= 0),
     total_price DOUBLE PRECISION NOT NULL DEFAULT 0 CHECK (total_price >= 0),
     guests INTEGER NOT NULL DEFAULT 1 CHECK (guests >= 1),
