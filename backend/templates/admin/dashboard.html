@@ -58,7 +58,7 @@
             </thead>
             <tbody>
                 {% for booking in all_bookings[:10] %}
-                <tr class="{% if booking.status == 'pending' %}row-highlight{% endif %}">
+                <tr class="{% if booking.status == 'pending' %}row-highlight{% endif %}" data-href="{{ url_for('admin.bookings_show', booking_id=booking.id) }}">
                     <td class="text-muted">#{{ booking.id }}</td>
                     <td>
                         <strong>{{ booking.user.first_name }} {{ booking.user.last_name }}</strong>

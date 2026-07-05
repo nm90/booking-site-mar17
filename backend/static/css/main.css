@@ -295,7 +295,7 @@ footer a:hover { text-decoration: underline; color: #f0a080; }
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  overflow: hidden;
+  overflow-x: auto;
   box-shadow: var(--shadow);
 }
 
@@ -325,6 +325,7 @@ footer a:hover { text-decoration: underline; color: #f0a080; }
 
 .table tbody tr:last-child td { border-bottom: none; }
 .table tbody tr:hover { background: #fafafa; }
+.table tbody tr[data-href] { cursor: pointer; }
 .table tbody tr.row-highlight { background: #fffbeb; }
 .table tbody tr.row-highlight:hover { background: #fef9c3; }
 

@@ -59,7 +59,7 @@
                 </thead>
                 <tbody>
                     {% for booking in bookings[:5] %}
-                    <tr>
+                    <tr data-href="{{ url_for('portal.bookings_show', booking_id=booking.id) }}">
                         <td class="text-muted">#{{ booking.id }}</td>
                         <td>{{ booking.start_date }}</td>
                         <td>{{ booking.end_date }}</td>

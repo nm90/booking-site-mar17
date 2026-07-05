@@ -33,7 +33,7 @@
         </thead>
         <tbody>
             {% for adventure in adventures %}
-            <tr>
+            <tr data-href="{{ url_for('admin.adventures_edit', adventure_id=adventure.id) }}">
                 <td class="text-muted">{{ adventure.id }}</td>
                 <td>
                     <strong>{{ adventure.name }}</strong>

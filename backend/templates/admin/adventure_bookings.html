@@ -42,7 +42,7 @@
         </thead>
         <tbody>
             {% for ab in bookings %}
-            <tr class="{% if ab.status == 'pending' %}row-highlight{% endif %}">
+            <tr class="{% if ab.status == 'pending' %}row-highlight{% endif %}" data-href="{{ url_for('admin.adventure_bookings_show', ab_id=ab.id) }}">
                 <td><a href="{{ url_for('admin.adventure_bookings_show', ab_id=ab.id) }}">#{{ ab.id }}</a></td>
                 <td>
                     <strong>{{ ab.user.first_name }} {{ ab.user.last_name }}</strong>

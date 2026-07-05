@@ -11,3 +11,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 5000);
     });
 });
+
+// Make table rows with data-href clickable (links/buttons inside still work)
+document.addEventListener('click', (e) => {
+    const row = e.target.closest('tr[data-href]');
+    if (!row) return;
+    if (e.target.closest('a, button, input, select, label, form')) return;
+    window.location = row.dataset.href;
+});

@@ -29,7 +29,7 @@
             </thead>
             <tbody>
                 {% for booking in bookings %}
-                <tr>
+                <tr data-href="{{ url_for('portal.bookings_show', booking_id=booking.id) }}">
                     <td class="text-muted">#{{ booking.id }}</td>
                     <td>{{ booking.property.name if booking.property else '—' }}</td>
                     <td>{{ booking.start_date }}</td>

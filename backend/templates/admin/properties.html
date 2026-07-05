@@ -26,7 +26,7 @@
         </thead>
         <tbody>
             {% for prop in properties %}
-            <tr>
+            <tr data-href="{{ url_for('admin.properties_edit', property_id=prop.id) }}">
                 <td class="text-muted">{{ prop.id }}</td>
                 <td><strong>{{ prop.name }}</strong></td>
                 <td>{{ prop.location }}</td>
