@@ -654,6 +654,24 @@
             header { padding: 0.75rem 1rem; }
             section { padding: 3rem 1.25rem; }
         }
+        .google-maps-button {
+            display: inline-block;
+            background-color: #1a73e8; /* Google blue */
+            color: white;
+            padding: 10px 20px;
+            font-family: Arial, sans-serif;
+            font-size: 16px;
+            font-weight: bold;
+            text-decoration: none;
+            border-radius: 5px;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .google-maps-button:hover {
+            background-color: #1557b0; /* Darker blue on hover */
+        }
     </style>
 </head>
 <body>
@@ -872,6 +890,9 @@
             </div>
             <div class="location-map">
                 <iframe src="https://www.openstreetmap.org/export/embed.html?bbox=-87.99757,17.88842,-87.93019,17.92872&layer=mapnik&marker=17.904373135031307, -87.9775765663924" title="Map showing San Pedro Town, Ambergris Caye, Belize" loading="lazy" referrerpolicy="no-referrer"></iframe>
+                <a href="https://maps.app.goo.gl/qzEaGkG8yyMsXs2k7" target="_blank" rel="noopener noreferrer" class="google-maps-button">
+                    Open in Google Maps
+                </a>
             </div>
         </div>
     </div>
