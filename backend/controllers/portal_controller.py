@@ -236,7 +236,7 @@ def bookings_create():
         )
         # Send email notifications
         send_booking_confirmation(session['user_email'], session['user_first_name'], booking)
-        admin_email = current_app.config.get('ADMIN_EMAIL', 'admin@vacationrental.com')
+        admin_email = current_app.config.get('ADMIN_EMAIL', 'bze@wiscomfort.com')
         notify_admin_new_booking(admin_email, booking)
 
         flash('Booking request submitted! We will review it shortly.', 'success')

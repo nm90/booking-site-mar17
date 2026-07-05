@@ -92,6 +92,7 @@ app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD', '')
 app.config['MAIL_DEFAULT_SENDER'] = os.environ.get('MAIL_DEFAULT_SENDER', 'bze@wiscomfort.com')
 app.config['BREVO_API_KEY'] = os.environ.get('BREVO_API_KEY', '').strip()
 app.config['BREVO_SENDER_NAME'] = os.environ.get('BREVO_SENDER_NAME', '').strip()
+app.config['ADMIN_EMAIL'] = os.environ.get('ADMIN_EMAIL', 'bze@wiscomfort.com').strip()
 mail = Mail(app)
 
 from backend.database.connection import close_connection, DB_PATH, DATABASE_URL

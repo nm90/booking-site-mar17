@@ -59,7 +59,13 @@ The production app is `booking-site-mar17`, service `booking-site`. It uses arch
 
 ```bash
 # Deploy current directory to production
-koyeb deploy . booking-site-mar17/booking-site --archive-builder docker --wait
+# NOTE: the CLI does NOT honor .koyebignore — it only skips .git,node_modules,vendor
+# by default. Pass --archive-ignore-dir for venvs/logs or the archive exceeds the 50MB limit.
+koyeb deploy . booking-site-mar17/booking-site --archive-builder docker \
+  --archive-ignore-dir .git --archive-ignore-dir node_modules --archive-ignore-dir vendor \
+  --archive-ignore-dir venv --archive-ignore-dir .venv --archive-ignore-dir .pytest_cache \
+  --archive-ignore-dir log --archive-ignore-dir logs --archive-ignore-dir backend/logs \
+  --wait
 
 # Check service health
 koyeb services get booking-site-mar17/booking-site
