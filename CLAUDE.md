@@ -33,9 +33,9 @@ Flask MVC app with strict layer separation:
 
 **Authentication:** Session-based (`session['user_id']`, `session['user_role']`). Decorators `@login_required` and `@admin_required` are defined in `auth_controller.py` and imported by other controllers.
 
-**Database access:** Always use `execute_query()` — never open connections directly. Parameterized queries only. The DB path comes from the `DATABASE_PATH` env var (default: `backend/database/booking_site.db`).
+**Database access:** Always use `execute_query()` — never open connections directly. Parameterized queries only, written with `?` placeholders. Two dialects behind the same API: if `DATABASE_URL` is set the app runs on Postgres via psycopg (placeholder translation, `INSERT ... RETURNING id`, SQLSTATE error mapping all handled inside `connection.py`); otherwise SQLite at `DATABASE_PATH` (default: `backend/database/booking_site.db`). Keep model SQL engine-neutral (e.g. `CURRENT_DATE`, not `date('now')`).
 
-**Validation:** Models raise `ValueError` with user-friendly messages. Controllers catch these and re-render the form with the error. SQLite `IntegrityError` is caught in `execute_query()` and re-raised as a readable message.
+**Validation:** Models raise `ValueError` with user-friendly messages. Controllers catch these and re-render the form with the error. `IntegrityError` (SQLite or psycopg — catch the `INTEGRITY_ERRORS` tuple from `connection.py`) is caught in `execute_query()` and re-raised with a readable `.user_message`.
 
 **Booking lifecycle:** `pending` → `approved` | `rejected` → (`cancelled` anytime). Reviews can only be submitted after an approved stay.
 
@@ -44,7 +44,8 @@ Flask MVC app with strict layer separation:
 | Variable | Default | Purpose |
 |---|---|---|
 | `SECRET_KEY` | `dev-secret-key-change-in-production` | Flask session signing |
-| `DATABASE_PATH` | `backend/database/booking_site.db` | SQLite file location |
+| `DATABASE_PATH` | `backend/database/booking_site.db` | SQLite file location (used only when `DATABASE_URL` is unset) |
+| `DATABASE_URL` | _(unset)_ | Postgres connection string (e.g. Supabase). Set → app uses Postgres via psycopg; unset → SQLite. Use the Supabase Session/pooler connection string; include `sslmode=require`. |
 | `FLASK_ENV` | `development` | Enables debug mode |
 
 ## Demo Accounts

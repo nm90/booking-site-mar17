@@ -7,10 +7,9 @@ MVC Role: MODEL
 - Enforces business rules (only completed stays can be reviewed)
 """
 
-import sqlite3
 from typing import Dict, List, Optional
 
-from backend.database.connection import begin_immediate, execute_query
+from backend.database.connection import INTEGRITY_ERRORS, begin_immediate, execute_query
 
 
 class Review:
@@ -82,7 +81,7 @@ class Review:
                     (user_id, booking_id, int(rating), title, content.strip()),
                     commit=True,
                 )
-            except sqlite3.IntegrityError:
+            except INTEGRITY_ERRORS:
                 raise ValueError(
                     "You have already submitted a review for this booking"
                 ) from None

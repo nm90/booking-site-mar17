@@ -353,7 +353,7 @@ class Booking:
         """Auto-transition approved bookings past checkout to 'completed'."""
         execute_query(
             """UPDATE bookings SET status='completed', updated_at=CURRENT_TIMESTAMP
-               WHERE status='approved' AND end_date <= date('now')""",
+               WHERE status='approved' AND end_date <= CURRENT_DATE""",
             commit=True
         )
 

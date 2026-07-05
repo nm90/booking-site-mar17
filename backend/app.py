@@ -94,7 +94,7 @@ app.config['BREVO_API_KEY'] = os.environ.get('BREVO_API_KEY', '').strip()
 app.config['BREVO_SENDER_NAME'] = os.environ.get('BREVO_SENDER_NAME', '').strip()
 mail = Mail(app)
 
-from backend.database.connection import close_connection, DB_PATH
+from backend.database.connection import close_connection, DB_PATH, DATABASE_URL
 app.teardown_appcontext(close_connection)
 
 # ============================================================================
@@ -307,8 +307,46 @@ def _replace_adventure_bookings_with_hardened_schema(conn: sqlite3.Connection) -
     )
 
 
+def _init_postgres_database():
+    """Create schema + seed on Postgres (Supabase) if not already initialized.
+
+    No runtime migrations here: schema_postgres.sql is authoritative and
+    Postgres databases start fresh (SQLite keeps its migration path below).
+    """
+    import psycopg
+
+    schema_path = os.path.join(DATABASE_DIR, 'schema_postgres.sql')
+    with psycopg.connect(DATABASE_URL) as conn:
+        cur = conn.execute(
+            "SELECT 1 FROM information_schema.tables "
+            "WHERE table_schema = 'public' AND table_name = 'users'"
+        )
+        if cur.fetchone():
+            print("Postgres database found; schema already initialized")
+            return
+
+        print("Creating Postgres schema...")
+        with open(schema_path, 'r') as f:
+            conn.execute(f.read())
+        conn.commit()
+        print("Schema created successfully!")
+
+    from backend.database.seed import insert_seed_data
+    insert_seed_data()
+    print("Database initialization complete!")
+
+
 def init_database():
     """Initialize the database if it doesn't exist."""
+    if DATABASE_URL:
+        try:
+            _init_postgres_database()
+        except Exception as e:
+            logger.error(f"Database initialization failed: {e}", exc_info=True)
+            print(f"Error initializing database: {e}")
+            raise
+        return
+
     db_path = app.config['DATABASE_PATH']
     schema_path = os.path.join(DATABASE_DIR, 'schema.sql')
 

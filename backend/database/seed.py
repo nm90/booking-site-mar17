@@ -15,7 +15,7 @@ if __name__ == '__main__' or __package__ is None:
     if _project_root not in sys.path:
         sys.path.insert(0, _project_root)
 
-from backend.database.connection import DB_PATH
+from backend.database.connection import DB_PATH, DATABASE_URL, translate_placeholders
 
 
 def hash_password(password: str) -> str:
@@ -23,9 +23,36 @@ def hash_password(password: str) -> str:
     return bcrypt.hashpw(password.encode(), bcrypt.gensalt(rounds=12)).decode()
 
 
-def insert_seed_data():
+def _open_seed_connection():
+    """Open a standalone connection for seeding (no Flask context at init time)."""
+    if DATABASE_URL:
+        import psycopg
+        return psycopg.connect(DATABASE_URL)
     conn = sqlite3.connect(DB_PATH)
     conn.execute("PRAGMA foreign_keys = ON;")
+    return conn
+
+
+def insert_seed_data():
+    raw_conn = _open_seed_connection()
+
+    class _Conn:
+        """Translate ?-placeholders so the seed statements work on both engines."""
+        def execute(self, sql, params=()):
+            if DATABASE_URL:
+                return raw_conn.execute(translate_placeholders(sql), params)
+            return raw_conn.execute(sql, params)
+
+        def commit(self):
+            raw_conn.commit()
+
+        def rollback(self):
+            raw_conn.rollback()
+
+        def close(self):
+            raw_conn.close()
+
+    conn = _Conn()
 
     try:
         # Users
