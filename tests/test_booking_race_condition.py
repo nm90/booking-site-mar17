@@ -40,6 +40,7 @@ def test_concurrent_bookings_same_dates_only_one_succeeds(app, seed_user):
                     end_date=end,
                     guests=2,
                     property_id=1,
+                    terms_accepted=True,
                 )
                 results["successes"].append(booking)
             except ValueError as e:

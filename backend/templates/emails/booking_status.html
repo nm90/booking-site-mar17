@@ -4,6 +4,7 @@
 
 {% if booking.status == 'approved' %}
 <p>Great news &mdash; your booking has been <span class="badge badge-approved">approved</span>!</p>
+<p>A PDF copy of your Vacation Rental Agreement is attached to this email for your records.</p>
 {% elif booking.status == 'rejected' %}
 <p>We're sorry, but your booking request has been <span class="badge badge-rejected">declined</span>.</p>
 {% elif booking.status == 'cancelled' %}
@@ -14,7 +15,20 @@
     <div class="detail-row"><span class="detail-label">Property</span><span class="detail-value">{{ booking.property.name }}</span></div>
     <div class="detail-row"><span class="detail-label">Dates</span><span class="detail-value">{{ booking.start_date }} &mdash; {{ booking.end_date }}</span></div>
     <div class="detail-row"><span class="detail-label">Status</span><span class="detail-value">{{ booking.status }}</span></div>
+    {% if booking.accommodation_subtotal is not none and booking.accommodation_subtotal > 0 %}
+    <div class="detail-row"><span class="detail-label">Accommodation</span><span class="detail-value">${{ "%.2f" | format(booking.accommodation_subtotal) }}</span></div>
+    <div class="detail-row"><span class="detail-label">BTB Tax (9%)</span><span class="detail-value">${{ "%.2f" | format(booking.btb_tax) }}</span></div>
+    {% if booking.has_pet and booking.pet_fee %}
+    <div class="detail-row"><span class="detail-label">Pet fee</span><span class="detail-value">${{ "%.2f" | format(booking.pet_fee) }}</span></div>
+    {% endif %}
+    {% endif %}
+    <div class="detail-row"><span class="detail-label">Total</span><span class="detail-value">${{ "%.2f" | format(booking.total_price) }}</span></div>
 </div>
+
+{% if booking.status == 'approved' and booking.has_pet %}
+<p><strong>Pet travel reminder:</strong> Please submit your BAHA clearance documentation
+(vaccination records and official import permit) before arrival.</p>
+{% endif %}
 
 {% if booking.admin_notes %}
 <p><strong>Note from host:</strong> {{ booking.admin_notes }}</p>

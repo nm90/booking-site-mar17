@@ -102,20 +102,31 @@ def insert_seed_data():
         #     12, 600.00
         # ))
 
-        # Bookings
+        # Bookings (gross total = subtotal + 9% BTB tax; $200/night)
         conn.execute("""
-            INSERT INTO bookings (user_id, property_id, start_date, end_date, status, total_price, guests)
-            VALUES (2, 1, '2026-04-10', '2026-04-15', 'approved', 875.00, 4)
+            INSERT INTO bookings (
+                user_id, property_id, start_date, end_date, status,
+                accommodation_subtotal, btb_tax, has_pet, pet_fee, total_price, guests
+            )
+            VALUES (2, 1, '2026-04-10', '2026-04-15', 'approved', 1000.00, 90.00, 0, 0, 1090.00, 4)
         """)
 
         conn.execute("""
-            INSERT INTO bookings (user_id, property_id, start_date, end_date, status, total_price, guests, special_requests)
-            VALUES (3, 1, '2026-05-01', '2026-05-07', 'pending', 1225.00, 4, 'Early check-in if possible')
+            INSERT INTO bookings (
+                user_id, property_id, start_date, end_date, status,
+                accommodation_subtotal, btb_tax, has_pet, pet_fee, total_price,
+                guests, special_requests
+            )
+            VALUES (3, 1, '2026-05-01', '2026-05-07', 'pending', 1200.00, 108.00, 0, 0, 1308.00, 4,
+                    'Early check-in if possible')
         """)
 
         conn.execute("""
-            INSERT INTO bookings (user_id, property_id, start_date, end_date, status, total_price, guests)
-            VALUES (2, 1, '2026-03-01', '2026-03-05', 'completed', 700.00, 2)
+            INSERT INTO bookings (
+                user_id, property_id, start_date, end_date, status,
+                accommodation_subtotal, btb_tax, has_pet, pet_fee, total_price, guests
+            )
+            VALUES (2, 1, '2026-03-01', '2026-03-05', 'completed', 800.00, 72.00, 0, 0, 872.00, 2)
         """)
 
         # Review

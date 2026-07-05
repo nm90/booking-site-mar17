@@ -77,7 +77,8 @@ def test_create_allows_overlap_with_pending(app):
         )
 
         booking = Booking.create(
-            user_id=1, start_date=start, end_date=end, guests=2, property_id=1
+            user_id=1, start_date=start, end_date=end,
+            guests=2, property_id=1, terms_accepted=True,
         )
         assert booking["status"] == "pending"
 
@@ -98,7 +99,8 @@ def test_create_still_blocked_by_confirmed_stays(app, blocking_status):
 
         with pytest.raises(ValueError, match="not available"):
             Booking.create(
-                user_id=1, start_date=start, end_date=end, guests=2, property_id=1
+                user_id=1, start_date=start, end_date=end, guests=2, property_id=1,
+                terms_accepted=True,
             )
 
 

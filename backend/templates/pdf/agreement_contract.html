@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Vacation Rental Agreement #{{ booking.id }}</title>
+    <style>
+        @page { size: letter; margin: 0.75in; }
+        body {
+            font-family: "Times New Roman", Times, serif;
+            font-size: 11pt;
+            line-height: 1.45;
+            color: #111;
+        }
+        h1 {
+            font-size: 16pt;
+            text-align: center;
+            margin: 0 0 0.35in;
+        }
+        h3 {
+            font-size: 12pt;
+            margin: 0.2in 0 0.08in;
+        }
+        p { margin: 0 0 0.1in; text-align: justify; }
+        .meta-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 0.25in;
+            font-size: 10.5pt;
+        }
+        .meta-table th,
+        .meta-table td {
+            border: 1px solid #ccc;
+            padding: 6px 8px;
+            text-align: left;
+            vertical-align: top;
+        }
+        .meta-table th {
+            width: 28%;
+            background: #f5f5f5;
+            font-weight: bold;
+        }
+        .pricing-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 0.15in 0 0.25in;
+            font-size: 10.5pt;
+        }
+        .pricing-table th,
+        .pricing-table td {
+            border: 1px solid #ccc;
+            padding: 6px 8px;
+        }
+        .pricing-table th { background: #f5f5f5; text-align: left; }
+        .pricing-table td.amount { text-align: right; width: 25%; }
+        .pricing-table tr.total td { font-weight: bold; }
+        .signature-block {
+            margin-top: 0.35in;
+            border-top: 1px solid #999;
+            padding-top: 0.15in;
+            font-size: 10.5pt;
+        }
+        .legal-version { font-size: 9pt; color: #555; margin-top: 0.2in; }
+    </style>
+</head>
+<body>
+    <h1>VACATION RENTAL AGREEMENT</h1>
+
+    <table class="meta-table">
+        <tr>
+            <th>Booking #</th>
+            <td>{{ booking.id }}</td>
+            <th>Agreement version</th>
+            <td>{{ agreement_version }}</td>
+        </tr>
+        <tr>
+            <th>Guest</th>
+            <td>{{ guest_name }}</td>
+            <th>Property</th>
+            <td>{{ booking.property.name if booking.property else '—' }}{% if booking.property and booking.property.location %}, {{ booking.property.location }}{% endif %}</td>
+        </tr>
+        <tr>
+            <th>Check-in</th>
+            <td>{{ booking.start_date }}</td>
+            <th>Check-out</th>
+            <td>{{ booking.end_date }}</td>
+        </tr>
+        <tr>
+            <th>Guests</th>
+            <td>{{ booking.guests }}</td>
+            <th>Pet on booking</th>
+            <td>{{ 'Yes' if has_pet else 'No' }}</td>
+        </tr>
+        <tr>
+            <th>Terms accepted</th>
+            <td colspan="3">{{ booking.terms_accepted_at or 'At booking submission' }}</td>
+        </tr>
+    </table>
+
+    <table class="pricing-table">
+        <thead>
+            <tr>
+                <th>Description</th>
+                <th class="amount">Amount (USD)</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Base accommodation</td>
+                <td class="amount">${{ "%.2f" | format(booking.accommodation_subtotal or 0) }}</td>
+            </tr>
+            <tr>
+                <td>Belize Tourism Board tax (9%)</td>
+                <td class="amount">${{ "%.2f" | format(booking.btb_tax or 0) }}</td>
+            </tr>
+            {% if has_pet and booking.pet_fee %}
+            <tr>
+                <td>Pet sanitation fee (non-refundable)</td>
+                <td class="amount">${{ "%.2f" | format(booking.pet_fee) }}</td>
+            </tr>
+            {% endif %}
+            <tr class="total">
+                <td>Total amount due</td>
+                <td class="amount">${{ "%.2f" | format(booking.total_price) }}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    {% include 'legal/rental_agreement_content.html' %}
+
+    <div class="signature-block">
+        <p><strong>Electronic acceptance.</strong> Guest {{ guest_name }} accepted this agreement electronically
+        on {{ booking.terms_accepted_at or booking.created_at }} for booking #{{ booking.id }}.</p>
+        {% if has_pet %}
+        <p><strong>BAHA notice:</strong> Guest declared a pet on this booking and assumes responsibility for
+        Belize Agricultural Health Authority import compliance prior to arrival.</p>
+        {% endif %}
+    </div>
+</body>
+</html>

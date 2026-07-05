@@ -1,0 +1,18 @@
+<div class="legal-container">
+    <label for="rental_terms" class="legal-container-title">
+        Conditions of Carriage &amp; Vacation Rental Agreement
+    </label>
+    <div id="rental_terms" class="legal-terms-scroll" tabindex="0">
+        {% include 'legal/rental_agreement_content.html' %}
+    </div>
+
+    <div class="checkbox-group">
+        <input type="checkbox" id="accept_legal" name="accept_legal" value="1" required
+               {{ 'checked' if accept_legal }}>
+        <label for="accept_legal">
+            I certify that I am authorized to bind all traveling parties. I have read, understood,
+            and unconditionally accept all terms, including the 9% BTB tax, island utility mandates,
+            and airline-style Conditions of Pet Carriage.
+        </label>
+    </div>
+</div>

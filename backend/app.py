@@ -128,6 +128,15 @@ app.config['LANDING_SITE_URL'] = _landing
 _contact_email = os.environ.get('CONTACT_EMAIL', 'bze@wiscomfort.com').strip()
 app.config['CONTACT_EMAIL'] = _contact_email
 
+app.config.setdefault('BTB_TAX_RATE', float(os.environ.get('BTB_TAX_RATE', '0.09')))
+app.config.setdefault(
+    'PET_SANITATION_FEE', float(os.environ.get('PET_SANITATION_FEE', '75'))
+)
+app.config.setdefault(
+    'RENTAL_AGREEMENT_VERSION',
+    os.environ.get('RENTAL_AGREEMENT_VERSION', '2026-07-05'),
+)
+
 
 # ============================================================================
 # TEMPLATE CONTEXT PROCESSOR
@@ -373,11 +382,24 @@ def init_database():
                 "ALTER TABLE users ADD COLUMN email_verification_expires DATETIME",
                 "ALTER TABLE users ADD COLUMN email_verified INTEGER NOT NULL DEFAULT 1",
                 "ALTER TABLE adventure_bookings ADD COLUMN admin_notes TEXT",
+                "ALTER TABLE bookings ADD COLUMN accommodation_subtotal REAL NOT NULL DEFAULT 0",
+                "ALTER TABLE bookings ADD COLUMN btb_tax REAL NOT NULL DEFAULT 0",
+                "ALTER TABLE bookings ADD COLUMN has_pet INTEGER NOT NULL DEFAULT 0",
+                "ALTER TABLE bookings ADD COLUMN pet_fee REAL NOT NULL DEFAULT 0",
+                "ALTER TABLE bookings ADD COLUMN terms_accepted_at DATETIME",
+                "ALTER TABLE bookings ADD COLUMN baha_verified TEXT NOT NULL DEFAULT 'not_applicable'",
             ]:
                 try:
                     conn.execute(migration)
                 except Exception:
                     pass  # Column already exists
+            try:
+                conn.execute(
+                    "UPDATE bookings SET accommodation_subtotal = total_price "
+                    "WHERE accommodation_subtotal = 0 AND total_price > 0"
+                )
+            except Exception:
+                pass
             try:
                 _migrate_reviews_one_per_booking(conn)
             except Exception as e:

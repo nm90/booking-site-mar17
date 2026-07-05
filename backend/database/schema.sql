@@ -60,10 +60,17 @@ CREATE TABLE IF NOT EXISTS bookings (
     end_date DATE NOT NULL,
     status TEXT NOT NULL DEFAULT 'pending'
         CHECK (status IN ('pending', 'approved', 'rejected', 'cancelled', 'completed')),
+    accommodation_subtotal REAL NOT NULL DEFAULT 0 CHECK (accommodation_subtotal >= 0),
+    btb_tax REAL NOT NULL DEFAULT 0 CHECK (btb_tax >= 0),
+    has_pet INTEGER NOT NULL DEFAULT 0 CHECK (has_pet IN (0, 1)),
+    pet_fee REAL NOT NULL DEFAULT 0 CHECK (pet_fee >= 0),
     total_price REAL NOT NULL DEFAULT 0 CHECK (total_price >= 0),
     guests INTEGER NOT NULL DEFAULT 1 CHECK (guests >= 1),
     special_requests TEXT,
     admin_notes TEXT,
+    terms_accepted_at DATETIME,
+    baha_verified TEXT NOT NULL DEFAULT 'not_applicable'
+        CHECK (baha_verified IN ('not_applicable', 'pending', 'verified')),
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_bookings_user

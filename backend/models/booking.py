@@ -9,7 +9,8 @@ MVC Role: MODEL
 """
 
 from typing import Dict, List, Optional
-from datetime import date, datetime, timedelta
+from datetime import date, timedelta
+from flask import current_app
 from backend.database.connection import execute_query, begin_immediate
 from backend.models.property import Property
 
@@ -24,6 +25,8 @@ class Booking:
     """
 
     VALID_STATUSES = ['pending', 'approved', 'rejected', 'cancelled', 'completed']
+
+    BAHA_STATUSES = ['not_applicable', 'pending', 'verified']
 
     ALLOWED_TRANSITIONS = {
         'pending': ['approved', 'rejected'],
@@ -71,11 +74,39 @@ class Booking:
 
     @staticmethod
     def calculate_price(start_date: str, end_date: str, price_per_night: float) -> float:
-        """Calculate total price for a stay."""
+        """Calculate accommodation subtotal for a stay (nights × nightly rate)."""
         start = date.fromisoformat(start_date)
         end = date.fromisoformat(end_date)
         nights = (end - start).days
         return round(nights * price_per_night, 2)
+
+    @staticmethod
+    def calculate_fees(
+        start_date: str,
+        end_date: str,
+        price_per_night: float,
+        has_pet: bool = False,
+        btb_rate: float = None,
+        pet_fee_flat: float = None,
+    ) -> Dict:
+        """Calculate accommodation subtotal, BTB tax, pet fee, and gross total."""
+        if btb_rate is None:
+            btb_rate = current_app.config.get('BTB_TAX_RATE', 0.09)
+        if pet_fee_flat is None:
+            pet_fee_flat = current_app.config.get('PET_SANITATION_FEE', 75.0)
+
+        subtotal = Booking.calculate_price(start_date, end_date, price_per_night)
+        btb_tax = round(subtotal * btb_rate, 2)
+        pet_fee = round(pet_fee_flat, 2) if has_pet else 0.0
+        total_price = round(subtotal + btb_tax + pet_fee, 2)
+
+        return {
+            'accommodation_subtotal': subtotal,
+            'btb_tax': btb_tax,
+            'has_pet': bool(has_pet),
+            'pet_fee': pet_fee,
+            'total_price': total_price,
+        }
 
     @staticmethod
     def check_availability(start_date: str, end_date: str, property_id: int,
@@ -139,16 +170,24 @@ class Booking:
 
     @staticmethod
     def create(user_id: int, start_date: str, end_date: str,
-               guests: int, property_id: int, special_requests: str = None) -> Dict:
+               guests: int, property_id: int, special_requests: str = None,
+               has_pet: bool = False, terms_accepted: bool = False) -> Dict:
         """
         Create a new booking request.
 
         MVC Flow:
         1. Controller calls Booking.create() with form data
-        2. Model validates dates, checks availability, calculates price
+        2. Model validates dates, checks availability, calculates fees
         3. Inserts booking with 'pending' status
         4. Returns complete booking dict
+
+        Guest must pass ``terms_accepted=True`` after accepting the clickwrap agreement.
         """
+        if not terms_accepted:
+            raise ValueError(
+                "You must accept the Vacation Rental Agreement to proceed."
+            )
+
         prop = Property.get_by_id(property_id)
         if not prop:
             raise ValueError("Property not found")
@@ -156,7 +195,10 @@ class Booking:
             raise ValueError("This property is not currently available for booking")
 
         Booking.validate(start_date, end_date, guests, max_capacity=prop['capacity'])
-        total_price = Booking.calculate_price(start_date, end_date, prop['price_per_night'])
+        fees = Booking.calculate_fees(
+            start_date, end_date, prop['price_per_night'], has_pet=has_pet
+        )
+        baha_verified = 'pending' if has_pet else 'not_applicable'
 
         with begin_immediate():
             if not Booking.check_availability(start_date, end_date, property_id,
@@ -164,12 +206,21 @@ class Booking:
                 raise ValueError("The property is not available for the selected dates")
 
             query = """
-                INSERT INTO bookings (user_id, property_id, start_date, end_date, status, total_price, guests, special_requests)
-                VALUES (?, ?, ?, ?, 'pending', ?, ?, ?)
+                INSERT INTO bookings (
+                    user_id, property_id, start_date, end_date, status,
+                    accommodation_subtotal, btb_tax, has_pet, pet_fee, total_price,
+                    guests, special_requests, terms_accepted_at, baha_verified
+                )
+                VALUES (?, ?, ?, ?, 'pending', ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?)
             """
             booking_id = execute_query(
                 query,
-                (user_id, property_id, start_date, end_date, total_price, int(guests), special_requests),
+                (
+                    user_id, property_id, start_date, end_date,
+                    fees['accommodation_subtotal'], fees['btb_tax'],
+                    1 if has_pet else 0, fees['pet_fee'], fees['total_price'],
+                    int(guests), special_requests, baha_verified,
+                ),
                 commit=True
             )
 
@@ -187,6 +238,8 @@ class Booking:
             booking['nights'] = (end - start).days
         except (KeyError, TypeError, ValueError):
             booking['nights'] = None
+        if 'has_pet' in booking:
+            booking['has_pet'] = bool(booking['has_pet'])
         if 'user_first_name' in row:
             booking['user'] = {
                 'first_name': row['user_first_name'],
@@ -349,6 +402,26 @@ class Booking:
         execute_query(
             "UPDATE bookings SET status=?, admin_notes=?, updated_at=CURRENT_TIMESTAMP WHERE id=?",
             (status, admin_notes, booking_id), commit=True
+        )
+        return Booking.get_by_id(booking_id, include_relations=True)
+
+    @staticmethod
+    def update_baha_verified(booking_id: int, status: str) -> Optional[Dict]:
+        """Update BAHA compliance status for a pet booking (admin action)."""
+        if status not in Booking.BAHA_STATUSES:
+            raise ValueError(f"BAHA status must be one of {Booking.BAHA_STATUSES}")
+
+        booking = Booking.get_by_id(booking_id)
+        if not booking:
+            return None
+
+        if not booking.get('has_pet') and status != 'not_applicable':
+            raise ValueError("BAHA status only applies to bookings with pets")
+
+        execute_query(
+            "UPDATE bookings SET baha_verified=?, updated_at=CURRENT_TIMESTAMP WHERE id=?",
+            (status, booking_id),
+            commit=True,
         )
         return Booking.get_by_id(booking_id, include_relations=True)
 

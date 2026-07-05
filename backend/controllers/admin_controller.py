@@ -30,7 +30,8 @@ Routes:
     POST /admin/users/<id>/status         - Update user status
 """
 
-from flask import Blueprint, request, redirect, url_for, flash, render_template, session
+from flask import Blueprint, request, redirect, url_for, flash, render_template, session, send_file, abort
+from io import BytesIO
 from backend.models.booking import Booking
 from backend.models.review import Review
 from backend.models.adventure import Adventure, AdventureBooking
@@ -38,6 +39,7 @@ from backend.models.user import User
 from backend.models.property import Property
 from backend.controllers.auth_controller import admin_required
 from backend.services.email import send_booking_status_change, send_checkin_reminder
+from backend.services.pdf import generate_contract_pdf
 
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
 
@@ -149,6 +151,41 @@ def bookings_complete(booking_id):
         flash(str(e), 'error')
 
     return redirect(url_for('admin.bookings_show', booking_id=booking_id))
+
+
+@admin_bp.route('/bookings/<int:booking_id>/baha', methods=['POST'])
+@admin_required
+def bookings_update_baha(booking_id):
+    """Update BAHA compliance status for a pet booking."""
+    status = request.form.get('baha_verified', '').strip()
+    try:
+        booking = Booking.update_baha_verified(booking_id, status)
+        if not booking:
+            flash('Booking not found.', 'error')
+        else:
+            flash('BAHA compliance status updated.', 'success')
+    except ValueError as e:
+        flash(str(e), 'error')
+    return redirect(url_for('admin.bookings_show', booking_id=booking_id))
+
+
+@admin_bp.route('/bookings/<int:booking_id>/contract')
+@admin_required
+def bookings_download_contract(booking_id):
+    """Download the rental agreement PDF for a booking."""
+    booking = Booking.get_by_id(booking_id, include_relations=True)
+    if not booking:
+        abort(404)
+    if booking['status'] not in ('approved', 'completed'):
+        flash('Contract is available after the booking is approved.', 'warning')
+        return redirect(url_for('admin.bookings_show', booking_id=booking_id))
+    pdf_bytes = generate_contract_pdf(booking)
+    return send_file(
+        BytesIO(pdf_bytes),
+        mimetype='application/pdf',
+        as_attachment=True,
+        download_name=f'San_Pedro_Agreement_{booking_id}.pdf',
+    )
 
 
 # ============================================================================

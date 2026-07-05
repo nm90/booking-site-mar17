@@ -84,6 +84,25 @@
                           placeholder="Early check-in, dietary needs, accessibility requirements…">{{ special_requests or '' }}</textarea>
             </div>
 
+            <div class="form-group">
+                <label class="checkbox-group checkbox-group-inline">
+                    <input type="checkbox" id="has_pet" name="has_pet" value="1"
+                           {{ 'checked' if has_pet }}>
+                    <span>I am traveling with an authorized pet
+                        (${{ "%.2f" | format(pet_sanitation_fee) }} non-refundable sanitation fee applies)</span>
+                </label>
+            </div>
+
+            <div class="booking-summary-card" id="form-pricing-summary" style="display:none">
+                <h4>Pricing Breakdown (USD)</h4>
+                <p><span>Base Accommodation:</span> <strong id="summary-subtotal">—</strong></p>
+                <p><span>Belize Tourism Board Tax ({{ (btb_tax_rate * 100) | int }}%):</span> <strong id="summary-btb">—</strong></p>
+                <p id="summary-pet-row" style="display:none"><span>Pet Sanitation Fee:</span> <strong id="summary-pet">—</strong></p>
+                <p class="booking-summary-total"><span>Total Amount Due:</span> <strong id="summary-total">—</strong></p>
+            </div>
+
+            {% include 'legal/rental_agreement_scrollbox.html' %}
+
             <div class="form-actions">
                 <a href="{{ url_for('portal.bookings_index') }}" class="btn btn-outline">Cancel</a>
                 <button type="submit" class="btn btn-primary">Submit Request</button>
@@ -102,24 +121,66 @@
             </ol>
         </div>-->
         <div class="info-card" id="pricing-card">
-            <h3>Pricing</h3>
-<!--            <p id="aside-price">Select a property to see pricing</p>-->
-            <p class="text-muted text-sm">Total is calculated automatically based on your selected dates.</p>
+            <h3>Pricing Estimate</h3>
+            <div id="aside-pricing" class="pricing-breakdown">
+                <p class="text-muted text-sm">Select a property and dates to see your estimate.</p>
+            </div>
         </div>
     </div>
 </div>
 
 <script>
+    const BTB_RATE = {{ btb_tax_rate }};
+    const PET_FEE = {{ pet_sanitation_fee }};
     const propertySelect = document.getElementById('property_id');
     const startInput = document.getElementById('start_date');
     const endInput = document.getElementById('end_date');
     const guestsInput = document.getElementById('guests');
     const guestsHint = document.getElementById('guests-hint');
+    const hasPetInput = document.getElementById('has_pet');
     const preview = document.getElementById('property-preview');
     const previewName = document.getElementById('preview-name');
     const previewDetails = document.getElementById('preview-details');
     const previewPrice = document.getElementById('preview-price');
-    const asidePrice = document.getElementById('pricing-card');
+    const asidePricing = document.getElementById('aside-pricing');
+    const formPricingSummary = document.getElementById('form-pricing-summary');
+
+    function formatUsd(amount) {
+        return amount.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+    }
+
+    function computeFees(nightlyRate, nights, hasPet) {
+        const subtotal = Math.round(nights * nightlyRate * 100) / 100;
+        const btbTax = Math.round(subtotal * BTB_RATE * 100) / 100;
+        const petFee = hasPet ? PET_FEE : 0;
+        const total = Math.round((subtotal + btbTax + petFee) * 100) / 100;
+        return { subtotal, btbTax, petFee, total };
+    }
+
+    function renderPricingBreakdown(fees, nights) {
+        const btbPct = Math.round(BTB_RATE * 100);
+        const petRow = fees.petFee > 0
+            ? `<p><span>Pet Sanitation Fee:</span> <strong>${formatUsd(fees.petFee)}</strong></p>`
+            : '';
+        const nightsLabel = nights + ' night' + (nights > 1 ? 's' : '');
+        asidePricing.innerHTML = `
+            <p><span>Accommodation (${nightsLabel}):</span> <strong>${formatUsd(fees.subtotal)}</strong></p>
+            <p><span>BTB Tax (${btbPct}%):</span> <strong>${formatUsd(fees.btbTax)}</strong></p>
+            ${petRow}
+            <p class="pricing-breakdown-total"><span>Total:</span> <strong>${formatUsd(fees.total)}</strong></p>
+        `;
+        document.getElementById('summary-subtotal').textContent = formatUsd(fees.subtotal);
+        document.getElementById('summary-btb').textContent = formatUsd(fees.btbTax);
+        const petSummaryRow = document.getElementById('summary-pet-row');
+        if (fees.petFee > 0) {
+            petSummaryRow.style.display = '';
+            document.getElementById('summary-pet').textContent = formatUsd(fees.petFee);
+        } else {
+            petSummaryRow.style.display = 'none';
+        }
+        document.getElementById('summary-total').textContent = formatUsd(fees.total);
+        formPricingSummary.style.display = '';
+    }
 
     function getSelectedProperty() {
         const opt = propertySelect.selectedOptions[0];
@@ -138,7 +199,8 @@
             preview.style.display = 'none';
             guestsHint.textContent = 'Select a property to see max guests';
             guestsInput.max = 20;
-            asidePrice.innerHTML = 'Select a property to see pricing';
+            asidePricing.innerHTML = '<p class="text-muted text-sm">Select a property and dates to see your estimate.</p>';
+            formPricingSummary.style.display = 'none';
             return;
         }
         previewName.textContent = prop.name + ' — ' + prop.location;
@@ -147,7 +209,6 @@
         preview.style.display = '';
         guestsInput.max = prop.capacity;
         guestsHint.textContent = 'Maximum ' + prop.capacity + ' guests';
-        asidePrice.innerHTML = '<strong>$' + prop.price.toFixed(2) + '</strong> per night';
         if (parseInt(guestsInput.value) > prop.capacity) {
             guestsInput.value = prop.capacity;
         }
@@ -157,13 +218,19 @@
     function updatePriceHint() {
         const prop = getSelectedProperty();
         if (!prop) return;
-        if (!startInput.value || !endInput.value) return;
+        if (!startInput.value || !endInput.value) {
+            asidePricing.innerHTML = '<p class="text-muted text-sm"><strong>$' + prop.price.toFixed(2) + '</strong> per night — select dates for a total.</p>';
+            formPricingSummary.style.display = 'none';
+            return;
+        }
         const start = new Date(startInput.value + 'T12:00:00');
         const end = new Date(endInput.value + 'T12:00:00');
         if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || end <= start) return;
         const nights = Math.round((end - start) / (1000 * 60 * 60 * 24));
-        const total = (nights * prop.price).toLocaleString('en-US', {style: 'currency', currency: 'USD'});
-        previewPrice.textContent = '$' + prop.price.toFixed(2) + ' / night \u00b7 ' + nights + ' night' + (nights > 1 ? 's' : '') + ' = ' + total + ' estimated';
+        const hasPet = hasPetInput.checked;
+        const fees = computeFees(prop.price, nights, hasPet);
+        previewPrice.textContent = '$' + prop.price.toFixed(2) + ' / night \u00b7 ' + nights + ' night' + (nights > 1 ? 's' : '') + ' = ' + formatUsd(fees.total) + ' estimated';
+        renderPricingBreakdown(fees, nights);
     }
 
     // Availability calendar
@@ -391,6 +458,7 @@
     });
     startInput.addEventListener('change', onDateInputsChange);
     endInput.addEventListener('change', onDateInputsChange);
+    hasPetInput.addEventListener('change', updatePriceHint);
 
     // Initialize on page load
     updatePropertyPreview();

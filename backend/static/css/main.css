@@ -357,6 +357,14 @@ footer a:hover { text-decoration: underline; color: #f0a080; }
 
 .badge-lg { font-size: 0.875rem; padding: 0.3em 0.9em; }
 
+.badge-baha-pending { background: var(--warning-light); color: #92400e; }
+.badge-baha-verified { background: var(--success-light); color: #14532d; }
+.badge-baha-not_applicable { background: #f3f4f6; color: #6b7280; }
+
+.baha-update-form { margin-top: 1rem; }
+.baha-form-row { align-items: flex-end; }
+.baha-submit .btn { width: 100%; }
+
 .role-badge { font-size: 0.7rem; background: var(--primary-light); color: var(--teal-dark); padding: 0.15em 0.5em; border-radius: 999px; }
 .role-tag   { font-size: 0.8rem; font-weight: 600; }
 .role-admin { color: var(--teal-dark); }
@@ -427,6 +435,111 @@ footer a:hover { text-decoration: underline; color: #f0a080; }
 }
 
 .form-aside { display: flex; flex-direction: column; gap: 1rem; }
+
+.checkbox-group {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  font-size: 0.875rem;
+  line-height: 1.45;
+  color: var(--text);
+}
+
+.checkbox-group input[type="checkbox"] {
+  width: auto;
+  margin-top: 0.2rem;
+  flex-shrink: 0;
+}
+
+.checkbox-group-inline {
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.legal-container { margin-top: 1.5rem; }
+
+.legal-container-title {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  color: var(--text);
+}
+
+.legal-terms-scroll {
+  height: 250px;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem 1.15rem;
+  background: var(--bg);
+  font-size: 0.875rem;
+  line-height: 1.55;
+  text-align: justify;
+  margin-bottom: 1rem;
+}
+
+.legal-terms-scroll h3 {
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin: 1rem 0 0.5rem;
+}
+
+.legal-terms-scroll h3:first-child { margin-top: 0; }
+
+.legal-terms-scroll p { margin-bottom: 0.65rem; }
+
+.booking-summary-card {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem 1.15rem;
+  margin-bottom: 1.25rem;
+}
+
+.booking-summary-card h4 {
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin-bottom: 0.65rem;
+}
+
+.booking-summary-card p {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  font-size: 0.875rem;
+  margin-bottom: 0.35rem;
+  color: var(--text-muted);
+}
+
+.booking-summary-card p strong { color: var(--text); }
+
+.booking-summary-total {
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--border);
+  font-weight: 600;
+  color: var(--text) !important;
+}
+
+.pricing-breakdown p {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  font-size: 0.875rem;
+  margin-bottom: 0.35rem;
+  color: var(--text-muted);
+}
+
+.pricing-breakdown-total {
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--border);
+  font-weight: 600;
+  color: var(--text) !important;
+}
+
+.pricing-detail-grid { margin-top: 0.5rem; }
 
 .info-card {
   background: var(--surface);

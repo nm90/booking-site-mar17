@@ -121,3 +121,30 @@ def test_send_brevo_http_error_returns_false(app):
         with patch.object(email_mod.urllib.request, 'urlopen', side_effect=fake_urlopen):
             ok = _send('S', ['a@b.com'], '<p>x</p>')
     assert ok is False
+
+
+def test_send_brevo_includes_pdf_attachment(app):
+    app.config['BREVO_API_KEY'] = 'secret-api-key'
+    app.config['MAIL_DEFAULT_SENDER'] = 'from@example.com'
+
+    captured = {}
+
+    def fake_urlopen(request, timeout=30):
+        captured['body'] = json.loads(request.data.decode('utf-8'))
+        return _FakeResponse(201)
+
+    attachments = [{
+        'filename': 'San_Pedro_Agreement_42.pdf',
+        'data': b'%PDF-1.4 fake content',
+        'content_type': 'application/pdf',
+    }]
+
+    with app.app_context():
+        with patch.object(email_mod.urllib.request, 'urlopen', side_effect=fake_urlopen):
+            ok = _send('Approved', ['guest@example.com'], '<p>ok</p>', 'plain', attachments)
+
+    assert ok is True
+    assert 'attachment' in captured['body']
+    assert captured['body']['attachment'][0]['name'] == 'San_Pedro_Agreement_42.pdf'
+    assert captured['body']['attachment'][0]['content']  # base64 payload present
+

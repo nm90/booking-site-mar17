@@ -50,13 +50,38 @@
                     <span class="detail-label">Guests</span>
                     <span class="detail-value">{{ booking.guests }}</span>
                 </div>
+                {% if booking.has_pet %}
                 <div class="detail-item">
-                    <span class="detail-label">Total Price</span>
-                    <span class="detail-value price">${{ "%.2f" | format(booking.total_price) }}</span>
+                    <span class="detail-label">Pet</span>
+                    <span class="detail-value">Traveling with authorized pet</span>
                 </div>
+                {% endif %}
                 <div class="detail-item">
                     <span class="detail-label">Submitted</span>
                     <span class="detail-value">{{ booking.created_at[:10] }}</span>
+                </div>
+            </div>
+
+            <div class="detail-grid pricing-detail-grid">
+                {% if booking.accommodation_subtotal is not none and booking.accommodation_subtotal > 0 %}
+                <div class="detail-item">
+                    <span class="detail-label">Accommodation</span>
+                    <span class="detail-value">${{ "%.2f" | format(booking.accommodation_subtotal) }}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">BTB Tax (9%)</span>
+                    <span class="detail-value">${{ "%.2f" | format(booking.btb_tax) }}</span>
+                </div>
+                {% if booking.has_pet and booking.pet_fee %}
+                <div class="detail-item">
+                    <span class="detail-label">Pet Sanitation Fee</span>
+                    <span class="detail-value">${{ "%.2f" | format(booking.pet_fee) }}</span>
+                </div>
+                {% endif %}
+                {% endif %}
+                <div class="detail-item">
+                    <span class="detail-label">Total Price</span>
+                    <span class="detail-value price">${{ "%.2f" | format(booking.total_price) }}</span>
                 </div>
             </div>
 
@@ -74,6 +99,41 @@
             </div>
             {% endif %}
         </div>
+
+        {% if booking.has_pet %}
+        <div class="detail-card">
+            <div class="detail-card-header">
+                <h2>Pet &amp; BAHA Compliance</h2>
+                <span class="badge badge-baha-{{ booking.baha_verified }} badge-lg">{{ booking.baha_verified }}</span>
+            </div>
+            <p class="text-muted text-sm">
+                Guest declared a pet on this booking (${{ "%.2f" | format(booking.pet_fee) }} sanitation fee).
+                Belize Agricultural Health Authority (BAHA) import permit and vaccination records
+                are required before arrival.
+            </p>
+            <form action="{{ url_for('admin.bookings_update_baha', booking_id=booking.id) }}" method="POST"
+                  class="baha-update-form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="form-row baha-form-row">
+                    <div class="form-group">
+                        <label for="baha_verified">BAHA status</label>
+                        <select id="baha_verified" name="baha_verified" required>
+                            <option value="pending" {{ 'selected' if booking.baha_verified == 'pending' }}>
+                                Pending — awaiting documents
+                            </option>
+                            <option value="verified" {{ 'selected' if booking.baha_verified == 'verified' }}>
+                                Verified — documents confirmed
+                            </option>
+                        </select>
+                    </div>
+                    <div class="form-group baha-submit">
+                        <label>&nbsp;</label>
+                        <button type="submit" class="btn btn-primary">Update BAHA Status</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+        {% endif %}
 
         <!-- Approve / Reject Actions (only for pending) -->
         {% if booking.status == 'pending' %}
@@ -123,6 +183,13 @@
         <div class="info-card">
             <h3>Quick Actions</h3>
             <ul class="quick-links">
+                {% if booking.status in ['approved', 'completed'] %}
+                <li>
+                    <a href="{{ url_for('admin.bookings_download_contract', booking_id=booking.id) }}">
+                        Download rental agreement (PDF)
+                    </a>
+                </li>
+                {% endif %}
                 <li><a href="{{ url_for('admin.bookings_index') }}?status=pending">View all pending</a></li>
                 <li><a href="{{ url_for('admin.users_index') }}">Manage users</a></li>
             </ul>

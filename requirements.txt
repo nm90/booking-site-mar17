@@ -4,3 +4,5 @@ Flask-WTF==1.2.1
 Flask-Mail==0.10.0
 gunicorn==22.0.0
 psycopg[binary]==3.3.4
+WeasyPrint==62.3
+pydyf==0.10.0

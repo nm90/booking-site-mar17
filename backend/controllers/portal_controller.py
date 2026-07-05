@@ -24,7 +24,8 @@ Routes:
     POST /portal/adventures          - Submit adventure request
 """
 
-from flask import Blueprint, request, redirect, url_for, flash, session, render_template, current_app, jsonify
+from flask import Blueprint, request, redirect, url_for, flash, session, render_template, current_app, jsonify, send_file, abort
+from io import BytesIO
 from backend.models.booking import Booking
 from backend.models.review import Review
 from backend.models.adventure import Adventure, AdventureBooking
@@ -32,8 +33,23 @@ from backend.models.property import Property
 from backend.models.user import User
 from backend.controllers.auth_controller import login_required
 from backend.services.email import send_booking_confirmation, notify_admin_new_booking
+from backend.services.pdf import generate_contract_pdf
 
 portal_bp = Blueprint('portal', __name__, url_prefix='/portal')
+
+
+def _booking_form_context(properties, **overrides):
+    """Shared template context for the booking request form."""
+    ctx = {
+        'properties': properties,
+        'btb_tax_rate': current_app.config.get('BTB_TAX_RATE', 0.09),
+        'pet_sanitation_fee': current_app.config.get('PET_SANITATION_FEE', 75.0),
+        'agreement_version': current_app.config.get('RENTAL_AGREEMENT_VERSION', '2026-07-05'),
+        'has_pet': False,
+        'accept_legal': False,
+    }
+    ctx.update(overrides)
+    return ctx
 
 
 # ============================================================================
@@ -168,7 +184,10 @@ def bookings_new():
     """Show the booking request form."""
     properties = Property.get_all(active_only=True)
     selected_id = request.args.get('property_id', type=int)
-    return render_template('bookings/new.html', properties=properties, property_id=selected_id)
+    return render_template(
+        'bookings/new.html',
+        **_booking_form_context(properties, property_id=selected_id),
+    )
 
 
 @portal_bp.route('/bookings/availability/<int:property_id>')
@@ -189,8 +208,20 @@ def bookings_create():
     guests = request.form.get('guests', '1')
     property_id = request.form.get('property_id', type=int)
     special_requests = request.form.get('special_requests', '').strip() or None
+    has_pet = request.form.get('has_pet') == '1'
+    terms_accepted = request.form.get('accept_legal') == '1'
 
     properties = Property.get_all(active_only=True)
+    form_ctx = _booking_form_context(
+        properties,
+        start_date=start_date,
+        end_date=end_date,
+        guests=guests,
+        special_requests=special_requests,
+        property_id=property_id,
+        has_pet=has_pet,
+        accept_legal=terms_accepted,
+    )
 
     try:
         booking = Booking.create(
@@ -199,7 +230,9 @@ def bookings_create():
             end_date=end_date,
             guests=guests,
             property_id=property_id,
-            special_requests=special_requests
+            special_requests=special_requests,
+            has_pet=has_pet,
+            terms_accepted=terms_accepted,
         )
         # Send email notifications
         send_booking_confirmation(session['user_email'], session['user_first_name'], booking)
@@ -217,18 +250,12 @@ def bookings_create():
 
     except ValueError as e:
         flash(str(e), 'error')
-        return render_template('bookings/new.html',
-                               start_date=start_date, end_date=end_date,
-                               guests=guests, special_requests=special_requests,
-                               properties=properties, property_id=property_id)
+        return render_template('bookings/new.html', **form_ctx)
 
     except Exception as e:
         error_message = getattr(e, 'user_message', str(e))
         flash(error_message, 'error')
-        return render_template('bookings/new.html',
-                               start_date=start_date, end_date=end_date,
-                               guests=guests, properties=properties,
-                               property_id=property_id)
+        return render_template('bookings/new.html', **form_ctx)
 
 
 @portal_bp.route('/bookings/<int:booking_id>')
@@ -253,6 +280,26 @@ def bookings_show(booking_id):
     return render_template('bookings/show.html',
                            booking=booking,
                            already_reviewed=already_reviewed)
+
+
+@portal_bp.route('/bookings/<int:booking_id>/contract')
+@login_required
+def bookings_download_contract(booking_id):
+    """Download the rental agreement PDF for the guest's own booking."""
+    user_id = session['user_id']
+    booking = Booking.get_by_id(booking_id, include_relations=True)
+    if not booking or booking['user_id'] != user_id:
+        abort(404)
+    if booking['status'] not in ('approved', 'completed'):
+        flash('Your rental agreement will be available after the booking is approved.', 'warning')
+        return redirect(url_for('portal.bookings_show', booking_id=booking_id))
+    pdf_bytes = generate_contract_pdf(booking)
+    return send_file(
+        BytesIO(pdf_bytes),
+        mimetype='application/pdf',
+        as_attachment=True,
+        download_name=f'San_Pedro_Agreement_{booking_id}.pdf',
+    )
 
 
 @portal_bp.route('/bookings/<int:booking_id>/cancel', methods=['POST'])

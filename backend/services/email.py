@@ -5,6 +5,7 @@ Uses Brevo's Transactional API when BREVO_API_KEY is set; otherwise Flask-Mail
 (SMTP) when MAIL_USERNAME is set. Falls back to logging if neither is configured.
 """
 
+import base64
 import json
 import logging
 import urllib.error
@@ -17,6 +18,9 @@ from flask_mail import Message
 logger = logging.getLogger(__name__)
 
 BREVO_SMTP_EMAIL_URL = "https://api.brevo.com/v3/smtp/email"
+
+# Each attachment: {'filename': str, 'data': bytes, 'content_type': str}
+EmailAttachment = Dict[str, Any]
 
 
 def _get_mail():
@@ -51,6 +55,16 @@ def _brevo_sender_from_config(config: dict) -> Optional[Dict[str, str]]:
     return None
 
 
+def _brevo_attachments(attachments: List[EmailAttachment]) -> List[Dict[str, str]]:
+    return [
+        {
+            'name': att['filename'],
+            'content': base64.b64encode(att['data']).decode('ascii'),
+        }
+        for att in attachments
+    ]
+
+
 def _send_via_brevo(
     api_key: str,
     sender: Dict[str, str],
@@ -58,6 +72,7 @@ def _send_via_brevo(
     recipients: List[str],
     html_body: str,
     text_body: Optional[str],
+    attachments: Optional[List[EmailAttachment]] = None,
 ) -> bool:
     payload: Dict[str, Any] = {
         'sender': sender,
@@ -67,6 +82,8 @@ def _send_via_brevo(
     }
     if text_body:
         payload['textContent'] = text_body
+    if attachments:
+        payload['attachment'] = _brevo_attachments(attachments)
 
     data = json.dumps(payload).encode('utf-8')
     req = urllib.request.Request(
@@ -95,7 +112,13 @@ def _send_via_brevo(
         return False
 
 
-def _send(subject: str, recipients: list, html_body: str, text_body: str = None):
+def _send(
+    subject: str,
+    recipients: list,
+    html_body: str,
+    text_body: str = None,
+    attachments: Optional[List[EmailAttachment]] = None,
+):
     """Send an email via Brevo, SMTP, or log if not configured."""
     api_key = (current_app.config.get('BREVO_API_KEY') or '').strip()
     if api_key:
@@ -105,7 +128,9 @@ def _send(subject: str, recipients: list, html_body: str, text_body: str = None)
                 "BREVO_API_KEY is set but MAIL_DEFAULT_SENDER has no valid email; skipping send."
             )
             return False
-        ok = _send_via_brevo(api_key, sender, subject, recipients, html_body, text_body)
+        ok = _send_via_brevo(
+            api_key, sender, subject, recipients, html_body, text_body, attachments
+        )
         if ok:
             logger.info("Email sent (Brevo): '%s' to %s", subject, recipients)
         return ok
@@ -113,6 +138,9 @@ def _send(subject: str, recipients: list, html_body: str, text_body: str = None)
     mail = _get_mail()
     if not mail or not current_app.config.get('MAIL_USERNAME'):
         logger.info("[EMAIL NOT CONFIGURED] To: %s | Subject: %s", recipients, subject)
+        if attachments:
+            logger.info("[EMAIL NOT CONFIGURED] Attachments: %s",
+                        [a['filename'] for a in attachments])
         logger.debug("Body: %s", text_body or html_body)
         return False
 
@@ -121,12 +149,26 @@ def _send(subject: str, recipients: list, html_body: str, text_body: str = None)
         msg.html = html_body
         if text_body:
             msg.body = text_body
+        for att in attachments or []:
+            msg.attach(
+                att['filename'],
+                att.get('content_type', 'application/octet-stream'),
+                att['data'],
+            )
         mail.send(msg)
         logger.info("Email sent: '%s' to %s", subject, recipients)
         return True
     except Exception as e:
         logger.error("Failed to send email: %s", e)
         return False
+
+
+def _contract_pdf_attachment(booking_id: int, pdf_bytes: bytes) -> EmailAttachment:
+    return {
+        'filename': f'San_Pedro_Agreement_{booking_id}.pdf',
+        'data': pdf_bytes,
+        'content_type': 'application/pdf',
+    }
 
 
 def send_booking_confirmation(guest_email: str, guest_name: str, booking: dict):
@@ -150,13 +192,36 @@ def send_booking_status_change(guest_email: str, guest_name: str, booking: dict)
         'rejected': f"Booking Update \u2014 {booking['property']['name']}",
         'cancelled': f"Booking Cancelled \u2014 {booking['property']['name']}",
     }
+    text_body = (
+        f"Hi {guest_name}, your booking for {booking['property']['name']} "
+        f"({booking['start_date']} to {booking['end_date']}) has been {status}."
+    )
+    attachments = None
+
+    if status == 'approved':
+        text_body += (
+            "\n\nAttached is your Vacation Rental Agreement (PDF) for your records."
+        )
+        if booking.get('has_pet'):
+            text_body += (
+                "\n\nYou declared a pet on this booking. Please submit BAHA clearance "
+                "documentation (vaccination records and import permit) before arrival."
+            )
+        try:
+            from backend.services.pdf import generate_contract_pdf
+            pdf_bytes = generate_contract_pdf(booking)
+            attachments = [_contract_pdf_attachment(booking['id'], pdf_bytes)]
+        except Exception as e:
+            logger.error("Failed to generate contract PDF for booking %s: %s",
+                         booking.get('id'), e)
+
     _send(
         subject=subjects.get(status, f"Booking Update \u2014 {booking['property']['name']}"),
         recipients=[guest_email],
         html_body=render_template('emails/booking_status.html',
                                   guest_name=guest_name, booking=booking),
-        text_body=f"Hi {guest_name}, your booking for {booking['property']['name']} "
-                  f"({booking['start_date']} to {booking['end_date']}) has been {status}."
+        text_body=text_body,
+        attachments=attachments,
     )
 
 
