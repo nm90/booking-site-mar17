@@ -1,6 +1,6 @@
 # Deployment Checklist (Koyeb)
 
-> **Note:** This checklist predates the current deploy method. Production (`booking-site-mar17/booking-site`) redeploys automatically on every push to `main` via [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml), which runs `koyeb deploy` (archive + Docker builder) — not the manual image-push-then-`koyeb service create/redeploy` flow in Sections 1 and 4 below, and not the image referenced in `koyeb.yaml`. See [`CLAUDE.md`](CLAUDE.md#deployment-koyeb) for the actual command, or use Sections 1 and 4 for local build verification / manual redeploys.
+> **Note:** This checklist predates the current deploy method. Production (`booking-site-mar17/booking-site`) redeploys automatically on every push to `main` via [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml), which runs `koyeb deploy` (archive + Docker builder) — not the manual image-push-then-`koyeb service create/redeploy` flow in Sections 1 and 4 below. The workflow does still build and push the `fauxtoe/booking-site` image referenced in `koyeb.yaml` (as a prerequisite job the deploy depends on), but the archive deploy rebuilds from source and doesn't run that image. See [`CLAUDE.md`](CLAUDE.md#deployment-koyeb) for the actual command, or use Sections 1 and 4 for local build verification / manual redeploys.
 
 ## 1. Docker Build Verification
 

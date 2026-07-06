@@ -11,7 +11,7 @@ backend/
 ├── app.py                          # Application bootstrap: config, DB init/migrations, blueprints, error handlers
 ├── controllers/
 │   ├── auth_controller.py          # Register/login/logout, email verification, password reset, auth decorators
-│   ├── portal_controller.py        # Customer-facing routes (/, /profile, /bookings/*, /reviews, /adventures/*)
+│   ├── portal_controller.py        # Customer-facing routes under /portal/* (dashboard, profile, bookings, reviews, adventures)
 │   └── admin_controller.py         # Admin routes (/admin/bookings, /reviews, /adventures, /users, /properties)
 ├── models/
 │   ├── user.py                     # User model (auth, CRUD, roles, password reset / email verification tokens)
@@ -93,7 +93,7 @@ SECRET_KEY=$(python3 -c "import secrets; print(secrets.token_hex(32))") docker c
 ## Running Tests
 
 ```bash
-pip install -r requirements.txt
+pip install -r requirements.txt pytest   # pytest is not in requirements.txt
 pytest
 ```
 
@@ -120,7 +120,7 @@ See the table in [`CLAUDE.md`](CLAUDE.md#environment-variables) for the full lis
 - Moderate guest reviews (approve / reject)
 - Approve or reject adventure booking requests
 - Manage user accounts (activate / suspend)
-- Manage properties (create, edit, deactivate multiple vacation rental listings)
+- Manage properties (create, edit, delete listings — deletion is refused if the property has any booking history)
 
 ## MVC Pattern
 

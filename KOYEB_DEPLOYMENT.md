@@ -1,6 +1,6 @@
 # Koyeb Deployment Guide — Vacation Rental Booking System
 
-> **Note:** This guide walks through setting up a *new* Koyeb service via Koyeb's own Git integration (Step 2). The current production service (`booking-site-mar17/booking-site`) instead redeploys through [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml) — a GitHub Actions workflow that runs the Koyeb CLI's archive + Docker builder (`koyeb deploy`) on every push to `main`. It's still a git-driven flow, just via GitHub Actions rather than Koyeb's native "Deploy with Git" autodeploy. See [`CLAUDE.md`](CLAUDE.md#deployment-koyeb) for the exact command and how to run it manually.
+> **Note:** This guide walks through setting up a *new* Koyeb service via Koyeb's own Git integration (Step 2). The current production service (`booking-site-mar17/booking-site`) instead redeploys through [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml) — a GitHub Actions workflow that runs the Koyeb CLI's archive + Docker builder (`koyeb deploy`) on every push to `main`, after a prerequisite job that builds and pushes the `fauxtoe/booking-site` image to DockerHub (kept for `koyeb.yaml`; the archive deploy itself rebuilds from source). It's still a git-driven flow, just via GitHub Actions rather than Koyeb's native "Deploy with Git" autodeploy. See [`CLAUDE.md`](CLAUDE.md#deployment-koyeb) for the exact command and how to run it manually.
 
 ## Prerequisites
 

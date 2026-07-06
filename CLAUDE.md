@@ -76,7 +76,7 @@ Flask MVC app with strict layer separation:
 
 The production app is `booking-site-mar17`, service `booking-site`. It uses archive + Docker builder (not the image in `koyeb.yaml`).
 
-**Deploys are automatic:** [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml) runs this same `koyeb deploy` command on every push to `main`, so merging to `main` redeploys production without any manual step. The commands below are for redeploying manually (e.g. to test a change before merging, or if the workflow needs to be re-run).
+**Deploys are automatic:** [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml) runs `koyeb deploy . booking-site-mar17/booking-site --archive-builder docker` on every push to `main` (same archive-based mechanism as below, minus the `--archive-ignore-dir` flags and `--wait` — CI checkouts are clean), so merging to `main` redeploys production without any manual step. The workflow also has a prerequisite job that builds and pushes the `fauxtoe/booking-site` image to DockerHub (the image `koyeb.yaml` references); the archive deploy doesn't consume that image, but the deploy job won't run if the image push fails, so DockerHub credentials must stay valid. The commands below are for redeploying manually (e.g. to test a change before merging, or if the workflow needs to be re-run).
 
 ```bash
 # Deploy current directory to production
