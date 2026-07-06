@@ -76,6 +76,8 @@ Flask MVC app with strict layer separation:
 
 The production app is `booking-site-mar17`, service `booking-site`. It uses archive + Docker builder (not the image in `koyeb.yaml`).
 
+**Deploys are automatic:** [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml) runs this same `koyeb deploy` command on every push to `main`, so merging to `main` redeploys production without any manual step. The commands below are for redeploying manually (e.g. to test a change before merging, or if the workflow needs to be re-run).
+
 ```bash
 # Deploy current directory to production
 # NOTE: the CLI does NOT honor .koyebignore — it only skips .git,node_modules,vendor

@@ -1,6 +1,6 @@
 # Koyeb Deployment Guide — Vacation Rental Booking System
 
-> **Note:** This guide walks through the initial Git-connected setup for a *new* Koyeb service. The current production service (`booking-site-mar17/booking-site`) is redeployed via the Koyeb CLI's archive + Docker builder instead of Git autodeploy — see the `koyeb deploy` command in [`CLAUDE.md`](CLAUDE.md#deployment-koyeb) for the exact command used for ongoing deploys.
+> **Note:** This guide walks through setting up a *new* Koyeb service via Koyeb's own Git integration (Step 2). The current production service (`booking-site-mar17/booking-site`) instead redeploys through [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml) — a GitHub Actions workflow that runs the Koyeb CLI's archive + Docker builder (`koyeb deploy`) on every push to `main`. It's still a git-driven flow, just via GitHub Actions rather than Koyeb's native "Deploy with Git" autodeploy. See [`CLAUDE.md`](CLAUDE.md#deployment-koyeb) for the exact command and how to run it manually.
 
 ## Prerequisites
 
@@ -118,14 +118,14 @@ Copy the output and paste it as the `SECRET_KEY` value. Keep it secret — never
 
 ## Step 5: Automatic Deployments
 
-Every `git push` to `main` triggers a redeploy automatically.
+Every `git push` to `main` triggers a redeploy automatically — not via Koyeb's own Git integration, but through [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml), which runs on GitHub Actions and calls the Koyeb CLI's archive-based `koyeb deploy` (see [`CLAUDE.md`](CLAUDE.md#deployment-koyeb)).
 
 ```bash
 # Make a change, then:
 git add .
 git commit -m "feat: my change"
 git push origin main
-# → Koyeb picks this up and redeploys
+# → GitHub Actions builds and runs `koyeb deploy`, redeploying production
 ```
 
 ---
