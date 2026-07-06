@@ -26,6 +26,7 @@ ENV/
 # Database files
 *.db
 *.db-journal
+*.db.init.lock
 *.sqlite
 *.sqlite3
 
