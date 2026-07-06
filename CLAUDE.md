@@ -15,17 +15,21 @@ docker compose up --build
 
 # Initialize/reset database manually
 python3 -c "from backend.database.seed import seed_database; seed_database()"
+
+# Run tests
+pytest
 ```
 
-No test suite or linter is configured.
+A pytest suite exists in `backend/tests/`. No linter is configured.
 
 ## Architecture
 
 Flask MVC app with strict layer separation:
 
-- **`backend/app.py`** — Entry point. Registers 3 blueprints, initializes DB on first run, injects session vars into all templates via context processor.
+- **`backend/app.py`** — Entry point. Registers 3 blueprints (`auth`, `portal`, `admin`), initializes/migrates DB on first run, injects session vars into all templates via context processor.
 - **`backend/controllers/`** — HTTP layer only. No SQL. Calls model methods, manages `session`, renders templates or redirects.
-- **`backend/models/`** — Business logic and persistence. Raises `ValueError` for validation failures. Uses `execute_query()` for all SQL.
+- **`backend/models/`** — Business logic and persistence (`user`, `property`, `booking`, `review`, `adventure`). Raises `ValueError` for validation failures. Uses `execute_query()` for all SQL.
+- **`backend/services/`** — Cross-cutting integrations: `email.py` (Flask-Mail SMTP or Brevo API) and `pdf.py` (WeasyPrint rental agreement PDFs). Called from controllers/models, not the other way around.
 - **`backend/database/connection.py`** — `execute_query(sql, params, fetchone, commit)` wrapper. Converts rows to dicts automatically.
 - **`backend/templates/`** — Jinja2. Extend `base.html`. Display only, no logic.
 
@@ -43,10 +47,25 @@ Flask MVC app with strict layer separation:
 
 | Variable | Default | Purpose |
 |---|---|---|
-| `SECRET_KEY` | `dev-secret-key-change-in-production` | Flask session signing |
+| `SECRET_KEY` | _(none — required)_ | Flask session signing. App exits at startup if unset or a known insecure default (see `_INSECURE_DEFAULTS` in `app.py`). Generate with `python3 -c "import secrets; print(secrets.token_hex(32))"`. |
 | `DATABASE_PATH` | `backend/database/booking_site.db` | SQLite file location (used only when `DATABASE_URL` is unset) |
 | `DATABASE_URL` | _(unset)_ | Postgres connection string (e.g. Supabase). Set → app uses Postgres via psycopg; unset → SQLite. Use the Supabase Session/pooler connection string; include `sslmode=require`. |
-| `FLASK_ENV` | `development` | Enables debug mode |
+| `FLASK_ENV` | `development` | Set to `production` to disable debug mode and lower log verbosity |
+| `MAIL_SERVER` | `smtp.gmail.com` | SMTP host for Flask-Mail (used when `BREVO_API_KEY` is not set) |
+| `MAIL_PORT` | `587` | SMTP port |
+| `MAIL_USE_TLS` | `true` | Whether to use STARTTLS for SMTP |
+| `MAIL_USERNAME` | _(empty)_ | SMTP auth username |
+| `MAIL_PASSWORD` | _(empty)_ | SMTP auth password |
+| `MAIL_DEFAULT_SENDER` | `bze@wiscomfort.com` | From-address for outgoing SMTP mail |
+| `BREVO_API_KEY` | _(empty)_ | If set, `backend/services/email.py` sends via the Brevo HTTP API instead of SMTP |
+| `BREVO_SENDER_NAME` | _(empty)_ | Display name used for the Brevo sender |
+| `ADMIN_EMAIL` | `bze@wiscomfort.com` | Recipient for admin notification emails (e.g. new booking alerts) |
+| `CONTACT_EMAIL` | `bze@wiscomfort.com` | Contact address shown in templates (injected via context processor) |
+| `LANDING_SITE_URL` | `https://nm90.github.io/booking-site-mar17/` | Marketing/landing site URL linked from the app; normalized to end with `/` |
+| `BTB_TAX_RATE` | `0.09` | Bed tax rate applied to booking subtotals |
+| `PET_SANITATION_FEE` | `75` | Flat fee added to bookings with a pet |
+| `RENTAL_AGREEMENT_VERSION` | `2026-07-05` | Version string stamped on the rental agreement PDF/legal content |
+| `TRUST_PROXY_HEADERS` | _(unset/false)_ | Set to `1`/`true`/`yes` to honor `X-Forwarded-*` from one reverse proxy (e.g. Koyeb's TLS terminator) via `ProxyFix` |
 
 ## Demo Accounts
 
@@ -56,6 +75,8 @@ Flask MVC app with strict layer separation:
 ## Deployment (Koyeb)
 
 The production app is `booking-site-mar17`, service `booking-site`. It uses archive + Docker builder (not the image in `koyeb.yaml`).
+
+**Deploys are automatic:** [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml) runs `koyeb deploy . booking-site-mar17/booking-site --archive-builder docker` on every push to `main` (same archive-based mechanism as below, minus the `--archive-ignore-dir` flags and `--wait` — CI checkouts are clean), so merging to `main` redeploys production without any manual step. The workflow also has a prerequisite job that builds and pushes the `fauxtoe/booking-site` image to DockerHub (the image `koyeb.yaml` references); the archive deploy doesn't consume that image, but the deploy job won't run if the image push fails, so DockerHub credentials must stay valid. The commands below are for redeploying manually (e.g. to test a change before merging, or if the workflow needs to be re-run).
 
 ```bash
 # Deploy current directory to production

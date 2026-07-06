@@ -1,5 +1,7 @@
 # Deployment Checklist (Koyeb)
 
+> **Note:** This checklist predates the current deploy method. Production (`booking-site-mar17/booking-site`) redeploys automatically on every push to `main` via [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml), which runs `koyeb deploy` (archive + Docker builder) — not the manual image-push-then-`koyeb service create/redeploy` flow in Sections 1 and 4 below. The workflow does still build and push the `fauxtoe/booking-site` image referenced in `koyeb.yaml` (as a prerequisite job the deploy depends on), but the archive deploy rebuilds from source and doesn't run that image. See [`CLAUDE.md`](CLAUDE.md#deployment-koyeb) for the actual command, or use Sections 1 and 4 for local build verification / manual redeploys.
+
 ## 1. Docker Build Verification
 
 - [ ] Build the image locally:
@@ -31,8 +33,10 @@ Map each `.env` variable to the corresponding entry in `koyeb.yaml`:
 |---|---|---|
 | `SECRET_KEY` | `SECRET_KEY` | Koyeb secret `secret-key` (set via dashboard or CLI) |
 | `FLASK_ENV` | `FLASK_ENV` | Hardcoded to `production` |
-| `DATABASE_PATH` | `DATABASE_PATH` | `/tmp/booking_site.db` |
+| `DATABASE_PATH` | `DATABASE_PATH` | `/tmp/booking_site.db` (ignored if `DATABASE_URL` is set) |
 | — | `PYTHONUNBUFFERED` | `1` (set in koyeb.yaml and Dockerfile) |
+
+For Postgres/Supabase persistence and the full list of app env vars (mail, fees, proxy handling, etc.), see [`CLAUDE.md`](CLAUDE.md#environment-variables).
 
 - [ ] Create the `secret-key` secret in Koyeb:
   ```bash
