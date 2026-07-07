@@ -59,7 +59,7 @@ def insert_seed_data():
         conn.execute("""
             INSERT INTO users (email, password_hash, first_name, last_name, role, email_verified)
             VALUES (?, ?, ?, ?, ?, 1)
-        """, ('happy@wiscomfort.com', hash_password('test1234'), 'Admin', 'User', 'admin'))
+        """, ('admin@example.com', hash_password('test1234'), 'Admin', 'User', 'admin'))
 
         conn.execute("""
             INSERT INTO users (email, password_hash, first_name, last_name, phone_number, role, email_verified)
